@@ -1,9 +1,13 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, FileText, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Upload, FileText, Loader2, AlertTriangle, CheckCircle2, ChevronDown, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScanResult } from '@/data/taxScannerTypes';
+import { TaxFormType, TAX_FORMS, FORM_DETECTION_PATTERNS } from '@/data/taxFormTypes';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface Props {
   onAnalysisComplete: (result: ScanResult) => void;
@@ -21,48 +25,55 @@ interface UserProfile {
   company_name?: string;
 }
 
+const FORM_CATEGORIES = [
+  { label: 'Déclaration principale', forms: ['2042', '2042-C', '2042-C-PRO', '2042-RICI'] as TaxFormType[] },
+  { label: 'Immobilier', forms: ['2044', '2031'] as TaxFormType[] },
+  { label: 'Revenus financiers', forms: ['2074', '2086'] as TaxFormType[] },
+  { label: 'International', forms: ['2047', '3916', '3916-bis'] as TaxFormType[] },
+  { label: 'Entreprise', forms: ['2035', '2065'] as TaxFormType[] },
+];
+
 export const DocumentUploadScanner = ({ onAnalysisComplete, onBack }: Props) => {
   const { user } = useAuth();
-  const [isUploading, setIsUploading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [progress, setProgress] = useState<string>('');
+  const [autoDetect, setAutoDetect] = useState(true);
+  const [selectedFormType, setSelectedFormType] = useState<TaxFormType>('2042');
+  const [detectedFormType, setDetectedFormType] = useState<TaxFormType | null>(null);
+
+  const detectFormTypeFromContent = (content: string): TaxFormType => {
+    for (const { pattern, formType } of FORM_DETECTION_PATTERNS) {
+      if (pattern.test(content)) {
+        return formType;
+      }
+    }
+    return '2042'; // Default to main form
+  };
 
   const extractTextFromFile = async (file: File): Promise<string> => {
-    // For now, we'll read text files directly
-    // For PDFs, we'll send the raw content and let the AI handle it
-    // In production, you'd want a proper PDF parser
-    
     if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
       return await file.text();
     }
     
-    // For PDFs and other files, convert to base64 and send a description
-    const arrayBuffer = await file.arrayBuffer();
-    const base64 = btoa(
-      new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-    );
+    // For PDFs, we'll describe what we expect and let AI handle it
+    const formInfo = TAX_FORMS[autoDetect ? 'unknown' : selectedFormType];
     
-    // Return file info for AI analysis
-    return `[Document PDF uploadé: ${file.name}, Taille: ${(file.size / 1024).toFixed(1)} KB]
+    return `[Document uploadé: ${file.name}, Taille: ${(file.size / 1024).toFixed(1)} KB]
 
-Note: Ce document est une déclaration d'impôts française. Veuillez analyser les informations typiquement présentes dans un formulaire 2042:
-- Cases 1AJ/1BJ: Salaires
-- Cases 2DC/2TS: Revenus de capitaux mobiliers
-- Cases 4BA/4BE: Revenus fonciers
-- Cases 5NG/5NK: BIC/BNC
-- Cases 6NS/6NT: Déductions PER
-- Cases 7DB/7DF: Crédits d'impôt emploi à domicile
-- Cases 7GA/7GB: Crédits garde d'enfants
+Type de formulaire ${autoDetect ? 'à détecter automatiquement' : `spécifié: ${formInfo.name} (${formInfo.code})`}
 
-Simulez une analyse basée sur un profil type de déclarant français et fournissez des recommandations générales pertinentes.`;
+${!autoDetect ? `Cases clés à analyser: ${formInfo.keyBoxes.join(', ')}
+Erreurs courantes de ce formulaire:
+${formInfo.commonErrors.map(e => `- ${e}`).join('\n')}` : ''}
+
+Veuillez analyser ce document fiscal français et identifier les erreurs et optimisations.`;
   };
 
   const handleFileSelect = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file
     const validTypes = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png'];
     if (!validTypes.includes(file.type) && !file.name.endsWith('.pdf') && !file.name.endsWith('.txt')) {
       toast.error('Format non supporté. Utilisez PDF, TXT ou image.');
@@ -75,7 +86,16 @@ Simulez une analyse basée sur un profil type de déclarant français et fournis
     }
 
     setUploadedFile(file);
-  }, []);
+    
+    // Try to detect form type from filename
+    const detected = detectFormTypeFromContent(file.name);
+    if (detected !== '2042') {
+      setDetectedFormType(detected);
+      if (!autoDetect) {
+        setSelectedFormType(detected);
+      }
+    }
+  }, [autoDetect]);
 
   const handleAnalyze = async () => {
     if (!uploadedFile || !user) return;
@@ -84,12 +104,10 @@ Simulez une analyse basée sur un profil type de déclarant français et fournis
     setProgress('Extraction du contenu...');
 
     try {
-      // Extract text content
       const documentContent = await extractTextFromFile(uploadedFile);
       
       setProgress('Récupération de votre profil...');
       
-      // Fetch user profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
@@ -98,11 +116,13 @@ Simulez une analyse basée sur un profil type de déclarant français et fournis
 
       setProgress('Analyse IA en cours...');
 
-      // Call the edge function
+      const formTypeToSend = autoDetect ? 'auto-detect' : selectedFormType;
+
       const { data, error } = await supabase.functions.invoke('analyze-tax-document', {
         body: { 
           documentContent,
-          userProfile: profile as UserProfile
+          userProfile: profile as UserProfile,
+          formType: formTypeToSend
         }
       });
 
@@ -110,12 +130,16 @@ Simulez une analyse basée sur un profil type de déclarant français et fournis
         throw new Error(error.message || 'Erreur lors de l\'analyse');
       }
 
-      // Convert AI response to ScanResult format
+      // Update detected form type from AI response
+      if (data.detectedFormType && data.detectedFormType !== 'unknown') {
+        setDetectedFormType(data.detectedFormType);
+      }
+
       const result: ScanResult = {
         score: data.score || 70,
         errors: (data.errors || []).map((e: any, idx: number) => ({
           id: `DOC_ERR_${idx}`,
-          category: 'Déclaration',
+          category: data.detectedFormType ? TAX_FORMS[data.detectedFormType as TaxFormType]?.category || 'Déclaration' : 'Déclaration',
           code: `D${idx + 1}`,
           severity: e.severity || 'info',
           title: e.title,
@@ -143,7 +167,7 @@ Simulez une analyse basée sur un profil type de déclarant français et fournis
         timestamp: new Date()
       };
 
-      toast.success('Analyse terminée !');
+      toast.success(`Analyse terminée ! Formulaire détecté: ${data.detectedFormType || 'Standard'}`);
       onAnalysisComplete(result);
 
     } catch (error) {
@@ -168,13 +192,105 @@ Simulez une analyse basée sur un profil type de déclarant français et fournis
     }
   }, [handleFileSelect]);
 
+  const selectedFormInfo = TAX_FORMS[selectedFormType];
+
   return (
     <div>
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-2">Analyser votre déclaration</h2>
         <p className="text-muted-foreground">
-          Uploadez votre déclaration d'impôts (PDF) pour une analyse personnalisée basée sur votre profil.
+          Uploadez votre déclaration d'impôts pour une analyse IA personnalisée.
         </p>
+      </div>
+
+      {/* Form type selector */}
+      <div className="glass-card rounded-2xl p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <div>
+              <h3 className="font-semibold">Type de formulaire</h3>
+              <p className="text-xs text-muted-foreground">
+                {autoDetect ? 'L\'IA identifiera automatiquement le type' : 'Sélectionnez manuellement'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="auto-detect" className="text-sm">Auto-détection</Label>
+            <Switch 
+              id="auto-detect"
+              checked={autoDetect}
+              onCheckedChange={setAutoDetect}
+            />
+          </div>
+        </div>
+
+        {!autoDetect && (
+          <div className="space-y-4">
+            <Select value={selectedFormType} onValueChange={(v) => setSelectedFormType(v as TaxFormType)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Sélectionner un formulaire" />
+              </SelectTrigger>
+              <SelectContent>
+                {FORM_CATEGORIES.map(category => (
+                  <div key={category.label}>
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                      {category.label}
+                    </div>
+                    {category.forms.map(formCode => {
+                      const form = TAX_FORMS[formCode];
+                      return (
+                        <SelectItem key={formCode} value={formCode}>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{form.code}</span>
+                            <span className="text-muted-foreground">- {form.name}</span>
+                            <span className={`text-xs px-1.5 py-0.5 rounded ${
+                              form.complexity === 'expert' ? 'bg-destructive/10 text-destructive' :
+                              form.complexity === 'complex' ? 'bg-warning/10 text-warning' :
+                              'bg-muted text-muted-foreground'
+                            }`}>
+                              {form.complexity}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </div>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Selected form info */}
+            <div className="p-4 rounded-xl bg-muted/30 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">{selectedFormInfo.code}</span>
+                <span className="text-sm text-muted-foreground">{selectedFormInfo.name}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">{selectedFormInfo.description}</p>
+              
+              {selectedFormInfo.commonErrors.length > 0 && (
+                <div className="pt-2">
+                  <p className="text-xs font-medium text-destructive mb-1">Erreurs fréquentes :</p>
+                  <ul className="text-xs text-muted-foreground space-y-0.5">
+                    {selectedFormInfo.commonErrors.slice(0, 3).map((err, i) => (
+                      <li key={i}>• {err}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {detectedFormType && autoDetect && (
+          <div className="mt-4 p-3 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-primary" />
+            <div>
+              <p className="text-sm font-medium">Formulaire pré-détecté : {TAX_FORMS[detectedFormType].code}</p>
+              <p className="text-xs text-muted-foreground">{TAX_FORMS[detectedFormType].name}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Upload zone */}
@@ -191,8 +307,8 @@ Simulez une analyse basée sur un profil type de déclarant français et fournis
               <Upload className="w-8 h-8 text-primary" />
             </div>
             <p className="text-lg font-medium mb-2">Déposez votre déclaration ici</p>
-            <p className="text-sm text-muted-foreground mb-4">ou cliquez pour sélectionner un fichier</p>
-            <p className="text-xs text-muted-foreground">Formats acceptés : PDF, TXT, Images (max 20 MB)</p>
+            <p className="text-sm text-muted-foreground mb-4">ou cliquez pour sélectionner</p>
+            <p className="text-xs text-muted-foreground">PDF, TXT, Images (max 20 MB)</p>
             <input 
               type="file" 
               className="hidden" 
@@ -210,7 +326,7 @@ Simulez une analyse basée sur un profil type de déclarant français et fournis
               <p className="text-sm text-muted-foreground">{(uploadedFile.size / 1024).toFixed(1)} KB</p>
             </div>
             <button 
-              onClick={() => setUploadedFile(null)}
+              onClick={() => { setUploadedFile(null); setDetectedFormType(null); }}
               className="text-sm text-destructive hover:underline"
             >
               Supprimer
@@ -225,8 +341,7 @@ Simulez une analyse basée sur un profil type de déclarant français et fournis
         <div>
           <p className="text-sm font-medium">Profil fiscal</p>
           <p className="text-xs text-muted-foreground">
-            L'analyse sera plus précise si votre profil est à jour. 
-            Pensez à renseigner votre situation familiale et professionnelle dans les paramètres.
+            Renseignez votre profil (situation familiale, enfants, revenus fonciers) pour une analyse plus précise.
           </p>
         </div>
       </div>
@@ -257,7 +372,7 @@ Simulez une analyse basée sur un profil type de déclarant français et fournis
           ) : (
             <>
               <CheckCircle2 className="w-4 h-4" />
-              Analyser ma déclaration
+              Analyser {!autoDetect && selectedFormType !== '2042' ? `(${selectedFormType})` : ''}
             </>
           )}
         </button>
@@ -265,7 +380,7 @@ Simulez une analyse basée sur un profil type de déclarant français et fournis
 
       {/* Disclaimer */}
       <p className="text-xs text-muted-foreground text-center mt-6">
-        🔒 Vos documents sont traités de manière sécurisée et ne sont pas conservés après l'analyse.
+        🔒 Documents traités de manière sécurisée et non conservés après analyse.
       </p>
     </div>
   );
