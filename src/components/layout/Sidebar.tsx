@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import logo from '@/assets/logo.png';
 
 const navItems = [
@@ -20,6 +21,7 @@ const navItems = [
 
 export const Sidebar = () => {
   const location = useLocation();
+  const { signOut } = useAuth();
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-sidebar-border bg-sidebar flex flex-col">
@@ -62,7 +64,10 @@ export const Sidebar = () => {
           <Settings className="h-5 w-5 text-muted-foreground" />
           <span className="font-medium">Paramètres</span>
         </NavLink>
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all">
+        <button 
+          onClick={signOut}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all"
+        >
           <LogOut className="h-5 w-5" />
           <span className="font-medium">Déconnexion</span>
         </button>
