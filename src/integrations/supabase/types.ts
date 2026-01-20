@@ -65,6 +65,63 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_scan_history: {
+        Row: {
+          created_at: string
+          critical_errors_count: number
+          errors: Json
+          errors_count: number
+          extracted_data: Json | null
+          file_name: string | null
+          form_type: string
+          id: string
+          optimizations: Json
+          optimizations_count: number
+          scan_source: string
+          score: number
+          total_potential_savings: number
+          total_risk_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          critical_errors_count?: number
+          errors?: Json
+          errors_count?: number
+          extracted_data?: Json | null
+          file_name?: string | null
+          form_type?: string
+          id?: string
+          optimizations?: Json
+          optimizations_count?: number
+          scan_source?: string
+          score?: number
+          total_potential_savings?: number
+          total_risk_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          critical_errors_count?: number
+          errors?: Json
+          errors_count?: number
+          extracted_data?: Json | null
+          file_name?: string | null
+          form_type?: string
+          id?: string
+          optimizations?: Json
+          optimizations_count?: number
+          scan_source?: string
+          score?: number
+          total_potential_savings?: number
+          total_risk_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
