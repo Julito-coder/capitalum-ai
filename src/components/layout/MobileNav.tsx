@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  FileSearch, 
+  ScanSearch, 
   Calendar, 
   Calculator, 
   MessageCircle
@@ -9,7 +9,7 @@ import {
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Accueil' },
-  { path: '/audit', icon: FileSearch, label: 'Audit' },
+  { path: '/scanner', icon: ScanSearch, label: 'Scanner' },
   { path: '/calendar', icon: Calendar, label: 'Agenda' },
   { path: '/simulator', icon: Calculator, label: 'Simul.' },
   { path: '/assistant', icon: MessageCircle, label: 'Chat' },

@@ -10,6 +10,7 @@ import Audit from "./pages/Audit";
 import CalendarPage from "./pages/Calendar";
 import Simulator from "./pages/Simulator";
 import Assistant from "./pages/Assistant";
+import Scanner from "./pages/Scanner";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
             <Route path="/simulator" element={<ProtectedRoute><Simulator /></ProtectedRoute>} />
             <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
+            <Route path="/scanner" element={<ProtectedRoute><Scanner /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
