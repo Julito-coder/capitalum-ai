@@ -17,28 +17,49 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          birth_year: number | null
+          children_count: number | null
           company_name: string | null
           created_at: string
+          family_status: string | null
           full_name: string | null
+          has_investments: boolean | null
+          has_rental_income: boolean | null
           id: string
+          professional_status: string | null
+          tax_profile_updated_at: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
+          birth_year?: number | null
+          children_count?: number | null
           company_name?: string | null
           created_at?: string
+          family_status?: string | null
           full_name?: string | null
+          has_investments?: boolean | null
+          has_rental_income?: boolean | null
           id?: string
+          professional_status?: string | null
+          tax_profile_updated_at?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
+          birth_year?: number | null
+          children_count?: number | null
           company_name?: string | null
           created_at?: string
+          family_status?: string | null
           full_name?: string | null
+          has_investments?: boolean | null
+          has_rental_income?: boolean | null
           id?: string
+          professional_status?: string | null
+          tax_profile_updated_at?: string | null
           updated_at?: string
           user_id?: string
         }
