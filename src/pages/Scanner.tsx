@@ -2,21 +2,20 @@ import { useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { ScannerQuestionnaire } from '@/components/scanner/ScannerQuestionnaire';
 import { ScannerResults } from '@/components/scanner/ScannerResults';
+import { DocumentUploadScanner } from '@/components/scanner/DocumentUploadScanner';
 import { TaxScannerInput, DEFAULT_TAX_INPUT, ScanResult } from '@/data/taxScannerTypes';
 import { detectTaxErrors } from '@/lib/taxErrorDetector';
 import { detectOptimizations, calculateTaxScore } from '@/lib/taxOptimizationEngine';
-import { FileSearch, Shield, AlertTriangle } from 'lucide-react';
+import { FileSearch, Shield, AlertTriangle, Upload, ClipboardList } from 'lucide-react';
+
+type ScannerStep = 'intro' | 'questionnaire' | 'upload' | 'results';
 
 const Scanner = () => {
-  const [step, setStep] = useState<'intro' | 'questionnaire' | 'results'>('intro');
+  const [step, setStep] = useState<ScannerStep>('intro');
   const [input, setInput] = useState<TaxScannerInput>(DEFAULT_TAX_INPUT);
   const [result, setResult] = useState<ScanResult | null>(null);
 
-  const handleStartScan = () => {
-    setStep('questionnaire');
-  };
-
-  const handleComplete = (data: TaxScannerInput) => {
+  const handleQuestionnaireComplete = (data: TaxScannerInput) => {
     setInput(data);
     
     const errors = detectTaxErrors(data);
@@ -33,6 +32,11 @@ const Scanner = () => {
       timestamp: new Date()
     });
     
+    setStep('results');
+  };
+
+  const handleDocumentAnalysisComplete = (analysisResult: ScanResult) => {
+    setResult(analysisResult);
     setStep('results');
   };
 
@@ -91,11 +95,46 @@ const Scanner = () => {
               </div>
             </div>
 
-            <button onClick={handleStartScan} className="btn-primary text-lg px-8 py-4">
-              Commencer l'analyse
-            </button>
+            {/* Two options */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-8">
+              <button 
+                onClick={() => setStep('questionnaire')}
+                className="glass-card rounded-2xl p-6 text-left hover:border-primary/50 transition-all group"
+              >
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <ClipboardList className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Questionnaire guidé</h3>
+                    <p className="text-xs text-muted-foreground">~5 minutes</p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Répondez à quelques questions sur votre situation pour obtenir une analyse personnalisée.
+                </p>
+              </button>
 
-            <p className="text-xs text-muted-foreground mt-6 max-w-xl mx-auto">
+              <button 
+                onClick={() => setStep('upload')}
+                className="glass-card rounded-2xl p-6 text-left hover:border-primary/50 transition-all group"
+              >
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Uploader ma déclaration</h3>
+                    <p className="text-xs text-success">Nouveau ✨</p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Importez votre déclaration (PDF) pour une analyse IA approfondie et personnalisée.
+                </p>
+              </button>
+            </div>
+
+            <p className="text-xs text-muted-foreground max-w-xl mx-auto">
               ⚠️ Cet outil aide à la détection mais ne remplace pas un conseil professionnel. 
               Consultez un fiscaliste pour les optimisations complexes.
             </p>
@@ -105,7 +144,14 @@ const Scanner = () => {
         {step === 'questionnaire' && (
           <ScannerQuestionnaire 
             initialData={input}
-            onComplete={handleComplete}
+            onComplete={handleQuestionnaireComplete}
+            onBack={() => setStep('intro')}
+          />
+        )}
+
+        {step === 'upload' && (
+          <DocumentUploadScanner 
+            onAnalysisComplete={handleDocumentAnalysisComplete}
             onBack={() => setStep('intro')}
           />
         )}
