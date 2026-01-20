@@ -11,6 +11,7 @@ import CalendarPage from "./pages/Calendar";
 import Simulator from "./pages/Simulator";
 import Assistant from "./pages/Assistant";
 import Scanner from "./pages/Scanner";
+import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -26,6 +27,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/audit" element={<ProtectedRoute><Audit /></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
             <Route path="/simulator" element={<ProtectedRoute><Simulator /></ProtectedRoute>} />
