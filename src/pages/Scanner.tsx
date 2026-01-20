@@ -3,19 +3,24 @@ import { Layout } from '@/components/layout/Layout';
 import { ScannerQuestionnaire } from '@/components/scanner/ScannerQuestionnaire';
 import { ScannerResults } from '@/components/scanner/ScannerResults';
 import { DocumentUploadScanner } from '@/components/scanner/DocumentUploadScanner';
+import { ScanHistory } from '@/components/scanner/ScanHistory';
 import { TaxScannerInput, DEFAULT_TAX_INPUT, ScanResult } from '@/data/taxScannerTypes';
 import { detectTaxErrors } from '@/lib/taxErrorDetector';
 import { detectOptimizations, calculateTaxScore } from '@/lib/taxOptimizationEngine';
-import { FileSearch, Shield, AlertTriangle, Upload, ClipboardList } from 'lucide-react';
+import { saveScanToHistory } from '@/lib/scanHistoryService';
+import { FileSearch, Shield, AlertTriangle, Upload, ClipboardList, History } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
-type ScannerStep = 'intro' | 'questionnaire' | 'upload' | 'results';
+type ScannerStep = 'intro' | 'questionnaire' | 'upload' | 'results' | 'history';
 
 const Scanner = () => {
+  const { user } = useAuth();
   const [step, setStep] = useState<ScannerStep>('intro');
   const [input, setInput] = useState<TaxScannerInput>(DEFAULT_TAX_INPUT);
   const [result, setResult] = useState<ScanResult | null>(null);
 
-  const handleQuestionnaireComplete = (data: TaxScannerInput) => {
+  const handleQuestionnaireComplete = async (data: TaxScannerInput) => {
     setInput(data);
     
     const errors = detectTaxErrors(data);
@@ -23,20 +28,53 @@ const Scanner = () => {
     const criticalErrors = errors.filter(e => e.severity === 'critical').length;
     const score = calculateTaxScore(errors.length, criticalErrors, 0, optimizations.length);
     
-    setResult({
+    const scanResult: ScanResult = {
       score,
       errors,
       optimizations,
       totalPotentialSavings: optimizations.reduce((sum, o) => sum + o.estimatedSavings, 0),
       totalRiskAmount: errors.reduce((sum, e) => sum + e.estimatedRisk, 0),
       timestamp: new Date()
-    });
-    
+    };
+
+    setResult(scanResult);
     setStep('results');
+
+    // Save to history
+    if (user) {
+      const { success, error } = await saveScanToHistory({
+        userId: user.id,
+        formType: '2042',
+        scanSource: 'questionnaire',
+        result: scanResult
+      });
+      if (success) {
+        toast.success('Analyse sauvegardée dans l\'historique');
+      }
+    }
   };
 
-  const handleDocumentAnalysisComplete = (analysisResult: ScanResult) => {
+  const handleDocumentAnalysisComplete = async (analysisResult: ScanResult, formType?: string, fileName?: string) => {
     setResult(analysisResult);
+    setStep('results');
+
+    // Save to history
+    if (user) {
+      const { success } = await saveScanToHistory({
+        userId: user.id,
+        formType: formType || '2042',
+        fileName,
+        scanSource: 'upload',
+        result: analysisResult
+      });
+      if (success) {
+        toast.success('Analyse sauvegardée dans l\'historique');
+      }
+    }
+  };
+
+  const handleViewHistoryScan = (scanResult: ScanResult) => {
+    setResult(scanResult);
     setStep('results');
   };
 
@@ -95,48 +133,65 @@ const Scanner = () => {
               </div>
             </div>
 
-            {/* Two options */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-8">
+            {/* Three options */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-8">
               <button 
                 onClick={() => setStep('questionnaire')}
-                className="glass-card rounded-2xl p-6 text-left hover:border-primary/50 transition-all group"
+                className="glass-card rounded-2xl p-5 text-left hover:border-primary/50 transition-all group"
               >
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                    <ClipboardList className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <ClipboardList className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">Questionnaire guidé</h3>
-                    <p className="text-xs text-muted-foreground">~5 minutes</p>
+                    <h3 className="font-semibold text-sm">Questionnaire</h3>
+                    <p className="text-xs text-muted-foreground">~5 min</p>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Répondez à quelques questions sur votre situation pour obtenir une analyse personnalisée.
+                <p className="text-xs text-muted-foreground">
+                  Répondez à quelques questions pour une analyse personnalisée.
                 </p>
               </button>
 
               <button 
                 onClick={() => setStep('upload')}
-                className="glass-card rounded-2xl p-6 text-left hover:border-primary/50 transition-all group"
+                className="glass-card rounded-2xl p-5 text-left hover:border-primary/50 transition-all group"
               >
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                    <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <Upload className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">Uploader ma déclaration</h3>
-                    <p className="text-xs text-success">Nouveau ✨</p>
+                    <h3 className="font-semibold text-sm">Upload PDF</h3>
+                    <p className="text-xs text-success">IA ✨</p>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Importez votre déclaration (PDF) pour une analyse IA approfondie et personnalisée.
+                <p className="text-xs text-muted-foreground">
+                  Importez votre déclaration pour une analyse IA approfondie.
+                </p>
+              </button>
+
+              <button 
+                onClick={() => setStep('history')}
+                className="glass-card rounded-2xl p-5 text-left hover:border-primary/50 transition-all group"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <History className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm">Historique</h3>
+                    <p className="text-xs text-muted-foreground">Comparer</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Consultez et comparez vos analyses précédentes.
                 </p>
               </button>
             </div>
 
             <p className="text-xs text-muted-foreground max-w-xl mx-auto">
-              ⚠️ Cet outil aide à la détection mais ne remplace pas un conseil professionnel. 
-              Consultez un fiscaliste pour les optimisations complexes.
+              ⚠️ Cet outil aide à la détection mais ne remplace pas un conseil professionnel.
             </p>
           </div>
         )}
@@ -153,6 +208,13 @@ const Scanner = () => {
           <DocumentUploadScanner 
             onAnalysisComplete={handleDocumentAnalysisComplete}
             onBack={() => setStep('intro')}
+          />
+        )}
+
+        {step === 'history' && (
+          <ScanHistory 
+            onViewScan={handleViewHistoryScan}
+            onClose={() => setStep('intro')}
           />
         )}
 

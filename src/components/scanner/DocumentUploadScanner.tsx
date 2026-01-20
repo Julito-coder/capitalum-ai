@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
 interface Props {
-  onAnalysisComplete: (result: ScanResult) => void;
+  onAnalysisComplete: (result: ScanResult, formType?: string, fileName?: string) => void;
   onBack: () => void;
 }
 
@@ -167,8 +167,9 @@ Veuillez analyser ce document fiscal français et identifier les erreurs et opti
         timestamp: new Date()
       };
 
-      toast.success(`Analyse terminée ! Formulaire détecté: ${data.detectedFormType || 'Standard'}`);
-      onAnalysisComplete(result);
+      const detectedType = data.detectedFormType || (autoDetect ? '2042' : selectedFormType);
+      toast.success(`Analyse terminée ! Formulaire: ${detectedType}`);
+      onAnalysisComplete(result, detectedType, uploadedFile?.name);
 
     } catch (error) {
       console.error('Analysis error:', error);
