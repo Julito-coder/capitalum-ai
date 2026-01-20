@@ -1,6 +1,8 @@
 import { ScanResult } from '@/data/taxScannerTypes';
 import { formatCurrency } from '@/data/mockData';
-import { AlertTriangle, CheckCircle2, XCircle, Info, TrendingUp, RotateCcw, FileText, ExternalLink } from 'lucide-react';
+import { exportTaxReportPDF } from '@/lib/pdfExport';
+import { AlertTriangle, CheckCircle2, XCircle, Info, TrendingUp, RotateCcw, FileDown, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Props {
   result: ScanResult;
@@ -17,6 +19,16 @@ export const ScannerResults = ({ result, onReset }: Props) => {
   const warningErrors = errors.filter(e => e.severity === 'warning');
   const infoErrors = errors.filter(e => e.severity === 'info');
 
+  const handleExportPDF = () => {
+    try {
+      exportTaxReportPDF(result);
+      toast.success('Rapport PDF téléchargé avec succès');
+    } catch (error) {
+      toast.error('Erreur lors de la génération du PDF');
+      console.error(error);
+    }
+  };
+
   return (
     <div>
       {/* Header */}
@@ -27,10 +39,16 @@ export const ScannerResults = ({ result, onReset }: Props) => {
             Analysé le {result.timestamp.toLocaleDateString('fr-FR')} à {result.timestamp.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
           </p>
         </div>
-        <button onClick={onReset} className="btn-secondary">
-          <RotateCcw className="w-4 h-4" />
-          Recommencer
-        </button>
+        <div className="flex gap-3">
+          <button onClick={handleExportPDF} className="btn-primary">
+            <FileDown className="w-4 h-4" />
+            Exporter PDF
+          </button>
+          <button onClick={onReset} className="btn-secondary">
+            <RotateCcw className="w-4 h-4" />
+            Recommencer
+          </button>
+        </div>
       </div>
 
       {/* Score card */}
