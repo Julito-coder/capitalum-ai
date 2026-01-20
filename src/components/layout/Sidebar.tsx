@@ -7,13 +7,15 @@ import {
   MessageCircle, 
   Settings,
   LogOut,
-  ScanSearch
+  ScanSearch,
+  UserCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import logo from '@/assets/logo.png';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Tableau de bord' },
+  { path: '/onboarding', icon: UserCircle, label: 'Mon profil fiscal' },
   { path: '/audit', icon: FileSearch, label: 'Audit fiscal' },
   { path: '/scanner', icon: ScanSearch, label: 'Scanner fiscal' },
   { path: '/calendar', icon: Calendar, label: 'Calendrier' },
