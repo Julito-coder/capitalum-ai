@@ -8,17 +8,37 @@ import {
   Settings,
   LogOut,
   ScanSearch,
-  UserCircle
+  UserCircle,
+  Receipt,
+  PiggyBank,
+  TrendingUp,
+  Building2,
+  FileText,
+  Wallet
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSpace } from '@/contexts/SpaceContext';
+import { SpaceToggle } from './SpaceToggle';
 import logo from '@/assets/logo.png';
 
-const navItems = [
+// Navigation items for Personal space (Particuliers)
+const personalNavItems = [
   { path: '/', icon: LayoutDashboard, label: 'Tableau de bord' },
   { path: '/onboarding', icon: UserCircle, label: 'Mon profil fiscal' },
   { path: '/audit', icon: FileSearch, label: 'Audit fiscal' },
   { path: '/scanner', icon: ScanSearch, label: 'Scanner fiscal' },
   { path: '/calendar', icon: Calendar, label: 'Calendrier' },
+  { path: '/simulator', icon: Calculator, label: 'Simulateur IR' },
+  { path: '/assistant', icon: MessageCircle, label: 'Assistant' },
+];
+
+// Navigation items for Professional space (Indépendants, TPE, Micro)
+const professionalNavItems = [
+  { path: '/', icon: LayoutDashboard, label: 'Tableau de bord' },
+  { path: '/onboarding', icon: Building2, label: 'Mon activité' },
+  { path: '/audit', icon: FileSearch, label: 'Audit fiscal' },
+  { path: '/scanner', icon: ScanSearch, label: 'Scanner fiscal' },
+  { path: '/calendar', icon: Calendar, label: 'Échéances pro' },
   { path: '/simulator', icon: Calculator, label: 'Simulateur' },
   { path: '/assistant', icon: MessageCircle, label: 'Assistant' },
 ];
@@ -26,6 +46,10 @@ const navItems = [
 export const Sidebar = () => {
   const location = useLocation();
   const { signOut } = useAuth();
+  const { currentSpace, isProfessionalSpace } = useSpace();
+
+  // Select nav items based on current space
+  const navItems = isProfessionalSpace ? professionalNavItems : personalNavItems;
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-sidebar-border bg-sidebar flex flex-col">
@@ -35,8 +59,11 @@ export const Sidebar = () => {
         <span className="text-xl font-bold gradient-text">CAPITALUM</span>
       </div>
 
+      {/* Space Toggle */}
+      <SpaceToggle />
+
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
