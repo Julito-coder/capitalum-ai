@@ -14,59 +14,48 @@ import {
   Calculator
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { loadUserProfile, formatCurrency } from '@/lib/dashboardService';
-
-interface URSSAFPayment {
-  id: string;
-  period: string;
-  dueDate: string;
-  amount: number;
-  status: 'paid' | 'pending' | 'overdue';
-  type: 'quarterly' | 'monthly';
-}
+import { 
+  loadProProfile, 
+  loadMonthlyRevenue, 
+  calculateAnnualTotals,
+  getURSSAFRate,
+  getURSSAFSchedule,
+  ProProfile
+} from '@/lib/proService';
+import { formatCurrency } from '@/lib/dashboardService';
 
 const URSSAFTracking = () => {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<ProProfile | null>(null);
+  const [annualRevenue, setAnnualRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
-      const data = await loadUserProfile(user.id);
-      setProfile(data);
+      
+      const [proProfile, monthlyData] = await Promise.all([
+        loadProProfile(user.id),
+        loadMonthlyRevenue(user.id, 2025)
+      ]);
+      
+      setProfile(proProfile);
+      
+      // Use monthly data if available, otherwise use profile estimate
+      const totals = calculateAnnualTotals(monthlyData);
+      setAnnualRevenue(totals.totalRevenue > 0 ? totals.totalRevenue : (proProfile?.annualRevenueHt || 0));
+      
       setLoading(false);
     };
     loadData();
   }, [user]);
 
-  // Calculate URSSAF rates based on fiscal status
-  const getURSSAFRate = () => {
-    if (!profile) return 0.22;
-    switch (profile.fiscalStatus) {
-      case 'micro_bnc': return 0.22;
-      case 'micro_bic_services': return 0.22;
-      case 'micro_bic_vente': return 0.128;
-      default: return 0.22;
-    }
-  };
-
-  const urssafRate = getURSSAFRate();
-  const annualCA = profile?.annualRevenueHt || 0;
-  const quarterlyCA = annualCA / 4;
-  const estimatedQuarterlyContribution = quarterlyCA * urssafRate;
-
-  // Mock payment schedule
-  const payments: URSSAFPayment[] = [
-    { id: '1', period: 'T1 2025', dueDate: '2025-04-30', amount: estimatedQuarterlyContribution, status: 'paid', type: 'quarterly' },
-    { id: '2', period: 'T2 2025', dueDate: '2025-07-31', amount: estimatedQuarterlyContribution, status: 'pending', type: 'quarterly' },
-    { id: '3', period: 'T3 2025', dueDate: '2025-10-31', amount: estimatedQuarterlyContribution, status: 'pending', type: 'quarterly' },
-    { id: '4', period: 'T4 2025', dueDate: '2026-01-31', amount: estimatedQuarterlyContribution, status: 'pending', type: 'quarterly' },
-  ];
-
-  const totalPaid = payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
-  const totalPending = payments.filter(p => p.status !== 'paid').reduce((sum, p) => sum + p.amount, 0);
-  const yearlyTotal = annualCA * urssafRate;
+  const urssafRate = getURSSAFRate(profile?.fiscalStatus || 'micro');
+  const payments = getURSSAFSchedule(annualRevenue, urssafRate);
+  
+  const totalPaid = profile?.socialChargesPaid || 0;
+  const yearlyTotal = annualRevenue * urssafRate;
+  const totalPending = yearlyTotal - totalPaid;
   const progressPercent = yearlyTotal > 0 ? (totalPaid / yearlyTotal) * 100 : 0;
 
   const getStatusBadge = (status: string) => {
@@ -82,6 +71,16 @@ const URSSAFTracking = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -90,7 +89,7 @@ const URSSAFTracking = () => {
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Suivi URSSAF</h1>
             <p className="text-muted-foreground mt-1">
-              Gérez vos cotisations sociales et anticipez vos échéances
+              Gérez vos cotisations sociales basées sur votre CA réel
             </p>
           </div>
           <div className="flex gap-3">
@@ -114,8 +113,8 @@ const URSSAFTracking = () => {
                   <Euro className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">CA annuel</p>
-                  <p className="text-xl font-bold">{formatCurrency(annualCA)}</p>
+                  <p className="text-sm text-muted-foreground">CA déclaré</p>
+                  <p className="text-xl font-bold">{formatCurrency(annualRevenue)}</p>
                 </div>
               </div>
             </CardContent>
@@ -143,7 +142,7 @@ const URSSAFTracking = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Reste à payer</p>
-                  <p className="text-xl font-bold text-warning">{formatCurrency(totalPending)}</p>
+                  <p className="text-xl font-bold text-warning">{formatCurrency(Math.max(0, totalPending))}</p>
                 </div>
               </div>
             </CardContent>
@@ -173,7 +172,7 @@ const URSSAFTracking = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Progress value={progressPercent} className="h-3" />
+            <Progress value={Math.min(progressPercent, 100)} className="h-3" />
             <p className="text-sm text-muted-foreground mt-2">
               {progressPercent.toFixed(0)}% des cotisations annuelles réglées
             </p>
@@ -187,31 +186,39 @@ const URSSAFTracking = () => {
               <Calendar className="h-5 w-5" />
               Échéancier des cotisations
             </CardTitle>
+            <CardDescription>
+              Basé sur votre CA de {formatCurrency(annualRevenue)}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {payments.map((payment) => (
-                <div 
-                  key={payment.id}
-                  className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <span className="font-bold text-primary">{payment.period}</span>
+              {payments.map((payment, index) => {
+                // Mark first payment as paid if user has paid something
+                const status = index === 0 && totalPaid > 0 ? 'paid' : payment.status;
+                
+                return (
+                  <div 
+                    key={payment.period}
+                    className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <span className="font-bold text-primary">{payment.period}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">Cotisations {payment.period}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Échéance : {new Date(payment.dueDate).toLocaleDateString('fr-FR')}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">Cotisations {payment.period}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Échéance : {new Date(payment.dueDate).toLocaleDateString('fr-FR')}
-                      </p>
+                    <div className="flex items-center gap-4">
+                      <span className="font-bold text-lg">{formatCurrency(payment.amount)}</span>
+                      {getStatusBadge(status)}
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="font-bold text-lg">{formatCurrency(payment.amount)}</span>
-                    {getStatusBadge(payment.status)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -226,7 +233,7 @@ const URSSAFTracking = () => {
               <div>
                 <h4 className="font-semibold mb-1">Conseils URSSAF</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Provisionnez 22-25% de votre CA pour les cotisations</li>
+                  <li>• Provisionnez {(urssafRate * 100).toFixed(0)}% de votre CA pour les cotisations</li>
                   <li>• Optez pour le prélèvement mensuel pour lisser la trésorerie</li>
                   <li>• Déclarez à temps pour éviter les pénalités (10% de majoration)</li>
                 </ul>

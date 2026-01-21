@@ -22,6 +22,7 @@ import RevenueTracker from "./pages/pro/RevenueTracker";
 import HiringSimulator from "./pages/pro/HiringSimulator";
 import StatusComparator from "./pages/pro/StatusComparator";
 import CashFlowForecast from "./pages/pro/CashFlowForecast";
+import ProOnboarding from "./pages/pro/ProOnboarding";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
               <Route path="/scanner" element={<ProtectedRoute><Scanner /></ProtectedRoute>} />
               {/* Pro routes */}
+              <Route path="/pro/onboarding" element={<ProtectedRoute><ProOnboarding /></ProtectedRoute>} />
               <Route path="/pro/urssaf" element={<ProtectedRoute><URSSAFTracking /></ProtectedRoute>} />
               <Route path="/pro/invoices" element={<ProtectedRoute><InvoiceManager /></ProtectedRoute>} />
               <Route path="/pro/revenue" element={<ProtectedRoute><RevenueTracker /></ProtectedRoute>} />

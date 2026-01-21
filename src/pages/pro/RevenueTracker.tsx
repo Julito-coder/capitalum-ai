@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
 import { 
   TrendingUp, 
   TrendingDown,
@@ -10,54 +13,158 @@ import {
   Target,
   BarChart3,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Save,
+  Edit2,
+  Check,
+  X
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { loadUserProfile, formatCurrency } from '@/lib/dashboardService';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Area, AreaChart } from 'recharts';
+import { 
+  loadMonthlyRevenue, 
+  saveMonthlyRevenue, 
+  loadProProfile,
+  calculateAnnualTotals,
+  MonthlyRevenue,
+  ProProfile 
+} from '@/lib/proService';
+import { formatCurrency } from '@/lib/dashboardService';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, Line, ComposedChart } from 'recharts';
 
 const MICRO_THRESHOLD = 77700;
-
-const monthlyData = [
-  { month: 'Jan', ca: 6500, objectif: 6000 },
-  { month: 'Fév', ca: 5800, objectif: 6000 },
-  { month: 'Mar', ca: 7200, objectif: 6000 },
-  { month: 'Avr', ca: 6100, objectif: 6000 },
-  { month: 'Mai', ca: 8500, objectif: 6000 },
-  { month: 'Juin', ca: 7800, objectif: 6000 },
-  { month: 'Juil', ca: 4200, objectif: 6000 },
-  { month: 'Août', ca: 3100, objectif: 6000 },
-  { month: 'Sep', ca: 6900, objectif: 6000 },
-  { month: 'Oct', ca: 7500, objectif: 6000 },
-  { month: 'Nov', ca: 8200, objectif: 6000 },
-  { month: 'Déc', ca: 0, objectif: 6000 },
-];
+const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 const RevenueTracker = () => {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
+  const { toast } = useToast();
+  const [profile, setProfile] = useState<ProProfile | null>(null);
+  const [monthlyData, setMonthlyData] = useState<MonthlyRevenue[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingMonth, setEditingMonth] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState({ revenue: 0, expenses: 0 });
+  const [saving, setSaving] = useState(false);
+  const [selectedYear] = useState(2025);
 
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
-      const data = await loadUserProfile(user.id);
-      setProfile(data);
+      
+      const [proProfile, revenueData] = await Promise.all([
+        loadProProfile(user.id),
+        loadMonthlyRevenue(user.id, selectedYear)
+      ]);
+      
+      setProfile(proProfile);
+      setMonthlyData(revenueData);
+      setLoading(false);
     };
     loadData();
-  }, [user]);
+  }, [user, selectedYear]);
 
-  const annualCA = profile?.annualRevenueHt || monthlyData.reduce((sum, m) => sum + m.ca, 0);
-  const currentMonthCA = monthlyData[new Date().getMonth()].ca || 0;
-  const lastMonthCA = monthlyData[Math.max(0, new Date().getMonth() - 1)].ca || 0;
-  const monthlyGrowth = lastMonthCA > 0 ? ((currentMonthCA - lastMonthCA) / lastMonthCA) * 100 : 0;
+  const handleEdit = (month: number) => {
+    const existing = monthlyData.find(m => m.month === month);
+    setEditValue({
+      revenue: existing?.revenue || 0,
+      expenses: existing?.expenses || 0,
+    });
+    setEditingMonth(month);
+  };
+
+  const handleSave = async (month: number) => {
+    if (!user) return;
+    
+    setSaving(true);
+    const result = await saveMonthlyRevenue(user.id, {
+      year: selectedYear,
+      month,
+      revenue: editValue.revenue,
+      expenses: editValue.expenses,
+    });
+
+    if (result.success) {
+      // Update local state
+      setMonthlyData(prev => {
+        const existing = prev.findIndex(m => m.month === month);
+        const newEntry: MonthlyRevenue = {
+          id: '',
+          userId: user.id,
+          year: selectedYear,
+          month,
+          revenue: editValue.revenue,
+          expenses: editValue.expenses,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        if (existing >= 0) {
+          const updated = [...prev];
+          updated[existing] = { ...updated[existing], ...newEntry };
+          return updated;
+        }
+        return [...prev, newEntry];
+      });
+      
+      toast({
+        title: "Enregistré",
+        description: `CA de ${MONTHS[month - 1]} mis à jour.`,
+      });
+    } else {
+      toast({
+        title: "Erreur",
+        description: result.error,
+        variant: "destructive",
+      });
+    }
+    
+    setEditingMonth(null);
+    setSaving(false);
+  };
+
+  const handleCancel = () => {
+    setEditingMonth(null);
+    setEditValue({ revenue: 0, expenses: 0 });
+  };
+
+  // Calculate metrics
+  const annualTotals = calculateAnnualTotals(monthlyData);
+  const currentMonth = new Date().getMonth() + 1;
+  const currentMonthData = monthlyData.find(m => m.month === currentMonth);
+  const lastMonthData = monthlyData.find(m => m.month === currentMonth - 1);
   
-  const thresholdUsage = (annualCA / MICRO_THRESHOLD) * 100;
-  const remainingCapacity = MICRO_THRESHOLD - annualCA;
-  const averageMonthlyCA = annualCA / 12;
-  const projectedAnnual = averageMonthlyCA * 12;
+  const monthlyGrowth = lastMonthData && lastMonthData.revenue > 0 
+    ? ((currentMonthData?.revenue || 0) - lastMonthData.revenue) / lastMonthData.revenue * 100 
+    : 0;
 
-  const yearlyObjectif = 72000;
-  const objectifProgress = (annualCA / yearlyObjectif) * 100;
+  const thresholdUsage = (annualTotals.totalRevenue / MICRO_THRESHOLD) * 100;
+  const remainingCapacity = MICRO_THRESHOLD - annualTotals.totalRevenue;
+
+  // Prepare chart data
+  const chartData = MONTHS.map((month, index) => {
+    const monthNum = index + 1;
+    const data = monthlyData.find(m => m.month === monthNum);
+    return {
+      month,
+      ca: data?.revenue || 0,
+      expenses: data?.expenses || 0,
+      objectif: profile?.annualRevenueHt ? profile.annualRevenueHt / 12 : 5000,
+    };
+  });
+
+  const cumulativeData = chartData.map((item, index) => ({
+    ...item,
+    cumul: chartData.slice(0, index + 1).reduce((sum, d) => sum + d.ca, 0),
+    objectifCumul: (index + 1) * (profile?.annualRevenueHt ? profile.annualRevenueHt / 12 : 5000),
+  }));
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -67,16 +174,13 @@ const RevenueTracker = () => {
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Suivi du chiffre d'affaires</h1>
             <p className="text-muted-foreground mt-1">
-              Analysez votre CA mensuel et anticipez vos objectifs
+              Saisissez votre CA mensuel pour un suivi précis
             </p>
           </div>
-          <div className="flex gap-3">
-            <select className="btn-secondary px-4 py-2">
-              <option>2025</option>
-              <option>2024</option>
-              <option>2023</option>
-            </select>
-          </div>
+          <select className="btn-secondary px-4 py-2 w-fit">
+            <option>2025</option>
+            <option>2024</option>
+          </select>
         </div>
 
         {/* Key Metrics */}
@@ -85,10 +189,10 @@ const RevenueTracker = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">CA annuel</p>
-                  <p className="text-2xl font-bold">{formatCurrency(annualCA)}</p>
+                  <p className="text-sm text-muted-foreground">CA réalisé</p>
+                  <p className="text-2xl font-bold">{formatCurrency(annualTotals.totalRevenue)}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Moyenne : {formatCurrency(averageMonthlyCA)}/mois
+                    {annualTotals.monthsWithData} mois renseignés
                   </p>
                 </div>
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -103,11 +207,13 @@ const RevenueTracker = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Ce mois</p>
-                  <p className="text-2xl font-bold">{formatCurrency(currentMonthCA)}</p>
-                  <div className={`flex items-center gap-1 text-xs mt-1 ${monthlyGrowth >= 0 ? 'text-success' : 'text-destructive'}`}>
-                    {monthlyGrowth >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                    {Math.abs(monthlyGrowth).toFixed(1)}% vs mois dernier
-                  </div>
+                  <p className="text-2xl font-bold">{formatCurrency(currentMonthData?.revenue || 0)}</p>
+                  {monthlyGrowth !== 0 && (
+                    <div className={`flex items-center gap-1 text-xs mt-1 ${monthlyGrowth >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      {monthlyGrowth >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                      {Math.abs(monthlyGrowth).toFixed(1)}% vs mois dernier
+                    </div>
+                  )}
                 </div>
                 <div className="h-12 w-12 rounded-xl bg-success/10 flex items-center justify-center">
                   <TrendingUp className="h-6 w-6 text-success" />
@@ -120,10 +226,10 @@ const RevenueTracker = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Objectif annuel</p>
-                  <p className="text-2xl font-bold">{objectifProgress.toFixed(0)}%</p>
+                  <p className="text-sm text-muted-foreground">Moyenne mensuelle</p>
+                  <p className="text-2xl font-bold">{formatCurrency(annualTotals.averageMonthlyRevenue)}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {formatCurrency(annualCA)} / {formatCurrency(yearlyObjectif)}
+                    Projection : {formatCurrency(annualTotals.projectedAnnual)}
                   </p>
                 </div>
                 <div className="h-12 w-12 rounded-xl bg-warning/10 flex items-center justify-center">
@@ -151,18 +257,120 @@ const RevenueTracker = () => {
           </Card>
         </div>
 
+        {/* Monthly Input Grid */}
+        <Card className="glass-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Saisie mensuelle {selectedYear}
+            </CardTitle>
+            <CardDescription>
+              Cliquez sur un mois pour saisir ou modifier votre CA
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {MONTHS.map((month, index) => {
+                const monthNum = index + 1;
+                const data = monthlyData.find(m => m.month === monthNum);
+                const isEditing = editingMonth === monthNum;
+                const isPast = monthNum <= currentMonth;
+                
+                return (
+                  <div 
+                    key={month}
+                    className={`p-4 rounded-xl transition-all ${
+                      isEditing 
+                        ? 'bg-primary/10 border-2 border-primary' 
+                        : data?.revenue 
+                          ? 'bg-success/10 border border-success/30 cursor-pointer hover:border-success/50'
+                          : isPast
+                            ? 'bg-warning/10 border border-warning/30 cursor-pointer hover:border-warning/50'
+                            : 'bg-secondary/50 border border-transparent cursor-pointer hover:border-border'
+                    }`}
+                    onClick={() => !isEditing && handleEdit(monthNum)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-sm">{month}</span>
+                      {data?.revenue ? (
+                        <Check className="h-4 w-4 text-success" />
+                      ) : isPast ? (
+                        <Edit2 className="h-4 w-4 text-warning" />
+                      ) : null}
+                    </div>
+                    
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-xs text-muted-foreground">CA</label>
+                          <Input
+                            type="number"
+                            value={editValue.revenue || ''}
+                            onChange={(e) => setEditValue(prev => ({ ...prev, revenue: Number(e.target.value) }))}
+                            className="h-8 text-sm"
+                            placeholder="0"
+                            autoFocus
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground">Dépenses</label>
+                          <Input
+                            type="number"
+                            value={editValue.expenses || ''}
+                            onChange={(e) => setEditValue(prev => ({ ...prev, expenses: Number(e.target.value) }))}
+                            className="h-8 text-sm"
+                            placeholder="0"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            className="flex-1 h-7" 
+                            onClick={() => handleSave(monthNum)}
+                            disabled={saving}
+                          >
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-7"
+                            onClick={handleCancel}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className={`text-lg font-bold ${data?.revenue ? 'text-success' : 'text-muted-foreground'}`}>
+                          {data?.revenue ? formatCurrency(data.revenue) : '—'}
+                        </p>
+                        {data?.expenses ? (
+                          <p className="text-xs text-destructive">
+                            -{formatCurrency(data.expenses)}
+                          </p>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Monthly Revenue Chart */}
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle>CA mensuel 2025</CardTitle>
-              <CardDescription>Évolution du chiffre d'affaires par mois</CardDescription>
+              <CardTitle>CA mensuel</CardTitle>
+              <CardDescription>Évolution de votre chiffre d'affaires</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyData}>
+                  <ComposedChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="month" className="text-xs" />
                     <YAxis className="text-xs" tickFormatter={(v) => `${v/1000}k`} />
@@ -174,28 +382,23 @@ const RevenueTracker = () => {
                         borderRadius: '8px'
                       }}
                     />
-                    <Bar dataKey="ca" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    <Line type="monotone" dataKey="objectif" stroke="hsl(var(--warning))" strokeDasharray="5 5" />
-                  </BarChart>
+                    <Bar dataKey="ca" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="CA" />
+                    <Line type="monotone" dataKey="objectif" stroke="hsl(var(--warning))" strokeDasharray="5 5" name="Objectif" />
+                  </ComposedChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
 
-          {/* Cumulative Revenue */}
           <Card className="glass-card">
             <CardHeader>
               <CardTitle>CA cumulé</CardTitle>
-              <CardDescription>Progression vers l'objectif annuel</CardDescription>
+              <CardDescription>Progression vers le seuil micro</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={monthlyData.map((m, i) => ({
-                    ...m,
-                    cumul: monthlyData.slice(0, i + 1).reduce((sum, d) => sum + d.ca, 0),
-                    objectifCumul: (i + 1) * 6000
-                  }))}>
+                  <AreaChart data={cumulativeData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="month" className="text-xs" />
                     <YAxis className="text-xs" tickFormatter={(v) => `${v/1000}k`} />
@@ -207,8 +410,8 @@ const RevenueTracker = () => {
                         borderRadius: '8px'
                       }}
                     />
-                    <Area type="monotone" dataKey="cumul" fill="hsl(var(--primary) / 0.2)" stroke="hsl(var(--primary))" />
-                    <Line type="monotone" dataKey="objectifCumul" stroke="hsl(var(--warning))" strokeDasharray="5 5" />
+                    <Area type="monotone" dataKey="cumul" fill="hsl(var(--primary) / 0.2)" stroke="hsl(var(--primary))" name="Cumulé" />
+                    <Line type="monotone" dataKey="objectifCumul" stroke="hsl(var(--warning))" strokeDasharray="5 5" name="Objectif" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -216,32 +419,24 @@ const RevenueTracker = () => {
           </Card>
         </div>
 
-        {/* Threshold Warning */}
+        {/* Threshold */}
         <Card className={`glass-card ${thresholdUsage > 80 ? 'border-warning/50' : ''}`}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
               Seuil micro-entrepreneur 2025
             </CardTitle>
-            <CardDescription>
-              Plafond annuel : {formatCurrency(MICRO_THRESHOLD)} pour les prestations de services
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Progress value={thresholdUsage} className="h-4" />
+            <Progress value={Math.min(thresholdUsage, 100)} className="h-4" />
             <div className="flex justify-between text-sm">
-              <span>CA réalisé : {formatCurrency(annualCA)}</span>
+              <span>CA réalisé : {formatCurrency(annualTotals.totalRevenue)}</span>
               <span className={remainingCapacity > 0 ? 'text-success' : 'text-destructive'}>
-                {remainingCapacity > 0 ? `Marge restante : ${formatCurrency(remainingCapacity)}` : `Dépassement : ${formatCurrency(Math.abs(remainingCapacity))}`}
+                {remainingCapacity > 0 
+                  ? `Marge : ${formatCurrency(remainingCapacity)}`
+                  : `Dépassement : ${formatCurrency(Math.abs(remainingCapacity))}`}
               </span>
             </div>
-            {thresholdUsage > 80 && (
-              <div className="p-4 rounded-xl bg-warning/10 border border-warning/20">
-                <p className="text-sm text-warning">
-                  ⚠️ Attention : vous approchez du seuil micro-entrepreneur. Au-delà de {formatCurrency(MICRO_THRESHOLD)}, vous devrez passer au régime réel.
-                </p>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
