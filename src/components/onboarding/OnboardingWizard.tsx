@@ -9,7 +9,8 @@ import { SelfEmployedStep } from './steps/SelfEmployedStep';
 import { RetiredStep } from './steps/RetiredStep';
 import { InvestorStep } from './steps/InvestorStep';
 import { ConsentStep } from './steps/ConsentStep';
-import { ArrowLeft, ArrowRight, Check, Shield, TrendingUp } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Shield, TrendingUp, Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
   onComplete: (data: OnboardingData) => void;
@@ -38,6 +39,7 @@ const ALL_STEPS: Step[] = [
 ];
 
 export const OnboardingWizard = ({ onComplete, initialData }: Props) => {
+  const navigate = useNavigate();
   const [data, setData] = useState<OnboardingData>({ ...DEFAULT_ONBOARDING_DATA, ...initialData });
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [estimatedSavings, setEstimatedSavings] = useState(0);
@@ -130,6 +132,13 @@ export const OnboardingWizard = ({ onComplete, initialData }: Props) => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/')}
+                className="h-10 w-10 rounded-xl bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-colors"
+                title="Retour au tableau de bord"
+              >
+                <Home className="h-5 w-5" />
+              </button>
               <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Shield className="h-5 w-5 text-primary" />
               </div>

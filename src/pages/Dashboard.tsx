@@ -39,37 +39,32 @@ const Dashboard = () => {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadData = async () => {
-      if (!user) return;
-      
-      try {
-        const userProfile = await loadUserProfile(user.id);
-        if (userProfile) {
-          setProfile(userProfile);
-          const calculatedMetrics = calculateDashboardMetrics(userProfile);
-          setMetrics(calculatedMetrics);
-        }
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, [user]);
-
-  const handleRefresh = async () => {
+  // Function to load dashboard data
+  const loadData = async () => {
+    if (!user) return;
+    
     setLoading(true);
-    if (user) {
+    try {
       const userProfile = await loadUserProfile(user.id);
       if (userProfile) {
         setProfile(userProfile);
-        setMetrics(calculateDashboardMetrics(userProfile));
+        const calculatedMetrics = calculateDashboardMetrics(userProfile);
+        setMetrics(calculatedMetrics);
       }
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  // Load data on mount and when returning from other pages
+  useEffect(() => {
+    loadData();
+  }, [user]);
+
+  const handleRefresh = () => {
+    loadData();
   };
 
   // Use real data if available, fallback to mock
