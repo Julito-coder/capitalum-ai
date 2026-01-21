@@ -35,7 +35,7 @@ const personalNavItems = [
 // Navigation items for Professional space (Indépendants, TPE, Micro)
 const professionalNavItems = [
   { path: '/', icon: LayoutDashboard, label: 'Tableau de bord' },
-  { path: '/onboarding', icon: Building2, label: 'Mon activité' },
+  { path: '/pro/onboarding', icon: Building2, label: 'Mon activité' },
   { path: '/pro/revenue', icon: TrendingUp, label: 'Suivi CA' },
   { path: '/pro/urssaf', icon: Receipt, label: 'URSSAF' },
   { path: '/pro/invoices', icon: FileText, label: 'Factures' },

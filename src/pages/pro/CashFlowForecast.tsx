@@ -11,12 +11,21 @@ import {
   AlertTriangle,
   CheckCircle2,
   Calendar,
-  ArrowRight,
   Wallet
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { loadUserProfile, formatCurrency } from '@/lib/dashboardService';
+import { 
+  loadProProfile, 
+  loadMonthlyRevenue,
+  calculateAnnualTotals,
+  getURSSAFRate,
+  ProProfile,
+  MonthlyRevenue
+} from '@/lib/proService';
+import { formatCurrency } from '@/lib/dashboardService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart } from 'recharts';
+
+const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 interface MonthlyForecast {
   month: string;
@@ -28,25 +37,38 @@ interface MonthlyForecast {
 
 const CashFlowForecast = () => {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
-  const [monthlyIncome, setMonthlyIncome] = useState(6000);
+  const [profile, setProfile] = useState<ProProfile | null>(null);
+  const [monthlyData, setMonthlyData] = useState<MonthlyRevenue[]>([]);
+  const [loading, setLoading] = useState(true);
   const [fixedExpenses, setFixedExpenses] = useState(2000);
-  const [urssafRate, setUrssafRate] = useState(22);
   const [currentBalance, setCurrentBalance] = useState(15000);
 
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
-      const data = await loadUserProfile(user.id);
-      if (data) {
-        setProfile(data);
-        setMonthlyIncome(data.annualRevenueHt / 12 || 6000);
+      
+      const [proProfile, revenueData] = await Promise.all([
+        loadProProfile(user.id),
+        loadMonthlyRevenue(user.id, 2025)
+      ]);
+      
+      setProfile(proProfile);
+      setMonthlyData(revenueData);
+      
+      // Initialize fixed expenses from profile
+      if (proProfile) {
+        const totalCharges = proProfile.officeRent + proProfile.vehicleExpenses + proProfile.professionalSupplies;
+        setFixedExpenses(Math.round(totalCharges / 12));
       }
+      
+      setLoading(false);
     };
     loadData();
   }, [user]);
 
-  const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+  const urssafRate = getURSSAFRate(profile?.fiscalStatus || 'micro');
+  const annualTotals = calculateAnnualTotals(monthlyData);
+  const monthlyIncome = annualTotals.averageMonthlyRevenue || (profile?.annualRevenueHt || 0) / 12;
   
   // Seasonality factors (freelance typical pattern)
   const seasonality = [0.9, 0.95, 1.1, 1.0, 1.15, 1.1, 0.7, 0.5, 1.0, 1.1, 1.2, 0.9];
@@ -59,24 +81,27 @@ const CashFlowForecast = () => {
     const currentMonth = new Date().getMonth();
     let cumulative = currentBalance;
     
-    return months.map((month, index) => {
+    return MONTHS.map((month, index) => {
       const adjustedIndex = (currentMonth + index) % 12;
-      const income = monthlyIncome * seasonality[adjustedIndex];
+      
+      // Use real data if available, otherwise estimate
+      const realData = monthlyData.find(m => m.month === adjustedIndex + 1);
+      const income = realData?.revenue || monthlyIncome * seasonality[adjustedIndex];
       
       // Calculate expenses
-      let expenses = fixedExpenses;
+      let expenses = realData?.expenses || fixedExpenses;
       
       // Add quarterly URSSAF payment
       if (urssafMonths.includes(adjustedIndex)) {
         const quarterlyCA = monthlyIncome * 3;
-        expenses += quarterlyCA * (urssafRate / 100);
+        expenses += quarterlyCA * urssafRate;
       }
       
       const balance = income - expenses;
       cumulative += balance;
       
       return {
-        month: months[adjustedIndex],
+        month: MONTHS[adjustedIndex],
         income: Math.round(income),
         expenses: Math.round(expenses),
         balance: Math.round(balance),
@@ -92,6 +117,16 @@ const CashFlowForecast = () => {
   const totalIncome = forecast.reduce((sum, f) => sum + f.income, 0);
   const totalExpenses = forecast.reduce((sum, f) => sum + f.expenses, 0);
 
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -100,7 +135,7 @@ const CashFlowForecast = () => {
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Prévisions trésorerie</h1>
             <p className="text-muted-foreground mt-1">
-              Anticipez vos flux de trésorerie sur 12 mois
+              Anticipez vos flux basés sur votre CA réel
             </p>
           </div>
           <Badge className={negativeMonths.length > 0 ? 'bg-destructive/20 text-destructive' : 'bg-success/20 text-success'}>
@@ -132,14 +167,11 @@ const CashFlowForecast = () => {
 
               <div className="space-y-2">
                 <Label>CA mensuel moyen</Label>
-                <div className="relative">
-                  <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    value={monthlyIncome}
-                    onChange={(e) => setMonthlyIncome(Number(e.target.value))}
-                    className="pl-10"
-                  />
+                <div className="p-3 rounded-lg bg-primary/10 text-center">
+                  <span className="font-bold text-lg">{formatCurrency(monthlyIncome)}</span>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Basé sur votre saisie CA
+                  </p>
                 </div>
               </div>
 
@@ -157,12 +189,13 @@ const CashFlowForecast = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Taux URSSAF (%)</Label>
-                <Input
-                  type="number"
-                  value={urssafRate}
-                  onChange={(e) => setUrssafRate(Number(e.target.value))}
-                />
+                <Label>Taux URSSAF</Label>
+                <div className="p-3 rounded-lg bg-secondary/50 text-center">
+                  <span className="font-bold">{(urssafRate * 100).toFixed(1)}%</span>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {profile?.fiscalStatus || 'Micro-entreprise'}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -175,7 +208,7 @@ const CashFlowForecast = () => {
                 Projection sur 12 mois
               </CardTitle>
               <CardDescription>
-                Évolution de la trésorerie avec saisonnalité et échéances URSSAF
+                Basée sur votre CA réel et échéances URSSAF
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -186,10 +219,6 @@ const CashFlowForecast = () => {
                       <linearGradient id="colorPositive" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.3}/>
                         <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorNegative" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -210,6 +239,7 @@ const CashFlowForecast = () => {
                       stroke="hsl(var(--primary))" 
                       fill="url(#colorPositive)"
                       strokeWidth={2}
+                      name="Trésorerie"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -287,7 +317,7 @@ const CashFlowForecast = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {forecast.map((month, index) => (
+              {forecast.map((month) => (
                 <div 
                   key={month.month}
                   className={`p-4 rounded-xl transition-all ${
@@ -333,13 +363,12 @@ const CashFlowForecast = () => {
                 <div>
                   <h4 className="font-semibold mb-2">Attention : trésorerie négative prévue</h4>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Votre trésorerie pourrait devenir négative sur {negativeMonths.length} mois. Voici quelques recommandations :
+                    Votre trésorerie pourrait devenir négative sur {negativeMonths.length} mois.
                   </p>
                   <ul className="text-sm space-y-1 text-muted-foreground">
                     <li>• Anticipez les paiements URSSAF en provisionnant chaque mois</li>
-                    <li>• Réduisez vos charges fixes si possible</li>
                     <li>• Accélérez vos encaissements clients</li>
-                    <li>• Envisagez une facilité de caisse auprès de votre banque</li>
+                    <li>• Envisagez une facilité de caisse</li>
                   </ul>
                 </div>
               </div>

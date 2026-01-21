@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      monthly_revenue: {
+        Row: {
+          created_at: string
+          expenses: number
+          id: string
+          month: number
+          notes: string | null
+          revenue: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          expenses?: number
+          id?: string
+          month: number
+          notes?: string | null
+          revenue?: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          expenses?: number
+          id?: string
+          month?: number
+          notes?: string | null
+          revenue?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           accounting_software: string | null
