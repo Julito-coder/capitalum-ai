@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      invoices: {
+        Row: {
+          amount_ht: number
+          amount_ttc: number
+          client_address: string | null
+          client_email: string | null
+          client_name: string
+          client_siret: string | null
+          created_at: string
+          description: string | null
+          due_date: string
+          id: string
+          invoice_number: string
+          issue_date: string
+          notes: string | null
+          paid_date: string | null
+          payment_method: string | null
+          status: string
+          tva_rate: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_ht?: number
+          amount_ttc?: number
+          client_address?: string | null
+          client_email?: string | null
+          client_name: string
+          client_siret?: string | null
+          created_at?: string
+          description?: string | null
+          due_date: string
+          id?: string
+          invoice_number: string
+          issue_date?: string
+          notes?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          status?: string
+          tva_rate?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_ht?: number
+          amount_ttc?: number
+          client_address?: string | null
+          client_email?: string | null
+          client_name?: string
+          client_siret?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          notes?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          status?: string
+          tva_rate?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       monthly_revenue: {
         Row: {
           created_at: string
@@ -362,6 +428,51 @@ export type Database = {
           total_risk_amount?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      urssaf_contributions: {
+        Row: {
+          contribution_amount: number
+          created_at: string
+          id: string
+          is_paid: boolean
+          month: number
+          notes: string | null
+          paid_date: string | null
+          quarter: number
+          revenue_declared: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          contribution_amount?: number
+          created_at?: string
+          id?: string
+          is_paid?: boolean
+          month: number
+          notes?: string | null
+          paid_date?: string | null
+          quarter: number
+          revenue_declared?: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          contribution_amount?: number
+          created_at?: string
+          id?: string
+          is_paid?: boolean
+          month?: number
+          notes?: string | null
+          paid_date?: string | null
+          quarter?: number
+          revenue_declared?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
         }
         Relationships: []
       }
