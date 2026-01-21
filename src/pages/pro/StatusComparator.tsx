@@ -5,16 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  Scale, 
-  Euro,
-  TrendingUp,
-  CheckCircle2,
-  XCircle,
-  Star,
-  Building2,
-  Briefcase,
-  Rocket
+  Scale, Euro, TrendingUp, CheckCircle2, XCircle, Star, Building2, Briefcase, Rocket, 
+  Users, Car, Home, Lightbulb, Shield, Calculator
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/dashboardService';
 
@@ -25,295 +20,220 @@ interface StatusAnalysis {
   ir: number;
   netAfterTax: number;
   chargesRate: number;
-  irRate: number;
   pros: string[];
   cons: string[];
-  recommended?: boolean;
+  capitalumScore: number;
 }
 
 const StatusComparator = () => {
-  const [annualRevenue, setAnnualRevenue] = useState(50000);
-  const [businessExpenses, setBusinessExpenses] = useState(10000);
+  // Detailed form state
+  const [formData, setFormData] = useState({
+    annualRevenue: 50000,
+    businessExpenses: 10000,
+    activityType: 'services' as 'services' | 'vente' | 'liberal',
+    hasEmployees: false,
+    employeeCount: 0,
+    hasOffice: false,
+    officeRent: 0,
+    hasVehicle: false,
+    vehicleExpenses: 0,
+    wantsUnemployment: false,
+    wantsDividends: false,
+    planningToSell: false,
+    yearsInBusiness: 0,
+    familyStatus: 'single' as 'single' | 'married' | 'pacs',
+    otherHouseholdIncome: 0,
+  });
 
-  const MICRO_THRESHOLD = 77700;
-  const isMicroEligible = annualRevenue <= MICRO_THRESHOLD;
+  const MICRO_THRESHOLD = formData.activityType === 'vente' ? 188700 : 77700;
+  const isMicroEligible = formData.annualRevenue <= MICRO_THRESHOLD;
 
-  // Calculate for each status
+  const totalExpenses = formData.businessExpenses + 
+    (formData.hasOffice ? formData.officeRent : 0) + 
+    (formData.hasVehicle ? formData.vehicleExpenses : 0) +
+    (formData.hasEmployees ? formData.employeeCount * 35000 : 0);
+
   const calculateMicroBNC = (): StatusAnalysis => {
-    const abattement = annualRevenue * 0.34;
-    const taxableIncome = annualRevenue - abattement;
-    const charges = annualRevenue * 0.22;
-    
+    const abattement = formData.activityType === 'vente' ? 0.71 : formData.activityType === 'liberal' ? 0.34 : 0.50;
+    const rate = formData.activityType === 'vente' ? 0.128 : 0.22;
+    const taxableIncome = formData.annualRevenue * (1 - abattement);
+    const charges = formData.annualRevenue * rate;
     let ir = 0;
     if (taxableIncome > 11294) ir += (Math.min(taxableIncome, 28797) - 11294) * 0.11;
     if (taxableIncome > 28797) ir += (Math.min(taxableIncome, 82341) - 28797) * 0.30;
     if (taxableIncome > 82341) ir += (taxableIncome - 82341) * 0.41;
-
+    let score = 70;
+    if (totalExpenses < formData.annualRevenue * abattement) score += 15;
+    if (!formData.hasEmployees) score += 10;
+    if (formData.wantsUnemployment) score -= 30;
     return {
-      name: 'Micro-BNC',
-      icon: Rocket,
-      charges,
-      ir,
-      netAfterTax: annualRevenue - charges - ir,
-      chargesRate: 22,
-      irRate: (ir / annualRevenue) * 100,
-      pros: ['Comptabilité simplifiée', 'Franchise de TVA', 'Déclarations trimestrielles'],
-      cons: ['Plafond de CA', 'Pas de déduction de charges', 'Abattement forfaitaire'],
-      recommended: isMicroEligible && businessExpenses < annualRevenue * 0.34
+      name: 'Micro-entreprise', icon: Rocket, charges, ir,
+      netAfterTax: formData.annualRevenue - charges - ir,
+      chargesRate: rate * 100,
+      pros: ['Comptabilité simplifiée', 'Franchise TVA possible', 'Déclarations faciles'],
+      cons: formData.hasEmployees ? ['Pas adapté avec salariés'] : ['Pas de déduction de charges', 'Plafond de CA'],
+      capitalumScore: Math.max(0, Math.min(100, score))
     };
   };
 
   const calculateEURL = (): StatusAnalysis => {
-    const profit = annualRevenue - businessExpenses;
-    const charges = profit * 0.45; // Approximation RSI
-    const taxableIncome = profit - charges;
-    
+    const profit = formData.annualRevenue - totalExpenses;
+    const charges = Math.max(0, profit) * 0.45;
+    const taxableIncome = Math.max(0, profit - charges);
     let ir = 0;
     if (taxableIncome > 11294) ir += (Math.min(taxableIncome, 28797) - 11294) * 0.11;
     if (taxableIncome > 28797) ir += (Math.min(taxableIncome, 82341) - 28797) * 0.30;
     if (taxableIncome > 82341) ir += (taxableIncome - 82341) * 0.41;
-
+    let score = 60;
+    if (totalExpenses > formData.annualRevenue * 0.35) score += 20;
+    if (formData.hasEmployees) score += 10;
     return {
-      name: 'EURL (IR)',
-      icon: Building2,
-      charges,
-      ir,
-      netAfterTax: annualRevenue - businessExpenses - charges - ir,
-      chargesRate: (charges / annualRevenue) * 100,
-      irRate: (ir / annualRevenue) * 100,
-      pros: ['Déduction des charges réelles', 'Pas de plafond de CA', 'Crédibilité'],
-      cons: ['Comptabilité obligatoire', 'Cotisations + élevées', 'Formalités'],
-      recommended: businessExpenses > annualRevenue * 0.4
+      name: 'EURL (IR)', icon: Building2, charges, ir,
+      netAfterTax: formData.annualRevenue - totalExpenses - charges - ir,
+      chargesRate: profit > 0 ? (charges / profit) * 100 : 0,
+      pros: ['Déduction charges réelles', 'Pas de plafond CA', 'Crédibilité'],
+      cons: ['Cotisations élevées (~45%)', 'Comptabilité obligatoire'],
+      capitalumScore: Math.max(0, Math.min(100, score))
     };
   };
 
   const calculateSASU = (): StatusAnalysis => {
-    const profit = annualRevenue - businessExpenses;
-    const salary = profit * 0.6; // 60% en salaire
-    const dividends = profit * 0.4 * 0.7; // 40% en dividendes après IS
-    const salaryCosts = salary * 0.82; // Charges sur salaire
-    const is = profit * 0.4 * 0.25; // IS sur part dividendes
-    const dividendTax = dividends * 0.30; // Flat tax
-    
-    const totalCharges = salary - salaryCosts + is;
-    const totalTax = dividendTax;
-
+    const profit = formData.annualRevenue - totalExpenses;
+    const salary = profit * 0.6;
+    const dividends = profit * 0.4 * 0.75;
+    const salaryCosts = salary * 0.55;
+    const is = profit * 0.4 * 0.25;
+    const dividendTax = dividends * 0.30;
+    let score = 50;
+    if (formData.wantsUnemployment) score += 25;
+    if (formData.wantsDividends) score += 15;
+    if (formData.annualRevenue > 100000) score += 10;
     return {
-      name: 'SASU',
-      icon: Briefcase,
-      charges: totalCharges,
-      ir: totalTax,
+      name: 'SASU', icon: Briefcase, charges: salary - salaryCosts + is, ir: dividendTax,
       netAfterTax: salaryCosts + dividends - dividendTax,
-      chargesRate: (totalCharges / annualRevenue) * 100,
-      irRate: (totalTax / annualRevenue) * 100,
-      pros: ['Protection sociale complète', 'Dividendes possibles', 'Image pro'],
-      cons: ['Charges élevées', 'Gestion complexe', 'Coûts fixes'],
-      recommended: annualRevenue > 80000 && businessExpenses > 20000
+      chargesRate: profit > 0 ? ((salary - salaryCosts + is) / profit) * 100 : 0,
+      pros: ['Assimilé salarié', 'Dividendes optimisés', formData.wantsUnemployment ? 'Chômage possible' : 'Image professionnelle'],
+      cons: ['Charges très élevées', 'Gestion complexe'],
+      capitalumScore: Math.max(0, Math.min(100, score))
     };
   };
 
   const calculatePortage = (): StatusAnalysis => {
-    const fraisGestion = annualRevenue * 0.10; // 10% frais de gestion
-    const available = annualRevenue - fraisGestion;
-    const charges = available * 0.50; // ~50% charges totales
+    const frais = formData.annualRevenue * 0.10;
+    const available = formData.annualRevenue - frais;
+    const charges = available * 0.50;
     const net = available - charges;
-    const ir = net * 0.15; // Estimation IR
-
+    const ir = net * 0.15;
+    let score = 40;
+    if (formData.wantsUnemployment) score += 30;
+    if (formData.yearsInBusiness < 2) score += 15;
     return {
-      name: 'Portage salarial',
-      icon: Building2,
-      charges: fraisGestion + charges,
-      ir,
-      netAfterTax: net - ir,
-      chargesRate: ((fraisGestion + charges) / annualRevenue) * 100,
-      irRate: (ir / annualRevenue) * 100,
-      pros: ['Aucune gestion', 'Protection chômage', 'CDI possible'],
-      cons: ['Frais de gestion', 'Moins de net', 'Dépendance'],
-      recommended: false
+      name: 'Portage salarial', icon: Users, charges: frais + charges, ir,
+      netAfterTax: net - ir, chargesRate: ((frais + charges) / formData.annualRevenue) * 100,
+      pros: ['Zéro gestion', 'Chômage garanti', 'CDI possible'],
+      cons: ['10% frais gestion', 'Net le plus faible'],
+      capitalumScore: Math.max(0, Math.min(100, score))
     };
   };
 
-  const statuses = [
-    calculateMicroBNC(),
-    calculateEURL(),
-    calculateSASU(),
-    calculatePortage()
-  ].sort((a, b) => b.netAfterTax - a.netAfterTax);
+  const statuses = [calculateMicroBNC(), calculateEURL(), calculateSASU(), calculatePortage()]
+    .filter(s => !(s.name === 'Micro-entreprise' && !isMicroEligible))
+    .sort((a, b) => b.capitalumScore - a.capitalumScore);
 
   const bestStatus = statuses[0];
 
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Comparateur de statuts</h1>
-            <p className="text-muted-foreground mt-1">
-              Analysez le meilleur statut juridique selon votre situation
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold">Comparateur de statuts</h1>
+          <p className="text-muted-foreground mt-1">Analyse personnalisée selon votre situation</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Input Form */}
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Scale className="h-5 w-5" />
-                Vos paramètres
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Form */}
+          <Card className="glass-card lg:col-span-1">
+            <CardHeader><CardTitle className="flex items-center gap-2"><Calculator className="h-5 w-5" />Votre situation</CardTitle></CardHeader>
+            <CardContent className="space-y-5">
               <div className="space-y-2">
                 <Label>CA annuel prévu</Label>
-                <div className="relative">
-                  <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    value={annualRevenue}
-                    onChange={(e) => setAnnualRevenue(Number(e.target.value))}
-                    className="pl-10"
-                  />
-                </div>
-                <Slider
-                  value={[annualRevenue]}
-                  onValueChange={(v) => setAnnualRevenue(v[0])}
-                  min={20000}
-                  max={200000}
-                  step={5000}
-                  className="mt-2"
-                />
+                <Input type="number" value={formData.annualRevenue} onChange={(e) => setFormData(p => ({...p, annualRevenue: Number(e.target.value)}))} />
+                <Slider value={[formData.annualRevenue]} onValueChange={(v) => setFormData(p => ({...p, annualRevenue: v[0]}))} min={20000} max={200000} step={5000} />
               </div>
-
               <div className="space-y-2">
-                <Label>Charges estimées</Label>
-                <div className="relative">
-                  <Euro className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    value={businessExpenses}
-                    onChange={(e) => setBusinessExpenses(Number(e.target.value))}
-                    className="pl-10"
-                  />
-                </div>
-                <Slider
-                  value={[businessExpenses]}
-                  onValueChange={(v) => setBusinessExpenses(v[0])}
-                  min={0}
-                  max={annualRevenue * 0.6}
-                  step={1000}
-                  className="mt-2"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Ratio charges/CA : {((businessExpenses / annualRevenue) * 100).toFixed(0)}%
-                </p>
+                <Label>Type d'activité</Label>
+                <Select value={formData.activityType} onValueChange={(v: any) => setFormData(p => ({...p, activityType: v}))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="services">Prestations de services</SelectItem>
+                    <SelectItem value="liberal">Profession libérale</SelectItem>
+                    <SelectItem value="vente">Vente de marchandises</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-
-              {!isMicroEligible && (
-                <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
-                  <p className="text-sm text-warning">
-                    ⚠️ CA supérieur au seuil micro ({formatCurrency(MICRO_THRESHOLD)})
-                  </p>
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label>Charges professionnelles</Label>
+                <Input type="number" value={formData.businessExpenses} onChange={(e) => setFormData(p => ({...p, businessExpenses: Number(e.target.value)}))} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2"><Home className="h-4 w-4" />Local professionnel</Label>
+                <Switch checked={formData.hasOffice} onCheckedChange={(c) => setFormData(p => ({...p, hasOffice: c}))} />
+              </div>
+              {formData.hasOffice && <Input type="number" placeholder="Loyer annuel" value={formData.officeRent || ''} onChange={(e) => setFormData(p => ({...p, officeRent: Number(e.target.value)}))} />}
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2"><Car className="h-4 w-4" />Véhicule pro</Label>
+                <Switch checked={formData.hasVehicle} onCheckedChange={(c) => setFormData(p => ({...p, hasVehicle: c}))} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2"><Users className="h-4 w-4" />Salariés</Label>
+                <Switch checked={formData.hasEmployees} onCheckedChange={(c) => setFormData(p => ({...p, hasEmployees: c}))} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2"><Shield className="h-4 w-4" />Droits chômage</Label>
+                <Switch checked={formData.wantsUnemployment} onCheckedChange={(c) => setFormData(p => ({...p, wantsUnemployment: c}))} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2"><Euro className="h-4 w-4" />Optimiser dividendes</Label>
+                <Switch checked={formData.wantsDividends} onCheckedChange={(c) => setFormData(p => ({...p, wantsDividends: c}))} />
+              </div>
+              {!isMicroEligible && <div className="p-3 rounded-lg bg-warning/10 border border-warning/20 text-sm text-warning">⚠️ CA supérieur au seuil micro ({formatCurrency(MICRO_THRESHOLD)})</div>}
             </CardContent>
           </Card>
 
-          {/* Status Cards */}
-          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Results */}
+          <div className="lg:col-span-2 space-y-4">
             {statuses.map((status, index) => (
-              <Card 
-                key={status.name}
-                className={`glass-card transition-all ${
-                  index === 0 ? 'border-success/50 ring-2 ring-success/20' : ''
-                } ${status.name === 'Micro-BNC' && !isMicroEligible ? 'opacity-50' : ''}`}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
+              <Card key={status.name} className={`glass-card ${index === 0 ? 'border-success/50 ring-2 ring-success/20' : ''}`}>
+                <CardContent className="pt-6">
+                  <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
-                        index === 0 ? 'bg-success/10' : 'bg-primary/10'
-                      }`}>
-                        <status.icon className={`h-5 w-5 ${index === 0 ? 'text-success' : 'text-primary'}`} />
+                      <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${index === 0 ? 'bg-success/10' : 'bg-primary/10'}`}>
+                        <status.icon className={`h-6 w-6 ${index === 0 ? 'text-success' : 'text-primary'}`} />
                       </div>
                       <div>
-                        <CardTitle className="text-lg">{status.name}</CardTitle>
-                        {index === 0 && (
-                          <Badge className="bg-success/20 text-success border-success/30 mt-1">
-                            <Star className="h-3 w-3 mr-1" />
-                            Recommandé
-                          </Badge>
-                        )}
+                        <h3 className="font-bold text-lg">{status.name}</h3>
+                        {index === 0 && <Badge className="bg-success/20 text-success border-success/30"><Star className="h-3 w-3 mr-1" />Recommandé Capitalum</Badge>}
                       </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Net after tax */}
-                  <div className="p-4 rounded-xl bg-success/10">
-                    <p className="text-sm text-muted-foreground">Net après impôts</p>
-                    <p className="text-2xl font-bold text-success">{formatCurrency(status.netAfterTax)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      soit {((status.netAfterTax / annualRevenue) * 100).toFixed(0)}% du CA
-                    </p>
-                  </div>
-
-                  {/* Breakdown */}
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Cotisations</span>
-                      <span className="text-destructive">-{formatCurrency(status.charges)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Impôt sur le revenu</span>
-                      <span className="text-destructive">-{formatCurrency(status.ir)}</span>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">Score</p>
+                      <p className={`text-2xl font-bold ${index === 0 ? 'text-success' : ''}`}>{status.capitalumScore}/100</p>
                     </div>
                   </div>
-
-                  {/* Pros & Cons */}
-                  <div className="space-y-2 pt-2 border-t border-border">
-                    {status.pros.slice(0, 2).map((pro, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm text-success">
-                        <CheckCircle2 className="h-3 w-3" />
-                        <span>{pro}</span>
-                      </div>
-                    ))}
-                    {status.cons.slice(0, 1).map((con, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm text-destructive">
-                        <XCircle className="h-3 w-3" />
-                        <span>{con}</span>
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-3 gap-4 mt-4">
+                    <div className="p-3 rounded-xl bg-success/10"><p className="text-xs text-muted-foreground">Net après impôts</p><p className="font-bold text-success">{formatCurrency(status.netAfterTax)}</p></div>
+                    <div className="p-3 rounded-xl bg-destructive/10"><p className="text-xs text-muted-foreground">Cotisations</p><p className="font-bold text-destructive">-{formatCurrency(status.charges)}</p></div>
+                    <div className="p-3 rounded-xl bg-warning/10"><p className="text-xs text-muted-foreground">IR estimé</p><p className="font-bold text-warning">-{formatCurrency(status.ir)}</p></div>
+                  </div>
+                  <div className="flex gap-4 mt-4 text-sm">
+                    <div className="flex-1">{status.pros.map((p,i) => <div key={i} className="flex items-center gap-1 text-success"><CheckCircle2 className="h-3 w-3" />{p}</div>)}</div>
+                    <div className="flex-1">{status.cons.map((c,i) => <div key={i} className="flex items-center gap-1 text-destructive"><XCircle className="h-3 w-3" />{c}</div>)}</div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         </div>
-
-        {/* Summary */}
-        <Card className="glass-card border-primary/20">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-4">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <TrendingUp className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-lg mb-2">Analyse personnalisée</h4>
-                <p className="text-muted-foreground">
-                  Avec un CA de {formatCurrency(annualRevenue)} et {formatCurrency(businessExpenses)} de charges, 
-                  le statut <strong className="text-foreground">{bestStatus.name}</strong> vous permet de conserver 
-                  <strong className="text-success"> {formatCurrency(bestStatus.netAfterTax)}</strong> soit 
-                  <strong> {((bestStatus.netAfterTax / annualRevenue) * 100).toFixed(0)}%</strong> de votre CA.
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Différence avec le moins avantageux : {formatCurrency(bestStatus.netAfterTax - statuses[statuses.length - 1].netAfterTax)}/an
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </Layout>
   );

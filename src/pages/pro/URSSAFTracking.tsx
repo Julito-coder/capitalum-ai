@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
 import { 
   Calendar, 
   TrendingUp, 
@@ -11,7 +10,8 @@ import {
   Clock,
   Euro,
   FileText,
-  Calculator
+  Calculator,
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -19,57 +19,89 @@ import {
   loadMonthlyRevenue, 
   calculateAnnualTotals,
   getURSSAFRate,
-  getURSSAFSchedule,
   ProProfile
 } from '@/lib/proService';
+import {
+  loadURSSAFContributions,
+  buildQuarterlyData,
+  toggleContributionPaid,
+  syncContributionsFromRevenue,
+  QuarterData
+} from '@/lib/urssafService';
 import { formatCurrency } from '@/lib/dashboardService';
+import { QuarterlyBreakdown } from '@/components/urssaf/QuarterlyBreakdown';
+import { ContributionSimulator } from '@/components/urssaf/ContributionSimulator';
+import { toast } from 'sonner';
 
 const URSSAFTracking = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<ProProfile | null>(null);
-  const [annualRevenue, setAnnualRevenue] = useState(0);
+  const [quarters, setQuarters] = useState<QuarterData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [showSimulator, setShowSimulator] = useState(false);
+  
+  const year = 2025;
+
+  const loadData = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    const [proProfile, monthlyData, contributions] = await Promise.all([
+      loadProProfile(user.id),
+      loadMonthlyRevenue(user.id, year),
+      loadURSSAFContributions(user.id, year)
+    ]);
+    
+    setProfile(proProfile);
+    
+    const urssafRate = getURSSAFRate(proProfile?.fiscalStatus || 'micro');
+    const quarterData = buildQuarterlyData(monthlyData, contributions, year, urssafRate);
+    setQuarters(quarterData);
+    
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      if (!user) return;
-      
-      const [proProfile, monthlyData] = await Promise.all([
-        loadProProfile(user.id),
-        loadMonthlyRevenue(user.id, 2025)
-      ]);
-      
-      setProfile(proProfile);
-      
-      // Use monthly data if available, otherwise use profile estimate
-      const totals = calculateAnnualTotals(monthlyData);
-      setAnnualRevenue(totals.totalRevenue > 0 ? totals.totalRevenue : (proProfile?.annualRevenueHt || 0));
-      
-      setLoading(false);
-    };
     loadData();
   }, [user]);
 
-  const urssafRate = getURSSAFRate(profile?.fiscalStatus || 'micro');
-  const payments = getURSSAFSchedule(annualRevenue, urssafRate);
-  
-  const totalPaid = profile?.socialChargesPaid || 0;
-  const yearlyTotal = annualRevenue * urssafRate;
-  const totalPending = yearlyTotal - totalPaid;
-  const progressPercent = yearlyTotal > 0 ? (totalPaid / yearlyTotal) * 100 : 0;
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return <Badge className="bg-success/20 text-success border-success/30">Payé</Badge>;
-      case 'pending':
-        return <Badge className="bg-warning/20 text-warning border-warning/30">À venir</Badge>;
-      case 'overdue':
-        return <Badge className="bg-destructive/20 text-destructive border-destructive/30">En retard</Badge>;
-      default:
-        return null;
+  const handleTogglePaid = async (month: number, isPaid: boolean) => {
+    if (!user) return;
+    
+    const result = await toggleContributionPaid(user.id, year, month, isPaid);
+    if (result.success) {
+      toast.success(isPaid ? 'Cotisation marquée comme payée' : 'Cotisation marquée comme non payée');
+      loadData();
+    } else {
+      toast.error('Erreur lors de la mise à jour');
     }
   };
+
+  const handleSync = async () => {
+    if (!user || !profile) return;
+    
+    setSyncing(true);
+    const result = await syncContributionsFromRevenue(user.id, year, profile.fiscalStatus);
+    if (result.success) {
+      toast.success('Cotisations synchronisées avec le CA déclaré');
+      await loadData();
+    } else {
+      toast.error('Erreur lors de la synchronisation');
+    }
+    setSyncing(false);
+  };
+
+  const urssafRate = getURSSAFRate(profile?.fiscalStatus || 'micro');
+  
+  // Calculate totals from quarters
+  const totalRevenue = quarters.reduce((sum, q) => sum + q.totalRevenue, 0);
+  const totalContributions = quarters.reduce((sum, q) => sum + q.totalContribution, 0);
+  const paidContributions = quarters.reduce((sum, q) => 
+    sum + q.months.filter(m => m.isPaid).reduce((s, m) => s + m.contribution, 0), 0
+  );
+  const pendingContributions = totalContributions - paidContributions;
+  const progressPercent = totalContributions > 0 ? (paidContributions / totalContributions) * 100 : 0;
 
   if (loading) {
     return (
@@ -89,15 +121,22 @@ const URSSAFTracking = () => {
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Suivi URSSAF</h1>
             <p className="text-muted-foreground mt-1">
-              Gérez vos cotisations sociales basées sur votre CA réel
+              Gérez vos cotisations sociales mois par mois
             </p>
           </div>
           <div className="flex gap-3">
-            <button className="btn-secondary">
-              <FileText className="h-4 w-4" />
-              Exporter PDF
+            <button 
+              onClick={handleSync}
+              disabled={syncing}
+              className="btn-secondary"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+              Synchroniser avec CA
             </button>
-            <button className="btn-primary">
+            <button 
+              onClick={() => setShowSimulator(true)}
+              className="btn-primary"
+            >
               <Calculator className="h-4 w-4" />
               Simuler cotisations
             </button>
@@ -114,7 +153,7 @@ const URSSAFTracking = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">CA déclaré</p>
-                  <p className="text-xl font-bold">{formatCurrency(annualRevenue)}</p>
+                  <p className="text-xl font-bold">{formatCurrency(totalRevenue)}</p>
                 </div>
               </div>
             </CardContent>
@@ -128,7 +167,7 @@ const URSSAFTracking = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Déjà payé</p>
-                  <p className="text-xl font-bold text-success">{formatCurrency(totalPaid)}</p>
+                  <p className="text-xl font-bold text-success">{formatCurrency(paidContributions)}</p>
                 </div>
               </div>
             </CardContent>
@@ -142,7 +181,7 @@ const URSSAFTracking = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Reste à payer</p>
-                  <p className="text-xl font-bold text-warning">{formatCurrency(Math.max(0, totalPending))}</p>
+                  <p className="text-xl font-bold text-warning">{formatCurrency(pendingContributions)}</p>
                 </div>
               </div>
             </CardContent>
@@ -166,9 +205,9 @@ const URSSAFTracking = () => {
         {/* Progress Section */}
         <Card className="glass-card">
           <CardHeader>
-            <CardTitle>Progression annuelle</CardTitle>
+            <CardTitle>Progression annuelle {year}</CardTitle>
             <CardDescription>
-              {formatCurrency(totalPaid)} payés sur {formatCurrency(yearlyTotal)} estimés
+              {formatCurrency(paidContributions)} payés sur {formatCurrency(totalContributions)} estimés
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -179,49 +218,18 @@ const URSSAFTracking = () => {
           </CardContent>
         </Card>
 
-        {/* Payment Schedule */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Échéancier des cotisations
-            </CardTitle>
-            <CardDescription>
-              Basé sur votre CA de {formatCurrency(annualRevenue)}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {payments.map((payment, index) => {
-                // Mark first payment as paid if user has paid something
-                const status = index === 0 && totalPaid > 0 ? 'paid' : payment.status;
-                
-                return (
-                  <div 
-                    key={payment.period}
-                    className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <span className="font-bold text-primary">{payment.period}</span>
-                      </div>
-                      <div>
-                        <p className="font-medium">Cotisations {payment.period}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Échéance : {new Date(payment.dueDate).toLocaleDateString('fr-FR')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="font-bold text-lg">{formatCurrency(payment.amount)}</span>
-                      {getStatusBadge(status)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Quarterly Breakdown */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Détail par trimestre
+          </h2>
+          <QuarterlyBreakdown
+            quarters={quarters}
+            onTogglePaid={handleTogglePaid}
+            loading={loading}
+          />
+        </div>
 
         {/* Tips */}
         <Card className="glass-card border-primary/20">
@@ -236,12 +244,21 @@ const URSSAFTracking = () => {
                   <li>• Provisionnez {(urssafRate * 100).toFixed(0)}% de votre CA pour les cotisations</li>
                   <li>• Optez pour le prélèvement mensuel pour lisser la trésorerie</li>
                   <li>• Déclarez à temps pour éviter les pénalités (10% de majoration)</li>
+                  <li>• Vérifiez votre éligibilité à l'ACRE (réduction de 50% la première année)</li>
                 </ul>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Simulator Modal */}
+      <ContributionSimulator
+        open={showSimulator}
+        onOpenChange={setShowSimulator}
+        initialRevenue={totalRevenue || 50000}
+        initialStatus={profile?.fiscalStatus || 'micro'}
+      />
     </Layout>
   );
 };
