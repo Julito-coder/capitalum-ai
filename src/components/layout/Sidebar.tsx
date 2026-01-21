@@ -36,10 +36,13 @@ const personalNavItems = [
 const professionalNavItems = [
   { path: '/', icon: LayoutDashboard, label: 'Tableau de bord' },
   { path: '/onboarding', icon: Building2, label: 'Mon activité' },
-  { path: '/audit', icon: FileSearch, label: 'Audit fiscal' },
+  { path: '/pro/revenue', icon: TrendingUp, label: 'Suivi CA' },
+  { path: '/pro/urssaf', icon: Receipt, label: 'URSSAF' },
+  { path: '/pro/invoices', icon: FileText, label: 'Factures' },
+  { path: '/pro/cashflow', icon: Wallet, label: 'Trésorerie' },
+  { path: '/pro/hiring', icon: UserCircle, label: 'Simulateur embauche' },
+  { path: '/pro/status', icon: Calculator, label: 'Comparateur statuts' },
   { path: '/scanner', icon: ScanSearch, label: 'Scanner fiscal' },
-  { path: '/calendar', icon: Calendar, label: 'Échéances pro' },
-  { path: '/simulator', icon: Calculator, label: 'Simulateur' },
   { path: '/assistant', icon: MessageCircle, label: 'Assistant' },
 ];
 

@@ -15,6 +15,13 @@ import Scanner from "./pages/Scanner";
 import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+// Pro pages
+import URSSAFTracking from "./pages/pro/URSSAFTracking";
+import InvoiceManager from "./pages/pro/InvoiceManager";
+import RevenueTracker from "./pages/pro/RevenueTracker";
+import HiringSimulator from "./pages/pro/HiringSimulator";
+import StatusComparator from "./pages/pro/StatusComparator";
+import CashFlowForecast from "./pages/pro/CashFlowForecast";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +42,13 @@ const App = () => (
               <Route path="/simulator" element={<ProtectedRoute><Simulator /></ProtectedRoute>} />
               <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
               <Route path="/scanner" element={<ProtectedRoute><Scanner /></ProtectedRoute>} />
+              {/* Pro routes */}
+              <Route path="/pro/urssaf" element={<ProtectedRoute><URSSAFTracking /></ProtectedRoute>} />
+              <Route path="/pro/invoices" element={<ProtectedRoute><InvoiceManager /></ProtectedRoute>} />
+              <Route path="/pro/revenue" element={<ProtectedRoute><RevenueTracker /></ProtectedRoute>} />
+              <Route path="/pro/hiring" element={<ProtectedRoute><HiringSimulator /></ProtectedRoute>} />
+              <Route path="/pro/status" element={<ProtectedRoute><StatusComparator /></ProtectedRoute>} />
+              <Route path="/pro/cashflow" element={<ProtectedRoute><CashFlowForecast /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </SpaceProvider>
