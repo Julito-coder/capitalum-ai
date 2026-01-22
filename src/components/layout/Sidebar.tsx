@@ -29,7 +29,7 @@ const personalNavItems = [
   { path: '/scanner', icon: ScanSearch, label: 'Scanner fiscal' },
   { path: '/calendar', icon: Calendar, label: 'Calendrier' },
   { path: '/simulator', icon: Calculator, label: 'Simulateur IR' },
-  { path: '/assistant', icon: MessageCircle, label: 'Assistant' },
+  { path: '/glossary', icon: FileText, label: 'Glossaire' },
 ];
 
 // Navigation items for Professional space (Indépendants, TPE, Micro)
@@ -43,7 +43,7 @@ const professionalNavItems = [
   { path: '/pro/hiring', icon: UserCircle, label: 'Simulateur embauche' },
   { path: '/pro/status', icon: Calculator, label: 'Comparateur statuts' },
   { path: '/scanner', icon: ScanSearch, label: 'Scanner fiscal' },
-  { path: '/assistant', icon: MessageCircle, label: 'Assistant' },
+  { path: '/glossary', icon: FileText, label: 'Glossaire' },
 ];
 
 export const Sidebar = () => {
