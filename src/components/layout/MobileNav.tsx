@@ -4,7 +4,7 @@ import {
   ScanSearch, 
   Calendar, 
   Calculator, 
-  MessageCircle
+  BookOpen
 } from 'lucide-react';
 
 const navItems = [
@@ -12,7 +12,7 @@ const navItems = [
   { path: '/scanner', icon: ScanSearch, label: 'Scanner' },
   { path: '/calendar', icon: Calendar, label: 'Agenda' },
   { path: '/simulator', icon: Calculator, label: 'Simul.' },
-  { path: '/assistant', icon: MessageCircle, label: 'Chat' },
+  { path: '/glossary', icon: BookOpen, label: 'Glossaire' },
 ];
 
 export const MobileNav = () => {

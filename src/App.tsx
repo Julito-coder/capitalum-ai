@@ -6,11 +6,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SpaceProvider } from "@/contexts/SpaceContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AIHelpWidget } from "@/components/ai/AIHelpWidget";
 import Dashboard from "./pages/Dashboard";
 import Audit from "./pages/Audit";
 import CalendarPage from "./pages/Calendar";
 import Simulator from "./pages/Simulator";
-import Assistant from "./pages/Assistant";
+import Glossary from "./pages/Glossary";
 import Scanner from "./pages/Scanner";
 import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
@@ -41,7 +42,7 @@ const App = () => (
               <Route path="/audit" element={<ProtectedRoute><Audit /></ProtectedRoute>} />
               <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
               <Route path="/simulator" element={<ProtectedRoute><Simulator /></ProtectedRoute>} />
-              <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
+              <Route path="/glossary" element={<ProtectedRoute><Glossary /></ProtectedRoute>} />
               <Route path="/scanner" element={<ProtectedRoute><Scanner /></ProtectedRoute>} />
               {/* Pro routes */}
               <Route path="/pro/onboarding" element={<ProtectedRoute><ProOnboarding /></ProtectedRoute>} />
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/pro/cashflow" element={<ProtectedRoute><CashFlowForecast /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <AIHelpWidget />
           </SpaceProvider>
         </AuthProvider>
       </BrowserRouter>
