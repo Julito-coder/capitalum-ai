@@ -41,15 +41,58 @@ DOMAINES D'EXPERTISE:
 - Patrimoine et investissements (PEA, assurance-vie, SCPI)
 - Déclarations fiscales (2042, 2044, etc.)`;
 
-    // Add user context if available
+    // Add comprehensive user context if available
     if (userContext) {
-      systemPrompt += `\n\nCONTEXTE UTILISATEUR:
+      const profileTypes = [];
+      if (userContext.isEmployee) profileTypes.push('Salarié');
+      if (userContext.isSelfEmployed) profileTypes.push('Indépendant');
+      if (userContext.isRetired) profileTypes.push('Retraité');
+      if (userContext.isInvestor) profileTypes.push('Investisseur');
+      
+      const objectiveLabels: Record<string, string> = {
+        'reduce_ir': 'Réduire mon impôt sur le revenu',
+        'optimize_charges': 'Optimiser mes charges sociales',
+        'prepare_retirement': 'Préparer ma retraite',
+        'build_wealth': 'Constituer un patrimoine',
+        'protect_family': 'Protéger ma famille'
+      };
+      
+      systemPrompt += `\n\nCONTEXTE UTILISATEUR DÉTAILLÉ:
+
+**Profil:**
+- Types de profil: ${profileTypes.length > 0 ? profileTypes.join(', ') : 'Non renseigné'}
 - Statut professionnel: ${userContext.professionalStatus || 'Non renseigné'}
 - Régime fiscal: ${userContext.fiscalStatus || 'Non renseigné'}
-- CA annuel: ${userContext.annualRevenue ? userContext.annualRevenue + '€' : 'Non renseigné'}
-- Situation familiale: ${userContext.familyStatus || 'Non renseignée'}
+- Année de naissance: ${userContext.birthYear || 'Non renseignée'}
+- Objectif principal: ${userContext.primaryObjective ? objectiveLabels[userContext.primaryObjective] || userContext.primaryObjective : 'Non renseigné'}
 
-Adapte tes réponses à ce profil spécifique.`;
+**Situation familiale:**
+- Statut: ${userContext.familyStatus === 'single' ? 'Célibataire' : userContext.familyStatus === 'married' ? 'Marié(e)' : userContext.familyStatus === 'pacs' ? 'Pacsé(e)' : userContext.familyStatus === 'divorced' ? 'Divorcé(e)' : userContext.familyStatus === 'widowed' ? 'Veuf/Veuve' : 'Non renseigné'}
+- Nombre d'enfants: ${userContext.childrenCount ?? 'Non renseigné'}
+
+**Revenus:**
+${userContext.isEmployee ? `- Salaire brut mensuel: ${userContext.grossMonthlySalary ? userContext.grossMonthlySalary + '€' : 'Non renseigné'}
+- Salaire net mensuel: ${userContext.netMonthlySalary ? userContext.netMonthlySalary + '€' : 'Non renseigné'}
+- Prime annuelle: ${userContext.annualBonus ? userContext.annualBonus + '€' : 'Non renseignée'}` : ''}
+${userContext.isSelfEmployed ? `- Chiffre d'affaires annuel HT: ${userContext.annualRevenue ? userContext.annualRevenue + '€' : 'Non renseigné'}
+- Entreprise: ${userContext.companyName || 'Non renseignée'}
+- SIRET: ${userContext.siret || 'Non renseigné'}` : ''}
+${userContext.isRetired ? `- Pension principale annuelle: ${userContext.mainPension ? userContext.mainPension + '€' : 'Non renseignée'}` : ''}
+
+**Patrimoine et investissements:**
+${userContext.hasInvestments ? `- PEA: ${userContext.peaBalance ? userContext.peaBalance + '€' : 'Non renseigné'}
+- Assurance-vie: ${userContext.lifeInsuranceBalance ? userContext.lifeInsuranceBalance + '€' : 'Non renseigné'}` : '- Pas d\'investissements déclarés'}
+${userContext.hasRentalIncome ? '- Revenus locatifs: Oui' : ''}
+
+**Optimisations fiscales:**
+${userContext.hasRealExpenses ? `- Frais réels déclarés: ${userContext.realExpensesAmount ? userContext.realExpensesAmount + '€' : 'Oui'}` : '- Utilise l\'abattement forfaitaire de 10%'}
+
+INSTRUCTIONS IMPORTANTES:
+- Adapte TOUTES tes réponses à ce profil spécifique
+- Donne des conseils personnalisés basés sur la situation réelle de l'utilisateur
+- Fais des calculs concrets avec les montants fournis quand c'est pertinent
+- Suggère des optimisations adaptées à son profil et objectif principal
+- Si des informations manquent pour donner un conseil précis, demande-les`;
     }
 
     // Add topic context if viewing a specific glossary term

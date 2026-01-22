@@ -55,23 +55,64 @@ export const AIHelpWidget = () => {
   // Get current topic based on route
   const currentTopic = routeTopics[location.pathname] || 'fiscalité générale';
 
-  // Load user context on mount
+// Load comprehensive user context on mount
   useEffect(() => {
     const loadUserContext = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('professional_status, fiscal_status, annual_revenue_ht, family_status')
+          .select(`
+            professional_status, fiscal_status, annual_revenue_ht, family_status,
+            is_employee, is_self_employed, is_retired, is_investor,
+            children_count, birth_year, has_rental_income, has_investments,
+            gross_monthly_salary, net_monthly_salary, annual_bonus,
+            main_pension_annual, pea_balance, life_insurance_balance,
+            has_real_expenses, real_expenses_amount, siret, company_name,
+            primary_objective, onboarding_completed
+          `)
           .eq('user_id', user.id)
           .single();
         
         if (profile) {
           setUserContext({
+            // Statut professionnel
             professionalStatus: profile.professional_status,
             fiscalStatus: profile.fiscal_status,
+            isEmployee: profile.is_employee,
+            isSelfEmployed: profile.is_self_employed,
+            isRetired: profile.is_retired,
+            isInvestor: profile.is_investor,
+            
+            // Revenus
             annualRevenue: profile.annual_revenue_ht,
-            familyStatus: profile.family_status
+            grossMonthlySalary: profile.gross_monthly_salary,
+            netMonthlySalary: profile.net_monthly_salary,
+            annualBonus: profile.annual_bonus,
+            mainPension: profile.main_pension_annual,
+            
+            // Famille
+            familyStatus: profile.family_status,
+            childrenCount: profile.children_count,
+            birthYear: profile.birth_year,
+            
+            // Patrimoine
+            hasRentalIncome: profile.has_rental_income,
+            hasInvestments: profile.has_investments,
+            peaBalance: profile.pea_balance,
+            lifeInsuranceBalance: profile.life_insurance_balance,
+            
+            // Déductions
+            hasRealExpenses: profile.has_real_expenses,
+            realExpensesAmount: profile.real_expenses_amount,
+            
+            // Entreprise
+            siret: profile.siret,
+            companyName: profile.company_name,
+            
+            // Objectifs
+            primaryObjective: profile.primary_objective,
+            onboardingCompleted: profile.onboarding_completed
           });
         }
       }

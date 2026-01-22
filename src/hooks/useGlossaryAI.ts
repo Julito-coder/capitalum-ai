@@ -9,10 +9,43 @@ interface Message {
 }
 
 interface UserContext {
+  // Statut professionnel
   professionalStatus?: string;
   fiscalStatus?: string;
+  isEmployee?: boolean;
+  isSelfEmployed?: boolean;
+  isRetired?: boolean;
+  isInvestor?: boolean;
+  
+  // Revenus
   annualRevenue?: number;
+  grossMonthlySalary?: number;
+  netMonthlySalary?: number;
+  annualBonus?: number;
+  mainPension?: number;
+  
+  // Famille
   familyStatus?: string;
+  childrenCount?: number;
+  birthYear?: number;
+  
+  // Patrimoine
+  hasRentalIncome?: boolean;
+  hasInvestments?: boolean;
+  peaBalance?: number;
+  lifeInsuranceBalance?: number;
+  
+  // Déductions
+  hasRealExpenses?: boolean;
+  realExpensesAmount?: number;
+  
+  // Entreprise
+  siret?: string;
+  companyName?: string;
+  
+  // Objectifs
+  primaryObjective?: string;
+  onboardingCompleted?: boolean;
 }
 
 export const useGlossaryAI = () => {
