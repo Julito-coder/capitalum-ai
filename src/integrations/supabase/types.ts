@@ -14,6 +14,139 @@ export type Database = {
   }
   public: {
     Tables: {
+      acquisition_data: {
+        Row: {
+          agency_fee_amount: number | null
+          agency_fee_pct: number | null
+          bank_fees: number | null
+          brokerage_fees: number | null
+          created_at: string
+          furniture_amount: number | null
+          guarantee_fees: number | null
+          id: string
+          notary_fee_amount: number | null
+          notary_fee_estimated: boolean | null
+          price_net_seller: number
+          project_id: string
+          total_project_cost: number | null
+          updated_at: string
+          works_amount: number | null
+          works_schedule_months: number | null
+        }
+        Insert: {
+          agency_fee_amount?: number | null
+          agency_fee_pct?: number | null
+          bank_fees?: number | null
+          brokerage_fees?: number | null
+          created_at?: string
+          furniture_amount?: number | null
+          guarantee_fees?: number | null
+          id?: string
+          notary_fee_amount?: number | null
+          notary_fee_estimated?: boolean | null
+          price_net_seller?: number
+          project_id: string
+          total_project_cost?: number | null
+          updated_at?: string
+          works_amount?: number | null
+          works_schedule_months?: number | null
+        }
+        Update: {
+          agency_fee_amount?: number | null
+          agency_fee_pct?: number | null
+          bank_fees?: number | null
+          brokerage_fees?: number | null
+          created_at?: string
+          furniture_amount?: number | null
+          guarantee_fees?: number | null
+          id?: string
+          notary_fee_amount?: number | null
+          notary_fee_estimated?: boolean | null
+          price_net_seller?: number
+          project_id?: string
+          total_project_cost?: number | null
+          updated_at?: string
+          works_amount?: number | null
+          works_schedule_months?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acquisition_data_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "real_estate_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financing_data: {
+        Row: {
+          amortization_table: Json | null
+          created_at: string
+          deferment_months: number | null
+          deferment_type: string | null
+          down_payment: number | null
+          down_payment_allocation: string | null
+          duration_months: number | null
+          id: string
+          insurance_mode: string | null
+          insurance_value: number | null
+          loan_amount: number | null
+          monthly_payment: number | null
+          nominal_rate: number | null
+          project_id: string
+          total_insurance: number | null
+          total_interest: number | null
+          updated_at: string
+        }
+        Insert: {
+          amortization_table?: Json | null
+          created_at?: string
+          deferment_months?: number | null
+          deferment_type?: string | null
+          down_payment?: number | null
+          down_payment_allocation?: string | null
+          duration_months?: number | null
+          id?: string
+          insurance_mode?: string | null
+          insurance_value?: number | null
+          loan_amount?: number | null
+          monthly_payment?: number | null
+          nominal_rate?: number | null
+          project_id: string
+          total_insurance?: number | null
+          total_interest?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amortization_table?: Json | null
+          created_at?: string
+          deferment_months?: number | null
+          deferment_type?: string | null
+          down_payment?: number | null
+          down_payment_allocation?: string | null
+          duration_months?: number | null
+          id?: string
+          insurance_mode?: string | null
+          insurance_value?: number | null
+          loan_amount?: number | null
+          monthly_payment?: number | null
+          nominal_rate?: number | null
+          project_id?: string
+          total_insurance?: number | null
+          total_interest?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financing_data_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "real_estate_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount_ht: number
@@ -115,6 +248,118 @@ export type Database = {
           year?: number
         }
         Relationships: []
+      }
+      operating_costs: {
+        Row: {
+          accounting_annual: number | null
+          cfe_annual: number | null
+          condo_nonrecoverable_annual: number | null
+          costs_growth_rate: number | null
+          created_at: string
+          id: string
+          insurance_annual: number | null
+          letting_fees_annual: number | null
+          maintenance_mode: string | null
+          maintenance_value: number | null
+          management_pct: number | null
+          other_costs: Json | null
+          project_id: string
+          property_tax_annual: number | null
+          property_tax_growth_rate: number | null
+          updated_at: string
+          utilities_annual: number | null
+        }
+        Insert: {
+          accounting_annual?: number | null
+          cfe_annual?: number | null
+          condo_nonrecoverable_annual?: number | null
+          costs_growth_rate?: number | null
+          created_at?: string
+          id?: string
+          insurance_annual?: number | null
+          letting_fees_annual?: number | null
+          maintenance_mode?: string | null
+          maintenance_value?: number | null
+          management_pct?: number | null
+          other_costs?: Json | null
+          project_id: string
+          property_tax_annual?: number | null
+          property_tax_growth_rate?: number | null
+          updated_at?: string
+          utilities_annual?: number | null
+        }
+        Update: {
+          accounting_annual?: number | null
+          cfe_annual?: number | null
+          condo_nonrecoverable_annual?: number | null
+          costs_growth_rate?: number | null
+          created_at?: string
+          id?: string
+          insurance_annual?: number | null
+          letting_fees_annual?: number | null
+          maintenance_mode?: string | null
+          maintenance_value?: number | null
+          management_pct?: number | null
+          other_costs?: Json | null
+          project_id?: string
+          property_tax_annual?: number | null
+          property_tax_growth_rate?: number | null
+          updated_at?: string
+          utilities_annual?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operating_costs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "real_estate_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_occupier_data: {
+        Row: {
+          avoided_rent_monthly: number | null
+          created_at: string
+          id: string
+          optimist_growth_rate: number | null
+          project_id: string
+          prudent_growth_rate: number | null
+          scenario_type: string | null
+          updated_at: string
+          value_growth_rate: number | null
+        }
+        Insert: {
+          avoided_rent_monthly?: number | null
+          created_at?: string
+          id?: string
+          optimist_growth_rate?: number | null
+          project_id: string
+          prudent_growth_rate?: number | null
+          scenario_type?: string | null
+          updated_at?: string
+          value_growth_rate?: number | null
+        }
+        Update: {
+          avoided_rent_monthly?: number | null
+          created_at?: string
+          id?: string
+          optimist_growth_rate?: number | null
+          project_id?: string
+          prudent_growth_rate?: number | null
+          scenario_type?: string | null
+          updated_at?: string
+          value_growth_rate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_occupier_data_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "real_estate_projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -374,6 +619,326 @@ export type Database = {
         }
         Relationships: []
       }
+      real_estate_projects: {
+        Row: {
+          city: string | null
+          created_at: string
+          dpe: string | null
+          floor: number | null
+          horizon_years: number | null
+          id: string
+          is_new: boolean | null
+          ownership_type: string | null
+          postal_code: string | null
+          property_type: string | null
+          rooms: number | null
+          status: string | null
+          strategy: string | null
+          surface_m2: number
+          tags: string[] | null
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+          zone_id: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          dpe?: string | null
+          floor?: number | null
+          horizon_years?: number | null
+          id?: string
+          is_new?: boolean | null
+          ownership_type?: string | null
+          postal_code?: string | null
+          property_type?: string | null
+          rooms?: number | null
+          status?: string | null
+          strategy?: string | null
+          surface_m2?: number
+          tags?: string[] | null
+          title: string
+          type?: string
+          updated_at?: string
+          user_id: string
+          zone_id?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          dpe?: string | null
+          floor?: number | null
+          horizon_years?: number | null
+          id?: string
+          is_new?: boolean | null
+          ownership_type?: string | null
+          postal_code?: string | null
+          property_type?: string | null
+          rooms?: number | null
+          status?: string | null
+          strategy?: string | null
+          surface_m2?: number
+          tags?: string[] | null
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+          zone_id?: string | null
+        }
+        Relationships: []
+      }
+      rental_income_data: {
+        Row: {
+          created_at: string
+          default_rate: number | null
+          id: string
+          is_seasonal: boolean | null
+          project_id: string
+          recoverable_charges: number | null
+          rent_growth_rate: number | null
+          rent_monthly: number | null
+          seasonal_avg_night: number | null
+          seasonal_cleaning_fees: number | null
+          seasonal_occupancy_rate: number | null
+          seasonal_platform_fees: number | null
+          updated_at: string
+          vacancy_rate: number | null
+        }
+        Insert: {
+          created_at?: string
+          default_rate?: number | null
+          id?: string
+          is_seasonal?: boolean | null
+          project_id: string
+          recoverable_charges?: number | null
+          rent_growth_rate?: number | null
+          rent_monthly?: number | null
+          seasonal_avg_night?: number | null
+          seasonal_cleaning_fees?: number | null
+          seasonal_occupancy_rate?: number | null
+          seasonal_platform_fees?: number | null
+          updated_at?: string
+          vacancy_rate?: number | null
+        }
+        Update: {
+          created_at?: string
+          default_rate?: number | null
+          id?: string
+          is_seasonal?: boolean | null
+          project_id?: string
+          recoverable_charges?: number | null
+          rent_growth_rate?: number | null
+          rent_monthly?: number | null
+          seasonal_avg_night?: number | null
+          seasonal_cleaning_fees?: number | null
+          seasonal_occupancy_rate?: number | null
+          seasonal_platform_fees?: number | null
+          updated_at?: string
+          vacancy_rate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_income_data_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "real_estate_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_data: {
+        Row: {
+          capital_gain_tax_rate: number | null
+          created_at: string
+          id: string
+          net_sale_proceeds: number | null
+          project_id: string
+          property_growth_rate: number | null
+          resale_agency_pct: number | null
+          resale_other_fees: number | null
+          resale_year: number | null
+          updated_at: string
+        }
+        Insert: {
+          capital_gain_tax_rate?: number | null
+          created_at?: string
+          id?: string
+          net_sale_proceeds?: number | null
+          project_id: string
+          property_growth_rate?: number | null
+          resale_agency_pct?: number | null
+          resale_other_fees?: number | null
+          resale_year?: number | null
+          updated_at?: string
+        }
+        Update: {
+          capital_gain_tax_rate?: number | null
+          created_at?: string
+          id?: string
+          net_sale_proceeds?: number | null
+          project_id?: string
+          property_growth_rate?: number | null
+          resale_agency_pct?: number | null
+          resale_other_fees?: number | null
+          resale_year?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_data_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "real_estate_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulation_results: {
+        Row: {
+          break_even_price: number | null
+          break_even_rate: number | null
+          break_even_rent: number | null
+          calculated_at: string
+          cashflow_series: Json | null
+          created_at: string
+          dscr: number | null
+          gross_yield: number | null
+          id: string
+          irr: number | null
+          monthly_cashflow_after_tax: number | null
+          monthly_cashflow_before_tax: number | null
+          monthly_effort: number | null
+          net_net_yield: number | null
+          net_patrimony: number | null
+          net_yield: number | null
+          patrimony_series: Json | null
+          project_id: string
+          sensitivity_data: Json | null
+          updated_at: string
+        }
+        Insert: {
+          break_even_price?: number | null
+          break_even_rate?: number | null
+          break_even_rent?: number | null
+          calculated_at?: string
+          cashflow_series?: Json | null
+          created_at?: string
+          dscr?: number | null
+          gross_yield?: number | null
+          id?: string
+          irr?: number | null
+          monthly_cashflow_after_tax?: number | null
+          monthly_cashflow_before_tax?: number | null
+          monthly_effort?: number | null
+          net_net_yield?: number | null
+          net_patrimony?: number | null
+          net_yield?: number | null
+          patrimony_series?: Json | null
+          project_id: string
+          sensitivity_data?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          break_even_price?: number | null
+          break_even_rate?: number | null
+          break_even_rent?: number | null
+          calculated_at?: string
+          cashflow_series?: Json | null
+          created_at?: string
+          dscr?: number | null
+          gross_yield?: number | null
+          id?: string
+          irr?: number | null
+          monthly_cashflow_after_tax?: number | null
+          monthly_cashflow_before_tax?: number | null
+          monthly_effort?: number | null
+          net_net_yield?: number | null
+          net_patrimony?: number | null
+          net_yield?: number | null
+          patrimony_series?: Json | null
+          project_id?: string
+          sensitivity_data?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulation_results_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "real_estate_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_config: {
+        Row: {
+          amortization_components: Json | null
+          amortization_enabled: boolean | null
+          annual_tax_override: number | null
+          capital_gain_mode: string | null
+          capital_gain_rate: number | null
+          costs_deductible: boolean | null
+          created_at: string
+          deficit_enabled: boolean | null
+          exploitation_start_date: string | null
+          id: string
+          interest_deductible: boolean | null
+          project_id: string
+          regime_key: string | null
+          social_rate: number | null
+          tax_mode: string | null
+          tmi_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          amortization_components?: Json | null
+          amortization_enabled?: boolean | null
+          annual_tax_override?: number | null
+          capital_gain_mode?: string | null
+          capital_gain_rate?: number | null
+          costs_deductible?: boolean | null
+          created_at?: string
+          deficit_enabled?: boolean | null
+          exploitation_start_date?: string | null
+          id?: string
+          interest_deductible?: boolean | null
+          project_id: string
+          regime_key?: string | null
+          social_rate?: number | null
+          tax_mode?: string | null
+          tmi_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amortization_components?: Json | null
+          amortization_enabled?: boolean | null
+          annual_tax_override?: number | null
+          capital_gain_mode?: string | null
+          capital_gain_rate?: number | null
+          costs_deductible?: boolean | null
+          created_at?: string
+          deficit_enabled?: boolean | null
+          exploitation_start_date?: string | null
+          id?: string
+          interest_deductible?: boolean | null
+          project_id?: string
+          regime_key?: string | null
+          social_rate?: number | null
+          tax_mode?: string | null
+          tmi_rate?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_config_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "real_estate_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tax_scan_history: {
         Row: {
           created_at: string
@@ -473,6 +1038,54 @@ export type Database = {
           updated_at?: string
           user_id?: string
           year?: number
+        }
+        Relationships: []
+      }
+      zone_data: {
+        Row: {
+          charges_estimate: number | null
+          city: string
+          country: string | null
+          created_at: string
+          id: string
+          postal_code_prefix: string | null
+          price_per_m2_default: number | null
+          property_tax_estimate: number | null
+          region: string | null
+          rent_per_m2_default: number | null
+          updated_at: string
+          vacancy_default: number | null
+          zone_category: string | null
+        }
+        Insert: {
+          charges_estimate?: number | null
+          city: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          postal_code_prefix?: string | null
+          price_per_m2_default?: number | null
+          property_tax_estimate?: number | null
+          region?: string | null
+          rent_per_m2_default?: number | null
+          updated_at?: string
+          vacancy_default?: number | null
+          zone_category?: string | null
+        }
+        Update: {
+          charges_estimate?: number | null
+          city?: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          postal_code_prefix?: string | null
+          price_per_m2_default?: number | null
+          property_tax_estimate?: number | null
+          region?: string | null
+          rent_per_m2_default?: number | null
+          updated_at?: string
+          vacancy_default?: number | null
+          zone_category?: string | null
         }
         Relationships: []
       }
