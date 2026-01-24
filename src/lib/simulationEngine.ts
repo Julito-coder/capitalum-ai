@@ -641,6 +641,3 @@ function calculateSensitivity(data: FullProjectData): SensitivityData {
     heatmap,
   };
 }
-
-// Export utility functions
-export { estimateNotaryFees, calculateInsurance, getRemainingDebtAtYear };
