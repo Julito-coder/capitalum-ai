@@ -71,10 +71,18 @@ const RealEstateSimulator = () => {
             <h1 className="text-2xl font-bold text-foreground">Simulateur Immobilier</h1>
             <p className="text-muted-foreground">Locatif & Résidence Principale</p>
           </div>
-          <Button onClick={() => navigate("/simulator/new")} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Nouvelle simulation
-          </Button>
+          <div className="flex gap-2">
+            {projects.length >= 2 && (
+              <Button variant="outline" onClick={() => navigate("/simulator/compare")} className="gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Comparer
+              </Button>
+            )}
+            <Button onClick={() => navigate("/simulator/new")} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nouvelle simulation
+            </Button>
+          </div>
         </div>
 
         {projects.length === 0 ? (

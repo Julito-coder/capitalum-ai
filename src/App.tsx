@@ -10,12 +10,16 @@ import { AIHelpWidget } from "@/components/ai/AIHelpWidget";
 import Dashboard from "./pages/Dashboard";
 import Audit from "./pages/Audit";
 import CalendarPage from "./pages/Calendar";
-import Simulator from "./pages/Simulator";
 import Glossary from "./pages/Glossary";
 import Scanner from "./pages/Scanner";
 import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+// Real Estate Simulator pages
+import RealEstateSimulator from "./pages/RealEstateSimulator";
+import NewSimulation from "./pages/simulator/NewSimulation";
+import SimulationDetails from "./pages/simulator/SimulationDetails";
+import CompareSimulations from "./pages/simulator/CompareSimulations";
 // Pro pages
 import URSSAFTracking from "./pages/pro/URSSAFTracking";
 import InvoiceManager from "./pages/pro/InvoiceManager";
@@ -41,9 +45,13 @@ const App = () => (
               <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
               <Route path="/audit" element={<ProtectedRoute><Audit /></ProtectedRoute>} />
               <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
-              <Route path="/simulator" element={<ProtectedRoute><Simulator /></ProtectedRoute>} />
               <Route path="/glossary" element={<ProtectedRoute><Glossary /></ProtectedRoute>} />
               <Route path="/scanner" element={<ProtectedRoute><Scanner /></ProtectedRoute>} />
+              {/* Real Estate Simulator routes */}
+              <Route path="/simulator" element={<ProtectedRoute><RealEstateSimulator /></ProtectedRoute>} />
+              <Route path="/simulator/new" element={<ProtectedRoute><NewSimulation /></ProtectedRoute>} />
+              <Route path="/simulator/compare" element={<ProtectedRoute><CompareSimulations /></ProtectedRoute>} />
+              <Route path="/simulator/:id" element={<ProtectedRoute><SimulationDetails /></ProtectedRoute>} />
               {/* Pro routes */}
               <Route path="/pro/onboarding" element={<ProtectedRoute><ProOnboarding /></ProtectedRoute>} />
               <Route path="/pro/urssaf" element={<ProtectedRoute><URSSAFTracking /></ProtectedRoute>} />
