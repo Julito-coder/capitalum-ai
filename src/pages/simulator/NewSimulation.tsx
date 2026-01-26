@@ -15,6 +15,7 @@ import { RentalIncomeStep } from "@/components/simulator/steps/RentalIncomeStep"
 import { OperatingCostsStep } from "@/components/simulator/steps/OperatingCostsStep";
 import { TaxConfigStep } from "@/components/simulator/steps/TaxConfigStep";
 import { SaleStep } from "@/components/simulator/steps/SaleStep";
+import StressTestsStep from "@/components/simulator/steps/StressTestsStep";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -245,9 +246,42 @@ const NewSimulation = () => {
             {currentStep === 6 && advState.project.type === 'LOCATIF' && (
               <SaleStep state={advState} updateState={updateAdvState} mode={mode} />
             )}
-            {/* RP steps or remaining Locatif steps (Stress Tests) */}
-            {((currentStep >= 7 && advState.project.type === 'LOCATIF') || 
-              (currentStep >= 3 && advState.project.type === 'RP')) && (
+            {currentStep === 7 && advState.project.type === 'LOCATIF' && (
+              <StressTestsStep 
+                data={{
+                  rentHaircut: advState.stressSettings.rentHaircut ? -advState.stressSettings.rentHaircut : 0,
+                  vacancyHaircut: advState.stressSettings.vacancyIncrease || 0,
+                  rateHaircut: advState.stressSettings.rateIncrease || 0,
+                  costsHaircut: advState.stressSettings.chargesIncrease || 0,
+                  applyAllHaircuts: advState.stressSettings.enabled,
+                  useConservativeScenario: false,
+                  rentMonthly: advState.rental.rentMonthly,
+                  vacancyRate: advState.rental.vacancyRate,
+                  nominalRate: advState.financing.nominalRate,
+                  operatingCostsAnnual: advState.operatingCosts.propertyTaxAnnual + 
+                    advState.operatingCosts.condoNonRecoverableAnnual + 
+                    advState.operatingCosts.insurancePNO + 
+                    advState.operatingCosts.accountingAnnual,
+                  loanAmount: advState.financing.loanAmount,
+                  durationMonths: advState.financing.durationMonths,
+                }}
+                onChange={(updates) => {
+                  setAdvState(prev => ({
+                    ...prev,
+                    stressSettings: {
+                      ...prev.stressSettings,
+                      rentHaircut: updates.rentHaircut !== undefined ? -updates.rentHaircut : prev.stressSettings.rentHaircut,
+                      vacancyIncrease: updates.vacancyHaircut ?? prev.stressSettings.vacancyIncrease,
+                      rateIncrease: updates.rateHaircut ?? prev.stressSettings.rateIncrease,
+                      chargesIncrease: updates.costsHaircut ?? prev.stressSettings.chargesIncrease,
+                      enabled: updates.useConservativeScenario ?? prev.stressSettings.enabled,
+                    }
+                  }));
+                }}
+              />
+            )}
+            {/* RP steps placeholder */}
+            {(currentStep >= 3 && advState.project.type === 'RP') && (
               <Card>
                 <CardContent className="py-12 text-center text-muted-foreground">
                   Étape en cours de développement. Créez la simulation pour voir les résultats.
