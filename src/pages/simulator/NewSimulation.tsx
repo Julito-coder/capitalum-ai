@@ -14,6 +14,7 @@ import { FinancingStep } from "@/components/simulator/steps/FinancingStep";
 import { RentalIncomeStep } from "@/components/simulator/steps/RentalIncomeStep";
 import { OperatingCostsStep } from "@/components/simulator/steps/OperatingCostsStep";
 import { TaxConfigStep } from "@/components/simulator/steps/TaxConfigStep";
+import { SaleStep } from "@/components/simulator/steps/SaleStep";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -241,8 +242,11 @@ const NewSimulation = () => {
             {currentStep === 5 && advState.project.type === 'LOCATIF' && (
               <TaxConfigStep state={advState} updateState={updateAdvState} mode={mode} />
             )}
-            {/* RP steps or remaining Locatif steps */}
-            {((currentStep >= 6 && advState.project.type === 'LOCATIF') || 
+            {currentStep === 6 && advState.project.type === 'LOCATIF' && (
+              <SaleStep state={advState} updateState={updateAdvState} mode={mode} />
+            )}
+            {/* RP steps or remaining Locatif steps (Stress Tests) */}
+            {((currentStep >= 7 && advState.project.type === 'LOCATIF') || 
               (currentStep >= 3 && advState.project.type === 'RP')) && (
               <Card>
                 <CardContent className="py-12 text-center text-muted-foreground">
