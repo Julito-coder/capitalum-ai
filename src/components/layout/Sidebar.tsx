@@ -28,7 +28,7 @@ const personalNavItems = [
   { path: '/audit', icon: FileSearch, label: 'Audit fiscal' },
   { path: '/scanner', icon: ScanSearch, label: 'Scanner fiscal' },
   { path: '/calendar', icon: Calendar, label: 'Calendrier' },
-  { path: '/simulator', icon: Calculator, label: 'Simulateur IR' },
+  { path: '/simulator', icon: Building2, label: 'Simulateur Immo' },
   { path: '/glossary', icon: FileText, label: 'Glossaire' },
 ];
 
