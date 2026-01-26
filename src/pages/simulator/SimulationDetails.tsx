@@ -122,6 +122,10 @@ const SimulationDetails = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate(`/simulator/edit/${id}`)}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Modifier
+            </Button>
             <Button variant="outline" onClick={handleRecalculate} disabled={recalculating}>
               <RefreshCw className={`h-4 w-4 mr-2 ${recalculating ? 'animate-spin' : ''}`} />
               Recalculer
