@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
-import { createProject } from "@/lib/realEstateService";
+import { createProject, fetchFullProject, recalculateProject } from "@/lib/realEstateService";
+import { supabase } from "@/integrations/supabase/client";
 import { WizardState, WIZARD_STEPS } from "@/lib/realEstateTypes";
 import { AdvancedWizardState, LOCATIF_WIZARD_STEPS, RP_WIZARD_STEPS, getDefaultAdvancedState } from "@/lib/advancedSimulatorTypes";
 import { WizardStepIndicator } from "@/components/simulator/WizardStepIndicator";
@@ -29,12 +30,149 @@ import { TAX_REGIMES } from "@/lib/realEstateTypes";
 const NewSimulation = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { id: editId } = useParams<{ id: string }>();
+  const isEditMode = !!editId;
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEditMode);
   const [currentStep, setCurrentStep] = useState(0);
   const [mode, setMode] = useState<'essential' | 'advanced'>('essential');
   
   // Advanced state
   const [advState, setAdvState] = useState<AdvancedWizardState>(getDefaultAdvancedState('LOCATIF'));
+
+  // Load existing project data in edit mode
+  useEffect(() => {
+    if (editId) {
+      loadExistingProject(editId);
+    }
+  }, [editId]);
+
+  const loadExistingProject = async (projectId: string) => {
+    try {
+      const fullData = await fetchFullProject(projectId);
+      if (!fullData) {
+        toast.error("Projet introuvable");
+        navigate("/simulator");
+        return;
+      }
+      
+      const { project, acquisition, financing, rental, owner_occupier, operating_costs, tax_config, sale_data } = fullData;
+      
+      // Set mode to advanced if complex data
+      setMode('advanced');
+      
+      // Update advanced state with loaded data
+      setAdvState({
+        project: {
+          type: project.type as 'LOCATIF' | 'RP',
+          title: project.title || '',
+          city: project.city || '',
+          postalCode: project.postal_code || '',
+          surfaceM2: project.surface_m2 || 50,
+          rooms: project.rooms || 2,
+          propertyType: (project.property_type as 'apartment' | 'house') || 'apartment',
+          isNew: project.is_new || false,
+          dpe: project.dpe || undefined,
+          floor: project.floor || undefined,
+          strategy: (project.strategy as 'nu' | 'meuble' | 'coloc' | 'saisonnier') || 'nu',
+          horizonYears: project.horizon_years || 20,
+          ownershipType: (project.ownership_type as 'personal' | 'sci' | 'other') || 'personal',
+        },
+        acquisition: {
+          priceNetSeller: acquisition?.price_net_seller || 200000,
+          agencyFeePct: acquisition?.agency_fee_pct || 0,
+          agencyFeeAmount: acquisition?.agency_fee_amount || 0,
+          notaryFeeAmount: acquisition?.notary_fee_amount || 15000,
+          notaryFeeEstimated: acquisition?.notary_fee_estimated ?? true,
+          worksAmount: acquisition?.works_amount || 0,
+          worksScheduleMonths: acquisition?.works_schedule_months || 0,
+          furnitureAmount: acquisition?.furniture_amount || 0,
+          bankFees: acquisition?.bank_fees || 500,
+          guaranteeFees: acquisition?.guarantee_fees || 2000,
+          brokerageFees: acquisition?.brokerage_fees || 0,
+        },
+        financing: {
+          downPayment: financing?.down_payment || 30000,
+          downPaymentAllocation: (financing?.down_payment_allocation as 'fees' | 'capital' | 'mixed') || 'fees',
+          loanAmount: financing?.loan_amount || 170000,
+          durationMonths: financing?.duration_months || 240,
+          nominalRate: financing?.nominal_rate || 3.5,
+          insuranceMode: (financing?.insurance_mode as 'percentage' | 'fixed') || 'percentage',
+          insuranceValue: financing?.insurance_value || 0.3,
+          defermentType: (financing?.deferment_type as 'none' | 'partial' | 'total') || 'none',
+          defermentMonths: financing?.deferment_months || 0,
+        },
+        rental: {
+          rentMonthly: rental?.rent_monthly || 900,
+          recoverableCharges: rental?.recoverable_charges || 0,
+          vacancyRate: rental?.vacancy_rate || 5,
+          defaultRate: rental?.default_rate || 2,
+          rentGrowthRate: rental?.rent_growth_rate || 1,
+          isSeasonal: rental?.is_seasonal || false,
+          seasonalOccupancyRate: rental?.seasonal_occupancy_rate || 70,
+          seasonalAvgNight: rental?.seasonal_avg_night || 80,
+          seasonalPlatformFees: rental?.seasonal_platform_fees || 15,
+          seasonalCleaningFees: rental?.seasonal_cleaning_fees || 30,
+        },
+        ownerOccupier: {
+          avoidedRentMonthly: owner_occupier?.avoided_rent_monthly || 1200,
+          valueGrowthRate: owner_occupier?.value_growth_rate || 2,
+          scenarioType: (owner_occupier?.scenario_type as 'prudent' | 'base' | 'optimist') || 'base',
+          prudentGrowthRate: owner_occupier?.prudent_growth_rate || 1,
+          optimistGrowthRate: owner_occupier?.optimist_growth_rate || 3,
+        },
+        operatingCosts: {
+          propertyTaxAnnual: operating_costs?.property_tax_annual || 1000,
+          propertyTaxGrowthRate: operating_costs?.property_tax_growth_rate || 2,
+          condoNonrecoverableAnnual: operating_costs?.condo_nonrecoverable_annual || 1200,
+          insuranceAnnual: operating_costs?.insurance_annual || 150,
+          maintenanceMode: (operating_costs?.maintenance_mode as 'percentage' | 'fixed') || 'percentage',
+          maintenanceValue: operating_costs?.maintenance_value || 5,
+          managementPct: operating_costs?.management_pct || 8,
+          lettingFeesAnnual: operating_costs?.letting_fees_annual || 0,
+          accountingAnnual: operating_costs?.accounting_annual || 300,
+          cfeAnnual: operating_costs?.cfe_annual || 0,
+          utilitiesAnnual: operating_costs?.utilities_annual || 0,
+          otherCosts: (operating_costs?.other_costs as { name: string; amount: number }[]) || [],
+          costsGrowthRate: operating_costs?.costs_growth_rate || 2,
+        },
+        taxConfig: {
+          taxMode: (tax_config?.tax_mode as 'simple' | 'advanced' | 'override') || 'simple',
+          tmiRate: tax_config?.tmi_rate || 30,
+          socialRate: tax_config?.social_rate || 17.2,
+          regimeKey: tax_config?.regime_key || 'micro_foncier',
+          interestDeductible: tax_config?.interest_deductible ?? true,
+          costsDeductible: tax_config?.costs_deductible ?? true,
+          amortizationEnabled: tax_config?.amortization_enabled || false,
+          amortizationComponents: (tax_config?.amortization_components as { name: string; value_pct: number; duration_years: number }[]) || [],
+          deficitEnabled: tax_config?.deficit_enabled || false,
+          annualTaxOverride: tax_config?.annual_tax_override || undefined,
+          capitalGainMode: (tax_config?.capital_gain_mode as 'simple' | 'advanced') || 'simple',
+          capitalGainRate: tax_config?.capital_gain_rate || 36.2,
+          exploitationStartDate: tax_config?.exploitation_start_date || undefined,
+        },
+        saleData: {
+          resaleYear: sale_data?.resale_year || 20,
+          propertyGrowthRate: sale_data?.property_growth_rate || 2,
+          resaleAgencyPct: sale_data?.resale_agency_pct || 5,
+          resaleOtherFees: sale_data?.resale_other_fees || 0,
+          capitalGainTaxRate: sale_data?.capital_gain_tax_rate || 36.2,
+        },
+        stressTests: {
+          rentHaircut: 10,
+          vacancyHaircut: 50,
+          rateHaircut: 1,
+          costsHaircut: 10,
+        },
+      });
+      
+      toast.success("Projet chargé pour modification");
+    } catch (error) {
+      toast.error("Erreur lors du chargement du projet");
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
   // Legacy state for essential mode
   const [state, setState] = useState<WizardState>({

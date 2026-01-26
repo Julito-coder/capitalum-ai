@@ -50,6 +50,7 @@ const App = () => (
               {/* Real Estate Simulator routes */}
               <Route path="/simulator" element={<ProtectedRoute><RealEstateSimulator /></ProtectedRoute>} />
               <Route path="/simulator/new" element={<ProtectedRoute><NewSimulation /></ProtectedRoute>} />
+              <Route path="/simulator/edit/:id" element={<ProtectedRoute><NewSimulation /></ProtectedRoute>} />
               <Route path="/simulator/compare" element={<ProtectedRoute><CompareSimulations /></ProtectedRoute>} />
               <Route path="/simulator/:id" element={<ProtectedRoute><SimulationDetails /></ProtectedRoute>} />
               {/* Pro routes */}
