@@ -17,6 +17,8 @@ import { OperatingCostsStep } from "@/components/simulator/steps/OperatingCostsS
 import { TaxConfigStep } from "@/components/simulator/steps/TaxConfigStep";
 import { SaleStep } from "@/components/simulator/steps/SaleStep";
 import StressTestsStep from "@/components/simulator/steps/StressTestsStep";
+import { HouseholdStep } from "@/components/simulator/steps/HouseholdStep";
+import { PatrimonyStep } from "@/components/simulator/steps/PatrimonyStep";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -423,13 +425,26 @@ const NewSimulation = () => {
                 }}
               />
             )}
-            {/* RP steps placeholder */}
-            {(currentStep >= 3 && advState.project.type === 'RP') && (
-              <Card>
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  Étape en cours de développement. Créez la simulation pour voir les résultats.
-                </CardContent>
-              </Card>
+            {/* RP steps */}
+            {currentStep === 3 && advState.project.type === 'RP' && (
+              <OperatingCostsStep state={advState} updateState={updateAdvState} mode={mode} />
+            )}
+            {currentStep === 4 && advState.project.type === 'RP' && (
+              <HouseholdStep 
+                state={advState} 
+                updateState={updateAdvState} 
+                mode={mode}
+                monthlyPayment={advState.financing.monthlyPayment}
+              />
+            )}
+            {currentStep === 5 && advState.project.type === 'RP' && (
+              <PatrimonyStep 
+                state={advState} 
+                updateState={updateAdvState} 
+                mode={mode}
+                totalProjectCost={advTotalCost}
+                loanAmount={advState.financing.loanAmount}
+              />
             )}
           </div>
         ) : (
