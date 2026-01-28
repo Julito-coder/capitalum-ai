@@ -165,6 +165,11 @@ export async function createProject(userId: string, wizardState: WizardState): P
           project_id: projectId,
           avoided_rent_monthly: wizardState.owner_occupier?.avoided_rent_monthly || 0,
           value_growth_rate: wizardState.owner_occupier?.value_growth_rate || 2,
+          household_income_monthly: wizardState.owner_occupier?.household_income_monthly || 0,
+          existing_credits_monthly: wizardState.owner_occupier?.existing_credits_monthly || 0,
+          other_charges_monthly: wizardState.owner_occupier?.other_charges_monthly || 0,
+          remaining_liquidity: wizardState.owner_occupier?.remaining_liquidity || 0,
+          household_members: JSON.stringify(wizardState.owner_occupier?.household_members || []),
         }),
   ]);
 

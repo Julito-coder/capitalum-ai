@@ -94,6 +94,16 @@ export interface RentalIncomeData {
   seasonal_cleaning_fees: number;
 }
 
+export interface HouseholdMemberData {
+  id?: string;
+  firstName: string;
+  relation: string;
+  professionalStatus: string;
+  netMonthlySalary: number;
+  contractType: string;
+  existingCredits: number;
+}
+
 export interface OwnerOccupierData {
   id?: string;
   project_id: string;
@@ -102,6 +112,12 @@ export interface OwnerOccupierData {
   scenario_type: ScenarioType;
   prudent_growth_rate: number;
   optimist_growth_rate: number;
+  // Household solvency fields
+  household_income_monthly?: number;
+  existing_credits_monthly?: number;
+  other_charges_monthly?: number;
+  remaining_liquidity?: number;
+  household_members?: HouseholdMemberData[];
 }
 
 export interface OperatingCosts {
