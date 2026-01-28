@@ -1,6 +1,7 @@
 // Service for real estate project CRUD operations
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import {
   RealEstateProject,
   AcquisitionData,
@@ -169,7 +170,7 @@ export async function createProject(userId: string, wizardState: WizardState): P
           existing_credits_monthly: wizardState.owner_occupier?.existing_credits_monthly || 0,
           other_charges_monthly: wizardState.owner_occupier?.other_charges_monthly || 0,
           remaining_liquidity: wizardState.owner_occupier?.remaining_liquidity || 0,
-          household_members: JSON.stringify(wizardState.owner_occupier?.household_members || []),
+          household_members: (wizardState.owner_occupier?.household_members ?? []) as unknown as Json,
         }),
   ]);
 

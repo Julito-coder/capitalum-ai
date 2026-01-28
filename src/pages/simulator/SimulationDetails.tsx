@@ -94,8 +94,16 @@ const SimulationDetails = () => {
       // If RP project, load household data from owner_occupier_data (stored in DB)
       if (result?.project.type === 'RP' && result.owner_occupier) {
         const oo = result.owner_occupier;
-        // Parse household_members from JSON stored in DB
-        const storedMembers = (oo.household_members || []) as Array<{
+        // Parse household_members - handle both JSONB array and legacy stringified JSON
+        let rawMembers = oo.household_members || [];
+        if (typeof rawMembers === 'string') {
+          try {
+            rawMembers = JSON.parse(rawMembers);
+          } catch {
+            rawMembers = [];
+          }
+        }
+        const storedMembers = (Array.isArray(rawMembers) ? rawMembers : []) as Array<{
           id?: string;
           firstName: string;
           relation: string;

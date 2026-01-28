@@ -134,17 +134,24 @@ const NewSimulation = () => {
           existingCreditsMonthly: owner_occupier?.existing_credits_monthly || 0,
           otherChargesMonthly: owner_occupier?.other_charges_monthly || 0,
           remainingLiquidity: owner_occupier?.remaining_liquidity || 10000,
-          householdMembers: Array.isArray(owner_occupier?.household_members) 
-            ? owner_occupier.household_members.map((m: any) => ({
-                id: m.id || crypto.randomUUID(),
-                firstName: m.firstName || '',
-                relation: m.relation || 'conjoint',
-                professionalStatus: m.professionalStatus || 'employee',
-                netMonthlySalary: Number(m.netMonthlySalary) || 0,
-                contractType: m.contractType || 'cdi',
-                existingCredits: Number(m.existingCredits) || 0,
-              }))
-            : [],
+          householdMembers: (() => {
+            // Parse household_members - handle JSONB array OR legacy string
+            let raw = owner_occupier?.household_members;
+            if (typeof raw === 'string') {
+              try { raw = JSON.parse(raw); } catch { raw = []; }
+            }
+            return Array.isArray(raw)
+              ? raw.map((m: any) => ({
+                  id: m.id || crypto.randomUUID(),
+                  firstName: m.firstName || '',
+                  relation: m.relation || 'conjoint',
+                  professionalStatus: m.professionalStatus || 'employee',
+                  netMonthlySalary: Number(m.netMonthlySalary) || 0,
+                  contractType: m.contractType || 'cdi',
+                  existingCredits: Number(m.existingCredits) || 0,
+                }))
+              : [];
+          })(),
         },
         operatingCosts: {
           ...defaults.operatingCosts,
