@@ -158,6 +158,16 @@ export interface AdvancedWizardState {
     existingCreditsMonthly: number;
     otherChargesMonthly: number;
     remainingLiquidity: number;
+    // Household members
+    householdMembers: {
+      id: string;
+      firstName: string;
+      relation: string;
+      professionalStatus: string;
+      netMonthlySalary: number;
+      contractType: string;
+      existingCredits: number;
+    }[];
   };
 
   // Operating costs
@@ -244,6 +254,7 @@ export const LOCATIF_WIZARD_STEPS = [
 // Wizard steps for RP
 export const RP_WIZARD_STEPS = [
   { id: 'project', title: 'Bien & Achat', description: 'Caractéristiques' },
+  { id: 'acquisition', title: 'Acquisition', description: 'Coût total' },
   { id: 'financing', title: 'Financement', description: 'Prêt et aides' },
   { id: 'costs', title: 'Charges', description: 'Budget logement' },
   { id: 'household', title: 'Ménage', description: 'Analyse banque' },
@@ -336,6 +347,7 @@ export const getDefaultAdvancedState = (type: 'LOCATIF' | 'RP'): AdvancedWizardS
     existingCreditsMonthly: 0,
     otherChargesMonthly: 500,
     remainingLiquidity: 10000,
+    householdMembers: [],
   },
   operatingCosts: {
     propertyTaxAnnual: 1000,
