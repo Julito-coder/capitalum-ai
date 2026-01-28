@@ -4,9 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Users, Euro } from "lucide-react";
+import { Plus, Trash2, Users, Euro, Loader2, RefreshCw } from "lucide-react";
 import { AdvancedWizardState } from "@/lib/advancedSimulatorTypes";
 import { formatCurrency } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export interface HouseholdMember {
   id: string;
@@ -56,6 +60,76 @@ const contractTypeOptions = [
 ];
 
 export function HouseholdStep({ state, updateState, monthlyPayment = 0 }: HouseholdStepProps) {
+  const { user } = useAuth();
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  // Load user profile on mount to pre-fill household data
+  useEffect(() => {
+    if (user && !profileLoaded && state.ownerOccupier.householdIncomeMonthly === 5000) {
+      loadUserProfile();
+    }
+  }, [user]);
+
+  const loadUserProfile = async () => {
+    if (!user) return;
+    
+    setProfileLoading(true);
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (profile) {
+        // Map profile data to household state
+        const netIncome = profile.net_monthly_salary || 0;
+        const existingCredits = profile.mortgage_remaining ? Math.round(profile.mortgage_remaining / 240) : 0; // Estimate monthly if mortgage exists
+        
+        // Map professional status
+        let professionalStatus = 'employee';
+        if (profile.is_self_employed) professionalStatus = 'self_employed';
+        else if (profile.is_retired) professionalStatus = 'retired';
+        
+        updateState('ownerOccupier', {
+          householdIncomeMonthly: netIncome > 0 ? netIncome : state.ownerOccupier.householdIncomeMonthly,
+          existingCreditsMonthly: existingCredits,
+        });
+
+        // If spouse income exists, add as household member
+        if (profile.spouse_income && profile.spouse_income > 0) {
+          const spouseMember: HouseholdMember = {
+            id: crypto.randomUUID(),
+            firstName: 'Conjoint(e)',
+            relation: 'conjoint',
+            professionalStatus: 'employee',
+            netMonthlySalary: profile.spouse_income,
+            contractType: 'cdi',
+            existingCredits: 0,
+          };
+          
+          // Only add if not already present
+          const existingMembers = state.ownerOccupier.householdMembers || [];
+          const hasSpouse = existingMembers.some(m => m.relation === 'conjoint');
+          if (!hasSpouse) {
+            updateState('ownerOccupier', {
+              householdMembers: [...existingMembers, spouseMember],
+            });
+          }
+        }
+
+        setProfileLoaded(true);
+        toast.success("Profil financier chargé");
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
   const members = state.ownerOccupier.householdMembers || [];
 
   const addMember = () => {
@@ -110,11 +184,28 @@ export function HouseholdStep({ state, updateState, monthlyPayment = 0 }: Househ
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-primary" />
-            Titulaire principal
-          </CardTitle>
-          <CardDescription>Revenus et charges du titulaire du projet</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Titulaire principal
+              </CardTitle>
+              <CardDescription>Revenus et charges du titulaire du projet</CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={loadUserProfile}
+              disabled={profileLoading}
+            >
+              {profileLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-1" />
+              )}
+              Charger mon profil
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -14,6 +14,7 @@ import { AcquisitionStep } from "@/components/simulator/steps/AcquisitionStep";
 import { FinancingStep } from "@/components/simulator/steps/FinancingStep";
 import { RentalIncomeStep } from "@/components/simulator/steps/RentalIncomeStep";
 import { OperatingCostsStep } from "@/components/simulator/steps/OperatingCostsStep";
+import { RPOperatingCostsStep } from "@/components/simulator/steps/RPOperatingCostsStep";
 import { TaxConfigStep } from "@/components/simulator/steps/TaxConfigStep";
 import { SaleStep } from "@/components/simulator/steps/SaleStep";
 import StressTestsStep from "@/components/simulator/steps/StressTestsStep";
@@ -427,7 +428,7 @@ const NewSimulation = () => {
             )}
             {/* RP steps */}
             {currentStep === 3 && advState.project.type === 'RP' && (
-              <OperatingCostsStep state={advState} updateState={updateAdvState} mode={mode} />
+              <RPOperatingCostsStep state={advState} updateState={updateAdvState} mode={mode} />
             )}
             {currentStep === 4 && advState.project.type === 'RP' && (
               <HouseholdStep 
