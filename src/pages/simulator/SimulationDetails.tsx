@@ -160,8 +160,10 @@ const SimulationDetails = () => {
     try {
       if (data.project.type === 'RP') {
         // For RP projects, use dedicated RP PDF export with household data
+        // IMPORTANT: Pass raw values - do NOT pre-sum, as calculateRPMetrics will handle the sums
         const config = {
           household: {
+            // Pass additional members only (not the primary person)
             members: householdData.members.map(m => ({
               firstName: m.firstName,
               relation: m.relation,
@@ -170,6 +172,10 @@ const SimulationDetails = () => {
               contractType: m.contractType,
               existingCredits: m.existingCredits,
             })),
+            // Pass primary income ONLY (not the sum) - calculateRPMetrics will add members
+            primaryIncome: householdData.primaryIncome,
+            primaryExistingCredits: householdData.primaryExistingCredits,
+            // Legacy fields for backward compatibility (used by some parts of PDF)
             totalIncome: householdData.primaryIncome + householdData.members.reduce((sum, m) => sum + m.netMonthlySalary, 0),
             totalExistingCredits: householdData.primaryExistingCredits + householdData.members.reduce((sum, m) => sum + m.existingCredits, 0),
           },
