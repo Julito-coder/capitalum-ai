@@ -32,6 +32,10 @@ interface HouseholdMember {
 
 interface HouseholdData {
   members: HouseholdMember[];
+  // Primary person income/credits (NOT the sum, just the primary applicant)
+  primaryIncome?: number;
+  primaryExistingCredits?: number;
+  // Legacy: pre-computed totals for backward compatibility
   totalIncome: number;
   totalExistingCredits: number;
 }
@@ -390,9 +394,13 @@ export async function generateRPBankPDF(
   };
 
   // Convert config to RPHouseholdData format for centralized calculations
+  // IMPORTANT: Use primaryIncome (just the main applicant) not totalIncome (pre-summed)
+  // calculateRPMetrics will add the members' income itself
   const rpHouseholdData: RPHouseholdData = {
-    primaryIncome: config.household.totalIncome || clientInfo.netMonthlySalary || 0,
-    primaryExistingCredits: config.household.totalExistingCredits || 0,
+    // If primaryIncome is provided, use it. Otherwise fall back to clientInfo salary.
+    // DO NOT use totalIncome here as it includes members already!
+    primaryIncome: config.household.primaryIncome ?? clientInfo.netMonthlySalary ?? 0,
+    primaryExistingCredits: config.household.primaryExistingCredits ?? 0,
     members: config.household.members.map(m => ({
       id: crypto.randomUUID(),
       firstName: m.firstName,
@@ -684,13 +692,15 @@ export async function generateRPBankPDF(
   doc.text('Credits', margin + 135, y + 8);
   doc.setFont('helvetica', 'normal');
   
-  // Main applicant row
+  // Main applicant row - show PRIMARY income only, not the total
   const row1Y = y + 18;
+  const primaryIncomeForDisplay = config.household.primaryIncome ?? clientInfo.netMonthlySalary ?? rpHouseholdData.primaryIncome ?? 0;
+  const primaryCreditsForDisplay = config.household.primaryExistingCredits ?? rpHouseholdData.primaryExistingCredits ?? 0;
   doc.setFontSize(7);
   doc.text(clientInfo.fullName, margin + 5, row1Y);
   doc.text(clientInfo.professionalStatus || 'Non renseigne', margin + 50, row1Y);
-  doc.text(formatCurrency(clientInfo.netMonthlySalary || householdIncome), margin + 95, row1Y);
-  doc.text(formatCurrency(existingCredits), margin + 135, row1Y);
+  doc.text(formatCurrency(primaryIncomeForDisplay), margin + 95, row1Y);
+  doc.text(formatCurrency(primaryCreditsForDisplay), margin + 135, row1Y);
   
   // Additional members
   if (config.household.members.length > 0) {
