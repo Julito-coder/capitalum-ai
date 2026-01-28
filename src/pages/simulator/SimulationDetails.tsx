@@ -90,6 +90,41 @@ const SimulationDetails = () => {
     try {
       const result = await fetchFullProject(id!);
       setData(result);
+      
+      // If RP project, load household data from owner_occupier_data (stored in DB)
+      if (result?.project.type === 'RP' && result.owner_occupier) {
+        const oo = result.owner_occupier;
+        // Parse household_members from JSON stored in DB
+        const storedMembers = (oo.household_members || []) as Array<{
+          id?: string;
+          firstName: string;
+          relation: string;
+          professionalStatus: string;
+          netMonthlySalary: number;
+          contractType: string;
+          existingCredits: number;
+        }>;
+        
+        const householdFromDB: HouseholdData = {
+          primaryIncome: oo.household_income_monthly || 0,
+          primaryExistingCredits: oo.existing_credits_monthly || 0,
+          members: storedMembers.map(m => ({
+            id: m.id || crypto.randomUUID(),
+            firstName: m.firstName || '',
+            relation: m.relation || 'conjoint',
+            professionalStatus: m.professionalStatus || 'employee',
+            netMonthlySalary: Number(m.netMonthlySalary) || 0,
+            contractType: m.contractType || 'cdi',
+            existingCredits: Number(m.existingCredits) || 0,
+          })),
+          otherChargesMonthly: oo.other_charges_monthly || 0,
+        };
+        
+        // Only use DB data if it has meaningful values
+        if (householdFromDB.primaryIncome > 0 || householdFromDB.members.length > 0) {
+          setHouseholdData(householdFromDB);
+        }
+      }
     } catch (error) {
       toast.error("Erreur lors du chargement");
     } finally {

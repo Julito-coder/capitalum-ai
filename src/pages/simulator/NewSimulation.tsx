@@ -129,6 +129,22 @@ const NewSimulation = () => {
           scenarioType: (owner_occupier?.scenario_type as 'prudent' | 'base' | 'optimist') || 'base',
           prudentGrowthRate: owner_occupier?.prudent_growth_rate || 1,
           optimistGrowthRate: owner_occupier?.optimist_growth_rate || 3,
+          // Load household solvency data from DB
+          householdIncomeMonthly: owner_occupier?.household_income_monthly || defaults.ownerOccupier.householdIncomeMonthly,
+          existingCreditsMonthly: owner_occupier?.existing_credits_monthly || 0,
+          otherChargesMonthly: owner_occupier?.other_charges_monthly || 0,
+          remainingLiquidity: owner_occupier?.remaining_liquidity || 10000,
+          householdMembers: Array.isArray(owner_occupier?.household_members) 
+            ? owner_occupier.household_members.map((m: any) => ({
+                id: m.id || crypto.randomUUID(),
+                firstName: m.firstName || '',
+                relation: m.relation || 'conjoint',
+                professionalStatus: m.professionalStatus || 'employee',
+                netMonthlySalary: Number(m.netMonthlySalary) || 0,
+                contractType: m.contractType || 'cdi',
+                existingCredits: Number(m.existingCredits) || 0,
+              }))
+            : [],
         },
         operatingCosts: {
           ...defaults.operatingCosts,
@@ -286,6 +302,11 @@ const NewSimulation = () => {
           avoided_rent_monthly: advState.ownerOccupier.avoidedRentMonthly,
           value_growth_rate: advState.ownerOccupier.valueGrowthRate,
           scenario_type: advState.ownerOccupier.scenarioType,
+          household_income_monthly: advState.ownerOccupier.householdIncomeMonthly,
+          existing_credits_monthly: advState.ownerOccupier.existingCreditsMonthly,
+          other_charges_monthly: advState.ownerOccupier.otherChargesMonthly,
+          remaining_liquidity: advState.ownerOccupier.remainingLiquidity,
+          household_members: advState.ownerOccupier.householdMembers,
         },
         operating_costs: {
           property_tax_annual: advState.operatingCosts.propertyTaxAnnual,

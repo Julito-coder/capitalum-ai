@@ -321,10 +321,15 @@ export type Database = {
         Row: {
           avoided_rent_monthly: number | null
           created_at: string
+          existing_credits_monthly: number
+          household_income_monthly: number
+          household_members: Json
           id: string
           optimist_growth_rate: number | null
+          other_charges_monthly: number
           project_id: string
           prudent_growth_rate: number | null
+          remaining_liquidity: number
           scenario_type: string | null
           updated_at: string
           value_growth_rate: number | null
@@ -332,10 +337,15 @@ export type Database = {
         Insert: {
           avoided_rent_monthly?: number | null
           created_at?: string
+          existing_credits_monthly?: number
+          household_income_monthly?: number
+          household_members?: Json
           id?: string
           optimist_growth_rate?: number | null
+          other_charges_monthly?: number
           project_id: string
           prudent_growth_rate?: number | null
+          remaining_liquidity?: number
           scenario_type?: string | null
           updated_at?: string
           value_growth_rate?: number | null
@@ -343,10 +353,15 @@ export type Database = {
         Update: {
           avoided_rent_monthly?: number | null
           created_at?: string
+          existing_credits_monthly?: number
+          household_income_monthly?: number
+          household_members?: Json
           id?: string
           optimist_growth_rate?: number | null
+          other_charges_monthly?: number
           project_id?: string
           prudent_growth_rate?: number | null
+          remaining_liquidity?: number
           scenario_type?: string | null
           updated_at?: string
           value_growth_rate?: number | null
