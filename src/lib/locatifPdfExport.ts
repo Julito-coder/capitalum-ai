@@ -63,14 +63,11 @@ const COLORS = {
 // =============================================================================
 
 function formatCurrencyPDF(value: number): string {
-  const formatted = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-  // Replace non-breaking spaces with regular spaces for PDF compatibility
-  return formatted.replace(/\u00A0/g, ' ').replace(/\u202F/g, ' ');
+  // Format number with space thousands separator
+  const absValue = Math.abs(Math.round(value));
+  const formatted = absValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const sign = value < 0 ? '-' : '';
+  return `${sign}${formatted} EUR`;
 }
 
 function formatPercentPDF(value: number, decimals: number = 2): string {
@@ -78,25 +75,43 @@ function formatPercentPDF(value: number, decimals: number = 2): string {
 }
 
 function normalizeText(text: string): string {
-  // Replace problematic characters for PDF rendering
+  if (!text) return '';
+  // Replace problematic characters for PDF rendering with proper French equivalents
   return text
+    .toString()
     .replace(/é/g, 'e')
+    .replace(/É/g, 'E')
     .replace(/è/g, 'e')
+    .replace(/È/g, 'E')
     .replace(/ê/g, 'e')
+    .replace(/Ê/g, 'E')
     .replace(/ë/g, 'e')
     .replace(/à/g, 'a')
+    .replace(/À/g, 'A')
     .replace(/â/g, 'a')
+    .replace(/Â/g, 'A')
     .replace(/ô/g, 'o')
+    .replace(/Ô/g, 'O')
     .replace(/û/g, 'u')
+    .replace(/Û/g, 'U')
     .replace(/ù/g, 'u')
+    .replace(/Ù/g, 'U')
     .replace(/î/g, 'i')
+    .replace(/Î/g, 'I')
     .replace(/ï/g, 'i')
     .replace(/ç/g, 'c')
+    .replace(/Ç/g, 'C')
     .replace(/œ/g, 'oe')
-    .replace(/≤/g, 'max')
-    .replace(/≥/g, 'min')
+    .replace(/Œ/g, 'OE')
+    .replace(/≤/g, '<=')
+    .replace(/≥/g, '>=')
     .replace(/€/g, 'EUR')
-    .replace(/'/g, "'");
+    .replace(/'/g, "'")
+    .replace(/'/g, "'")
+    .replace(/"/g, '"')
+    .replace(/"/g, '"')
+    .replace(/–/g, '-')
+    .replace(/—/g, '-');
 }
 
 async function fetchClientInfo(): Promise<ClientInfo> {
@@ -708,99 +723,137 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
   newPage();
   addSectionTitle('Resume Executif');
 
-  // Key metrics in 2 columns
+  // Key metrics in 2 columns with proper styling
   doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
-  doc.roundedRect(margin, y, contentWidth / 2 - 4, 65, 3, 3, 'F');
-  doc.roundedRect(margin + contentWidth / 2 + 4, y, contentWidth / 2 - 4, 65, 3, 3, 'F');
+  doc.roundedRect(margin, y, contentWidth / 2 - 4, 70, 3, 3, 'F');
+  doc.roundedRect(margin + contentWidth / 2 + 4, y, contentWidth / 2 - 4, 70, 3, 3, 'F');
 
-  // Left column - Project
-  let leftY = y + 8;
-  doc.setFontSize(8);
+  // Draw subtle borders
+  doc.setDrawColor(COLORS.muted[0], COLORS.muted[1], COLORS.muted[2]);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(margin, y, contentWidth / 2 - 4, 70, 3, 3, 'S');
+  doc.roundedRect(margin + contentWidth / 2 + 4, y, contentWidth / 2 - 4, 70, 3, 3, 'S');
+
+  // Left column - Project details
+  let leftY = y + 10;
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-  doc.text('PROJET IMMOBILIER', margin + 5, leftY);
+  doc.text('PROJET IMMOBILIER', margin + 6, leftY);
+  
+  // Underline
+  doc.setDrawColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+  doc.setLineWidth(0.5);
+  doc.line(margin + 6, leftY + 2, margin + 55, leftY + 2);
 
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-  leftY += 10;
+  leftY += 12;
+  
   const leftMetrics = [
-    ['Cout total projet', formatCurrencyPDF(totalCost)],
+    ['Cout total du projet', formatCurrencyPDF(totalCost)],
     ['Apport personnel', formatCurrencyPDF(financing.down_payment)],
-    ['Montant finance', formatCurrencyPDF(financing.loan_amount)],
-    ['Duree / Taux', `${(financing.duration_months || 0) / 12} ans a ${financing.nominal_rate || 0}%`],
-    ['Mensualite', formatCurrencyPDF(financing.monthly_payment)],
+    ['Montant emprunte', formatCurrencyPDF(financing.loan_amount)],
+    ['Duree et taux', `${(financing.duration_months || 0) / 12} ans a ${(financing.nominal_rate || 0).toFixed(2)}%`],
+    ['Mensualite totale', formatCurrencyPDF(financing.monthly_payment)],
   ];
+  
   leftMetrics.forEach(([label, value]) => {
     doc.setFontSize(7);
     doc.setTextColor(COLORS.muted[0], COLORS.muted[1], COLORS.muted[2]);
-    doc.text(normalizeText(label), margin + 5, leftY);
-    doc.setFontSize(9);
+    doc.text(normalizeText(label as string), margin + 6, leftY);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
-    doc.text(normalizeText(value), margin + 5, leftY + 5);
+    doc.text(normalizeText(value as string), margin + 6, leftY + 5);
     doc.setFont('helvetica', 'normal');
     leftY += 11;
   });
 
-  // Right column - Performance
-  let rightY = y + 8;
-  doc.setFontSize(8);
+  // Right column - Performance indicators
+  let rightY = y + 10;
+  const rightColX = margin + contentWidth / 2 + 8;
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(COLORS.success[0], COLORS.success[1], COLORS.success[2]);
-  doc.text('PERFORMANCE', margin + contentWidth / 2 + 8, rightY);
+  doc.text('INDICATEURS DE PERFORMANCE', rightColX, rightY);
+  
+  // Underline
+  doc.setDrawColor(COLORS.success[0], COLORS.success[1], COLORS.success[2]);
+  doc.setLineWidth(0.5);
+  doc.line(rightColX, rightY + 2, rightColX + 70, rightY + 2);
 
   doc.setFont('helvetica', 'normal');
-  rightY += 10;
+  rightY += 12;
+  
+  const cashflowValue = results?.monthly_cashflow_after_tax || 0;
+  const dscrValue = results?.dscr || 0;
+  
   const rightMetrics = [
-    ['Loyer mensuel', formatCurrencyPDF(rental?.rent_monthly || 0)],
-    ['Cashflow net/mois', formatCurrencyPDF(results?.monthly_cashflow_after_tax || 0)],
-    ['Rentabilite nette', formatPercentPDF(results?.net_yield || 0)],
-    ['DSCR', (results?.dscr || 0).toFixed(2)],
-    ['TRI (IRR)', formatPercentPDF(results?.irr || 0, 1)],
+    ['Loyer mensuel brut', formatCurrencyPDF(rental?.rent_monthly || 0)],
+    ['Cashflow net mensuel', formatCurrencyPDF(cashflowValue)],
+    ['Rentabilite nette', formatPercentPDF(results?.net_yield || 0, 2)],
+    ['DSCR (ratio couverture)', dscrValue.toFixed(2)],
+    ['TRI sur la duree', formatPercentPDF(results?.irr || 0, 1)],
   ];
+  
   rightMetrics.forEach(([label, value]) => {
     doc.setFontSize(7);
     doc.setTextColor(COLORS.muted[0], COLORS.muted[1], COLORS.muted[2]);
-    doc.text(normalizeText(label), margin + contentWidth / 2 + 8, rightY);
-    doc.setFontSize(9);
+    doc.text(normalizeText(label as string), rightColX, rightY);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
-    doc.text(normalizeText(value), margin + contentWidth / 2 + 8, rightY + 5);
+    // Color code cashflow and DSCR
+    if ((label as string).includes('Cashflow')) {
+      doc.setTextColor(cashflowValue >= 0 ? COLORS.success[0] : COLORS.danger[0], cashflowValue >= 0 ? COLORS.success[1] : COLORS.danger[1], cashflowValue >= 0 ? COLORS.success[2] : COLORS.danger[2]);
+    } else if ((label as string).includes('DSCR')) {
+      doc.setTextColor(dscrValue >= 1.2 ? COLORS.success[0] : dscrValue >= 1 ? COLORS.warning[0] : COLORS.danger[0], dscrValue >= 1.2 ? COLORS.success[1] : dscrValue >= 1 ? COLORS.warning[1] : COLORS.danger[1], dscrValue >= 1.2 ? COLORS.success[2] : dscrValue >= 1 ? COLORS.warning[2] : COLORS.danger[2]);
+    } else {
+      doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
+    }
+    doc.text(normalizeText(value as string), rightColX, rightY + 5);
     doc.setFont('helvetica', 'normal');
     rightY += 11;
   });
 
-  y += 75;
+  y += 80;
 
-  // Status badge
-  const isViable = (results?.dscr || 0) >= 1.2 && (results?.monthly_cashflow_after_tax || 0) >= -100;
-  const isWarning = (results?.dscr || 0) >= 1 && (results?.dscr || 0) < 1.2;
+  // Status badge with clear interpretation
+  const isViable = dscrValue >= 1.2 && cashflowValue >= -100;
+  const isWarning = dscrValue >= 1 && dscrValue < 1.2;
   let statusText = 'PROJET EQUILIBRE';
+  let statusSubtext = 'DSCR conforme aux exigences bancaires';
   let statusColor = COLORS.success;
   let statusBg = COLORS.successLight;
+  
   if (!isViable && isWarning) {
     statusText = 'PROJET A SURVEILLER';
+    statusSubtext = 'DSCR proche du seuil minimal bancaire (1.20)';
     statusColor = COLORS.warning;
     statusBg = COLORS.warningLight;
   } else if (!isViable && !isWarning) {
     statusText = 'PROJET SOUS TENSION';
+    statusSubtext = 'DSCR insuffisant - Effort d\'epargne mensuel requis';
     statusColor = COLORS.danger;
     statusBg = COLORS.dangerLight;
   }
 
   doc.setFillColor(statusBg[0], statusBg[1], statusBg[2]);
-  doc.roundedRect(margin, y, contentWidth, 20, 3, 3, 'F');
+  doc.roundedRect(margin, y, contentWidth, 25, 3, 3, 'F');
   doc.setDrawColor(statusColor[0], statusColor[1], statusColor[2]);
-  doc.setLineWidth(1);
-  doc.roundedRect(margin, y, contentWidth, 20, 3, 3, 'S');
+  doc.setLineWidth(1.5);
+  doc.roundedRect(margin, y, contentWidth, 25, 3, 3, 'S');
 
-  doc.setFontSize(11);
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-  doc.text(normalizeText(statusText), pageWidth / 2, y + 12, { align: 'center' });
+  doc.text(normalizeText(statusText), pageWidth / 2, y + 11, { align: 'center' });
+  
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
+  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+  doc.text(normalizeText(statusSubtext), pageWidth / 2, y + 20, { align: 'center' });
 
-  y += 28;
+  y += 33;
 
   // Synthesis text
   doc.setFontSize(8);
@@ -901,22 +954,22 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
   addSectionTitle('Exploitation Locative');
 
   addSubtitle('Revenus locatifs');
-  addLine('Loyer mensuel HC', formatCurrencyPDF(rental?.rent_monthly || 0), 0, true);
+  addLine('Loyer mensuel hors charges', formatCurrencyPDF(rental?.rent_monthly || 0), 0, true);
   addLine('Loyer annuel brut', formatCurrencyPDF(annualRent), 5);
-  addLine('Charges recoverables', formatCurrencyPDF(rental?.recoverable_charges || 0) + '/mois', 5);
-  addLine('Vacance locative', formatPercentPDF(rental?.vacancy_rate || 5), 5);
-  addLine("Taux d'impayes", formatPercentPDF(rental?.default_rate || 2), 5);
-  addLine('Revalorisation annuelle', formatPercentPDF(rental?.rent_growth_rate || 1), 5);
+  addLine('Charges recuperables', formatCurrencyPDF(rental?.recoverable_charges || 0) + '/mois', 5);
+  addLine('Vacance locative', formatPercentPDF(rental?.vacancy_rate || 5, 2), 5);
+  addLine('Taux d\'impayes', formatPercentPDF(rental?.default_rate || 2, 2), 5);
+  addLine('Revalorisation annuelle', formatPercentPDF(rental?.rent_growth_rate || 1, 2), 5);
   addSeparator();
   addLine('REVENU EFFECTIF ANNUEL', formatCurrencyPDF(effectiveRent), 0, true);
 
   y += 6;
-  addSubtitle("Charges d'exploitation");
+  addSubtitle('Charges d\'exploitation annuelles');
   addLine('Taxe fonciere', formatCurrencyPDF(operating_costs.property_tax_annual || 0) + '/an', 5);
-  addLine('Charges copropriete (non recup.)', formatCurrencyPDF(operating_costs.condo_nonrecoverable_annual || 0) + '/an', 5);
+  addLine('Charges copropriete non recup.', formatCurrencyPDF(operating_costs.condo_nonrecoverable_annual || 0) + '/an', 5);
   addLine('Assurance PNO', formatCurrencyPDF(operating_costs.insurance_annual || 0) + '/an', 5);
-  if ((operating_costs.management_pct || 0) > 0) addLine('Gestion locative', formatPercentPDF(operating_costs.management_pct || 0), 5);
-  addLine('CFE', formatCurrencyPDF(operating_costs.cfe_annual || 0) + '/an', 5);
+  if ((operating_costs.management_pct || 0) > 0) addLine('Gestion locative', formatPercentPDF(operating_costs.management_pct || 0, 1) + ' du loyer', 5);
+  addLine('CFE (Cotisation Fonciere)', formatCurrencyPDF(operating_costs.cfe_annual || 0) + '/an', 5);
   addLine('Comptabilite', formatCurrencyPDF(operating_costs.accounting_annual || 0) + '/an', 5);
   addSeparator();
   addLine('TOTAL CHARGES ANNUELLES', formatCurrencyPDF(totalOperatingCosts), 0, true);
@@ -950,18 +1003,25 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
   newPage();
   addSectionTitle('Indicateurs de Performance');
 
-  // KPI Cards
+  // KPI Cards - Properly structured with correct values
+  const grossYield = results?.gross_yield || 0;
+  const netYield = results?.net_yield || 0;
+  const netNetYield = results?.net_net_yield || 0;
+  const dscr = results?.dscr || 0;
+  const irr = results?.irr || 0;
+  const breakEvenRent = results?.break_even_rent || 0;
+
   const kpis = [
-    { label: 'Rentabilite brute', value: formatPercentPDF(results?.gross_yield || 0), desc: 'Loyer brut / Cout total', color: COLORS.primaryLight },
-    { label: 'Rentabilite nette', value: formatPercentPDF(results?.net_yield || 0), desc: 'Apres charges, avant impots', color: COLORS.success },
-    { label: 'Rentabilite nette-nette', value: formatPercentPDF(results?.net_net_yield || 0), desc: 'Apres charges et impots', color: COLORS.warning },
-    { label: 'DSCR', value: (results?.dscr || 0).toFixed(2), desc: 'NOI / Service dette (seuil 1.20)', color: COLORS.primary },
-    { label: 'TRI (IRR)', value: formatPercentPDF(results?.irr || 0, 1), desc: 'Performance globale', color: COLORS.success },
-    { label: 'Loyer seuil', value: formatCurrencyPDF(results?.break_even_rent || 0), desc: 'Break-even mensuel', color: COLORS.warning },
+    { label: 'Rentabilite brute', value: formatPercentPDF(grossYield, 2), desc: 'Loyer brut / Cout total du projet', color: COLORS.primaryLight },
+    { label: 'Rentabilite nette', value: formatPercentPDF(netYield, 2), desc: 'Apres deduction des charges', color: COLORS.success },
+    { label: 'Rentabilite nette-nette', value: formatPercentPDF(netNetYield, 2), desc: 'Apres charges et fiscalite', color: COLORS.warning },
+    { label: 'DSCR', value: dscr.toFixed(2), desc: 'Ratio de couverture (seuil: 1.20)', color: dscr >= 1.2 ? COLORS.success : COLORS.danger },
+    { label: 'TRI (IRR)', value: formatPercentPDF(irr, 1), desc: 'Taux de rendement interne', color: COLORS.success },
+    { label: 'Loyer equilibre', value: formatCurrencyPDF(breakEvenRent), desc: 'Loyer mensuel minimum', color: COLORS.warning },
   ];
 
   const cardWidth = (contentWidth - 10) / 3;
-  const cardHeight = 30;
+  const cardHeight = 32;
 
   kpis.forEach((kpi, i) => {
     const row = Math.floor(i / 3);
@@ -972,64 +1032,111 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
     doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
     doc.roundedRect(kx, cardY, cardWidth, cardHeight, 3, 3, 'F');
     doc.setDrawColor(kpi.color[0], kpi.color[1], kpi.color[2]);
-    doc.setLineWidth(1);
+    doc.setLineWidth(1.5);
     doc.roundedRect(kx, cardY, cardWidth, cardHeight, 3, 3, 'S');
 
-    doc.setFontSize(13);
+    // Value - larger and bold
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
-    doc.text(kpi.value, kx + cardWidth / 2, cardY + 12, { align: 'center' });
+    doc.text(kpi.value, kx + cardWidth / 2, cardY + 13, { align: 'center' });
 
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
+    // Label
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-    doc.text(normalizeText(kpi.label), kx + cardWidth / 2, cardY + 20, { align: 'center' });
+    doc.text(normalizeText(kpi.label), kx + cardWidth / 2, cardY + 21, { align: 'center' });
 
+    // Description
     doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
     doc.setTextColor(COLORS.muted[0], COLORS.muted[1], COLORS.muted[2]);
-    doc.text(normalizeText(kpi.desc), kx + cardWidth / 2, cardY + 26, { align: 'center' });
+    doc.text(normalizeText(kpi.desc), kx + cardWidth / 2, cardY + 28, { align: 'center' });
   });
 
-  y += 85;
+  y += 90;
 
   // Yield comparison chart
   doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
   doc.roundedRect(margin, y, contentWidth, 55, 3, 3, 'F');
 
   drawHorizontalBarChart(doc, margin, y, contentWidth, 55, [
-    { label: 'Brute', value: results?.gross_yield || 0, color: COLORS.primaryLight },
-    { label: 'Nette', value: results?.net_yield || 0, color: COLORS.success },
-    { label: 'Nette-nette', value: results?.net_net_yield || 0, color: COLORS.warning },
+    { label: 'Rentabilite brute', value: grossYield, color: COLORS.primaryLight },
+    { label: 'Rentabilite nette', value: netYield, color: COLORS.success },
+    { label: 'Rentabilite nette-nette', value: netNetYield, color: COLORS.warning },
   ], {
     title: 'Comparaison des rentabilites',
-    valueFormatter: (v) => formatPercentPDF(v),
+    valueFormatter: (v) => formatPercentPDF(v, 2),
   });
 
   // ==========================================================================
   // PAGE 7: CASHFLOW ANALYSIS
   // ==========================================================================
   newPage();
-  addSectionTitle('Analyse des Cashflows');
+  addSectionTitle('Analyse des Flux de Tresorerie');
 
-  // Monthly cashflow breakdown
-  addSubtitle('Decomposition mensuelle');
+  // Monthly cashflow breakdown - improved layout
+  addSubtitle('Decomposition mensuelle du cashflow');
+  
   const monthlyRent = rental?.rent_monthly || 0;
   const monthlyCharges = totalOperatingCosts / 12;
   const monthlyDebt = financing.monthly_payment || 0;
   const monthlyCashflowBefore = (results?.monthly_cashflow_before_tax || 0);
-  const monthlyTax = (results?.monthly_cashflow_before_tax || 0) - (results?.monthly_cashflow_after_tax || 0);
+  const monthlyTax = Math.max(0, (results?.monthly_cashflow_before_tax || 0) - (results?.monthly_cashflow_after_tax || 0));
   const monthlyCashflowAfter = results?.monthly_cashflow_after_tax || 0;
 
-  addLine('Loyer mensuel', formatCurrencyPDF(monthlyRent), 0);
-  addLine('- Charges mensuelles', '- ' + formatCurrencyPDF(monthlyCharges), 5);
-  addLine('- Mensualite credit', '- ' + formatCurrencyPDF(monthlyDebt), 5);
-  addSeparator();
-  addLine('= Cashflow avant impots', formatCurrencyPDF(monthlyCashflowBefore), 0, true);
-  addLine('- Imposition', '- ' + formatCurrencyPDF(Math.max(0, monthlyTax)), 5);
-  addSeparator();
-  addLine('= CASHFLOW NET MENSUEL', formatCurrencyPDF(monthlyCashflowAfter), 0, true);
+  // Create a cleaner breakdown table
+  doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
+  doc.roundedRect(margin, y, contentWidth, 48, 3, 3, 'F');
+  
+  let tableY = y + 8;
+  
+  const cashflowLines = [
+    { label: 'Loyer mensuel brut', value: monthlyRent, prefix: '', isTotal: false },
+    { label: 'Charges d\'exploitation (1/12)', value: -monthlyCharges, prefix: '', isTotal: false },
+    { label: 'Mensualite de credit', value: -monthlyDebt, prefix: '', isTotal: false },
+    { label: 'Cashflow avant impots', value: monthlyCashflowBefore, prefix: '=', isTotal: true },
+    { label: 'Imposition mensuelle estimee', value: -monthlyTax, prefix: '', isTotal: false },
+    { label: 'CASHFLOW NET MENSUEL', value: monthlyCashflowAfter, prefix: '=', isTotal: true },
+  ];
 
-  y += 10;
+  cashflowLines.forEach((line) => {
+    doc.setFontSize(8);
+    if (line.isTotal) {
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
+    } else {
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+    }
+    
+    const labelText = line.prefix ? `${line.prefix} ${line.label}` : line.label;
+    doc.text(normalizeText(labelText), margin + 5, tableY);
+    
+    // Color code values
+    if (line.value < 0) {
+      doc.setTextColor(COLORS.danger[0], COLORS.danger[1], COLORS.danger[2]);
+    } else if (line.value > 0) {
+      doc.setTextColor(COLORS.success[0], COLORS.success[1], COLORS.success[2]);
+    }
+    
+    if (line.isTotal) {
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text(formatCurrencyPDF(line.value), pageWidth - margin - 5, tableY, { align: 'right' });
+    tableY += 7;
+    
+    // Add separator before totals
+    if (line.label === 'Mensualite de credit' || line.label === 'Imposition mensuelle estimee') {
+      doc.setDrawColor(COLORS.muted[0], COLORS.muted[1], COLORS.muted[2]);
+      doc.setLineWidth(0.3);
+      doc.line(margin + 5, tableY - 2, pageWidth - margin - 5, tableY - 2);
+      tableY += 2;
+    }
+  });
+
+  y += 58;
 
   // Cashflow evolution chart
   const cashflowData = (results?.cashflow_series || []).map(cf => ({
@@ -1039,55 +1146,60 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
 
   if (cashflowData.length > 0) {
     doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
-    doc.roundedRect(margin, y, contentWidth, 65, 3, 3, 'F');
+    doc.roundedRect(margin, y, contentWidth, 60, 3, 3, 'F');
 
-    drawLineChart(doc, margin, y, contentWidth, 65, cashflowData, {
-      title: 'Evolution du cashflow annuel apres impots',
+    drawLineChart(doc, margin, y, contentWidth, 60, cashflowData, {
+      title: 'Projection du cashflow annuel net',
       lineColor: monthlyCashflowAfter >= 0 ? COLORS.success : COLORS.danger,
       showDots: true,
       yFormatter: (v) => formatCurrencyPDF(v),
       yTickCount: 5,
     });
 
-    y += 70;
+    y += 68;
   }
 
-  // Cashflow table
-  if (y < pageHeight - 60) {
-    addSubtitle('Tableau des 5 premieres annees');
-    doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
-    doc.roundedRect(margin, y, contentWidth, 40, 2, 2, 'F');
+  // Cashflow table - improved with proper headers
+  addSubtitle('Projection sur les 5 premieres annees');
+  doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
+  doc.roundedRect(margin, y, contentWidth, 42, 2, 2, 'F');
 
-    // Headers
+  // Headers with background
+  doc.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+  doc.rect(margin, y, contentWidth, 8, 'F');
+  
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  
+  const cols = ['Annee', 'Revenus', 'Charges', 'Credit', 'Impots', 'Cashflow Net'];
+  const colWidths = [22, 30, 30, 30, 28, 34];
+  let colX = margin + 3;
+  cols.forEach((col, i) => {
+    doc.text(normalizeText(col), colX, y + 5);
+    colX += colWidths[i];
+  });
+
+  // Rows
+  (results?.cashflow_series || []).slice(0, 5).forEach((cf, i) => {
+    const rowY = y + 14 + i * 6;
+    colX = margin + 3;
     doc.setFontSize(7);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
-    const cols = ['Annee', 'Revenus', 'Charges', 'Credit', 'Impots', 'Cashflow'];
-    const colWidths = [20, 30, 30, 30, 30, 30];
-    let colX = margin + 3;
-    cols.forEach((col, i) => {
-      doc.text(normalizeText(col), colX, y + 8);
-      colX += colWidths[i];
-    });
     doc.setFont('helvetica', 'normal');
-
-    // Rows
-    (results?.cashflow_series || []).slice(0, 5).forEach((cf, i) => {
-      const rowY = y + 15 + i * 5;
-      colX = margin + 3;
-      doc.setFontSize(7);
-      doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-      doc.text(`An ${cf.year}`, colX, rowY); colX += colWidths[0];
-      doc.text(formatCurrencyPDF(cf.rental_income), colX, rowY); colX += colWidths[1];
-      doc.text(formatCurrencyPDF(cf.operating_costs), colX, rowY); colX += colWidths[2];
-      doc.text(formatCurrencyPDF(cf.loan_payment), colX, rowY); colX += colWidths[3];
-      doc.text(formatCurrencyPDF(cf.tax), colX, rowY); colX += colWidths[4];
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(cf.cashflow_after_tax >= 0 ? COLORS.success[0] : COLORS.danger[0], cf.cashflow_after_tax >= 0 ? COLORS.success[1] : COLORS.danger[1], cf.cashflow_after_tax >= 0 ? COLORS.success[2] : COLORS.danger[2]);
-      doc.text(formatCurrencyPDF(cf.cashflow_after_tax), colX, rowY);
-      doc.setFont('helvetica', 'normal');
-    });
-  }
+    doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+    
+    doc.text(`Annee ${cf.year}`, colX, rowY); colX += colWidths[0];
+    doc.setTextColor(COLORS.success[0], COLORS.success[1], COLORS.success[2]);
+    doc.text(formatCurrencyPDF(cf.rental_income), colX, rowY); colX += colWidths[1];
+    doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+    doc.text(formatCurrencyPDF(cf.operating_costs), colX, rowY); colX += colWidths[2];
+    doc.text(formatCurrencyPDF(cf.loan_payment), colX, rowY); colX += colWidths[3];
+    doc.text(formatCurrencyPDF(cf.tax), colX, rowY); colX += colWidths[4];
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(cf.cashflow_after_tax >= 0 ? COLORS.success[0] : COLORS.danger[0], cf.cashflow_after_tax >= 0 ? COLORS.success[1] : COLORS.danger[1], cf.cashflow_after_tax >= 0 ? COLORS.success[2] : COLORS.danger[2]);
+    doc.text(formatCurrencyPDF(cf.cashflow_after_tax), colX, rowY);
+  });
 
   // ==========================================================================
   // PAGE 8: TAX CONFIGURATION
@@ -1095,24 +1207,34 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
   newPage();
   addSectionTitle('Fiscalite');
 
+  // Format regime name for display
+  const regimeDisplay = (tax_config.regime_key || 'non_defini')
+    .replace(/_/g, ' ')
+    .replace(/lmnp/gi, 'LMNP')
+    .replace(/sci/gi, 'SCI')
+    .replace(/is/gi, 'IS')
+    .replace(/reel/gi, 'Reel')
+    .replace(/micro/gi, 'Micro');
+
   addSubtitle('Configuration fiscale');
-  addLine('Mode', tax_config.tax_mode === 'simple' ? 'Simple' : tax_config.tax_mode === 'advanced' ? 'Avance' : 'Override', 5);
-  addLine('Regime', normalizeText((tax_config.regime_key || 'Non defini').replace(/_/g, ' ')), 5);
-  addLine('Tranche marginale (TMI)', formatPercentPDF(tax_config.tmi_rate || 0), 5);
-  addLine('Prelevements sociaux', formatPercentPDF(tax_config.social_rate || 0), 5);
-  addLine('Taux global', formatPercentPDF((tax_config.tmi_rate || 0) + (tax_config.social_rate || 0)), 0, true);
+  addLine('Mode de calcul', tax_config.tax_mode === 'simple' ? 'Simplifie' : tax_config.tax_mode === 'advanced' ? 'Avance' : 'Saisie manuelle', 5);
+  addLine('Regime fiscal', normalizeText(regimeDisplay), 5);
+  addLine('Tranche Marginale d\'Imposition', formatPercentPDF(tax_config.tmi_rate || 0, 2), 5);
+  addLine('Prelevements sociaux', formatPercentPDF(tax_config.social_rate || 0, 2), 5);
+  addSeparator();
+  addLine('TAUX GLOBAL D\'IMPOSITION', formatPercentPDF((tax_config.tmi_rate || 0) + (tax_config.social_rate || 0), 2), 0, true);
 
   y += 6;
-  addSubtitle('Options de deduction');
-  addLine('Interets deductibles', tax_config.interest_deductible ? 'Oui' : 'Non', 5);
-  addLine('Charges deductibles', tax_config.costs_deductible ? 'Oui' : 'Non', 5);
-  addLine('Amortissements actives', tax_config.amortization_enabled ? 'Oui' : 'Non', 5);
-  if (tax_config.deficit_enabled) addLine('Report de deficit', 'Active', 5);
+  addSubtitle('Options de deduction fiscale');
+  addLine('Interets d\'emprunt deductibles', tax_config.interest_deductible ? 'Oui' : 'Non', 5);
+  addLine('Charges d\'exploitation deductibles', tax_config.costs_deductible ? 'Oui' : 'Non', 5);
+  addLine('Amortissements comptables', tax_config.amortization_enabled ? 'Actives' : 'Desactives', 5);
+  if (tax_config.deficit_enabled) addLine('Report des deficits fonciers', 'Active', 5);
 
   y += 10;
 
   // Tax evolution
-  addSubtitle('Evolution de l\'imposition');
+  addSubtitle('Evolution de l\'imposition annuelle');
   doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
   doc.roundedRect(margin, y, contentWidth, 55, 3, 3, 'F');
 
@@ -1123,7 +1245,7 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
 
   if (taxData.length > 0) {
     drawLineChart(doc, margin, y, contentWidth, 55, taxData, {
-      title: 'Impots annuels',
+      title: 'Fiscalite annuelle projetee',
       lineColor: COLORS.warning,
       showDots: true,
       yFormatter: (v) => formatCurrencyPDF(v),
@@ -1135,86 +1257,153 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
   // PAGE 9: STRESS TESTS
   // ==========================================================================
   newPage();
-  addSectionTitle('Analyse de Resilience (Stress Tests)');
+  addSectionTitle('Analyse de Resilience - Stress Tests');
 
-  // Stress hypotheses
+  // Stress hypotheses box
   doc.setFillColor(COLORS.warningLight[0], COLORS.warningLight[1], COLORS.warningLight[2]);
-  doc.roundedRect(margin, y, contentWidth, 20, 3, 3, 'F');
+  doc.roundedRect(margin, y, contentWidth, 25, 3, 3, 'F');
+  doc.setDrawColor(COLORS.warning[0], COLORS.warning[1], COLORS.warning[2]);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(margin, y, contentWidth, 25, 3, 3, 'S');
 
-  doc.setFontSize(8);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
-  doc.text('Hypotheses de stress appliquees :', margin + 5, y + 8);
+  doc.text('Hypotheses de stress appliquees (scenario prudent)', margin + 5, y + 10);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.text(normalizeText(`Loyer -${config.haircuts.rentHaircut}%  |  Vacance +${config.haircuts.vacancyHaircut}%  |  Taux +${config.haircuts.rateHaircut} pts  |  Charges +${config.haircuts.costsHaircut}%`), margin + 5, y + 16);
+  doc.setFontSize(8);
+  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+  const stressParams = [
+    `Loyer: -${config.haircuts.rentHaircut}%`,
+    `Vacance: +${config.haircuts.vacancyHaircut}%`,
+    `Taux credit: +${config.haircuts.rateHaircut} point(s)`,
+    `Charges: +${config.haircuts.costsHaircut}%`
+  ];
+  doc.text(normalizeText(stressParams.join('   |   ')), margin + 5, y + 20);
 
-  y += 28;
+  y += 32;
 
-  // Comparison table
-  addSubtitle('Comparaison Base vs Prudent');
+  // Comparison table with clear headers
+  addSubtitle('Comparaison Scenario Base vs Scenario Prudent');
   doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
-  doc.roundedRect(margin, y, contentWidth, 50, 3, 3, 'F');
+  doc.roundedRect(margin, y, contentWidth, 55, 3, 3, 'F');
 
-  // Headers
+  // Table headers with proper alignment
+  const tableColWidths = [55, 45, 45, 35];
+  let tableX = margin + 5;
+  
   doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
-  doc.text('Indicateur', margin + 5, y + 10);
-  doc.text('Base', margin + 65, y + 10);
-  doc.text('Prudent', margin + 105, y + 10);
-  doc.text('Variation', margin + 150, y + 10);
+  doc.text('Indicateur', tableX, y + 10);
+  doc.text('Scenario Base', tableX + tableColWidths[0], y + 10);
+  doc.text('Scenario Prudent', tableX + tableColWidths[0] + tableColWidths[1], y + 10);
+  doc.text('Ecart', tableX + tableColWidths[0] + tableColWidths[1] + tableColWidths[2], y + 10);
+  
+  // Draw header separator
+  doc.setDrawColor(COLORS.muted[0], COLORS.muted[1], COLORS.muted[2]);
+  doc.setLineWidth(0.3);
+  doc.line(margin + 5, y + 14, pageWidth - margin - 5, y + 14);
+  
   doc.setFont('helvetica', 'normal');
+
+  const baseDSCR = results?.dscr || 0;
+  const baseCashflow = results?.monthly_cashflow_after_tax || 0;
+  const baseRent = rental?.rent_monthly || 0;
+  const basePayment = financing.monthly_payment || 0;
 
   const comparisons = [
-    { label: 'Loyer mensuel', base: formatCurrencyPDF(rental?.rent_monthly || 0), prudent: formatCurrencyPDF(prudentRent), variation: `-${config.haircuts.rentHaircut}%` },
-    { label: 'Mensualite credit', base: formatCurrencyPDF(financing.monthly_payment), prudent: formatCurrencyPDF(prudentMonthlyPayment), variation: `+${((prudentMonthlyPayment / (financing.monthly_payment || 1) - 1) * 100).toFixed(0)}%` },
-    { label: 'DSCR', base: (results?.dscr || 0).toFixed(2), prudent: prudentDSCR.toFixed(2), variation: `${((prudentDSCR / (results?.dscr || 1) - 1) * 100).toFixed(0)}%` },
-    { label: 'Cashflow/mois', base: formatCurrencyPDF(results?.monthly_cashflow_after_tax || 0), prudent: formatCurrencyPDF(prudentCashflowMonthly), variation: formatCurrencyPDF(prudentCashflowMonthly - (results?.monthly_cashflow_after_tax || 0)) },
+    { 
+      label: 'Loyer mensuel', 
+      base: formatCurrencyPDF(baseRent), 
+      prudent: formatCurrencyPDF(prudentRent), 
+      variation: `-${config.haircuts.rentHaircut}%` 
+    },
+    { 
+      label: 'Mensualite credit', 
+      base: formatCurrencyPDF(basePayment), 
+      prudent: formatCurrencyPDF(prudentMonthlyPayment), 
+      variation: basePayment > 0 ? `+${((prudentMonthlyPayment / basePayment - 1) * 100).toFixed(0)}%` : 'N/A'
+    },
+    { 
+      label: 'DSCR (couverture dette)', 
+      base: baseDSCR.toFixed(2), 
+      prudent: prudentDSCR.toFixed(2), 
+      variation: baseDSCR > 0 ? `${((prudentDSCR / baseDSCR - 1) * 100).toFixed(0)}%` : 'N/A'
+    },
+    { 
+      label: 'Cashflow net mensuel', 
+      base: formatCurrencyPDF(baseCashflow), 
+      prudent: formatCurrencyPDF(prudentCashflowMonthly), 
+      variation: formatCurrencyPDF(prudentCashflowMonthly - baseCashflow)
+    },
   ];
 
   comparisons.forEach((comp, i) => {
-    const rowY = y + 20 + i * 8;
+    const rowY = y + 22 + i * 8;
     doc.setFontSize(7);
     doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-    doc.text(normalizeText(comp.label), margin + 5, rowY);
-    doc.text(comp.base, margin + 65, rowY);
+    doc.text(normalizeText(comp.label), tableX, rowY);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
+    doc.text(comp.base, tableX + tableColWidths[0], rowY);
+    
     doc.setTextColor(COLORS.warning[0], COLORS.warning[1], COLORS.warning[2]);
-    doc.text(comp.prudent, margin + 105, rowY);
+    doc.text(comp.prudent, tableX + tableColWidths[0] + tableColWidths[1], rowY);
+    
     doc.setTextColor(COLORS.danger[0], COLORS.danger[1], COLORS.danger[2]);
-    doc.text(comp.variation, margin + 150, rowY);
+    doc.text(comp.variation, tableX + tableColWidths[0] + tableColWidths[1] + tableColWidths[2], rowY);
+    doc.setFont('helvetica', 'normal');
   });
 
-  y += 60;
+  y += 62;
 
   // DSCR comparison chart
   doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
   doc.roundedRect(margin, y, contentWidth, 50, 3, 3, 'F');
 
   drawHorizontalBarChart(doc, margin, y, contentWidth, 50, [
-    { label: 'DSCR Base', value: results?.dscr || 0, color: COLORS.success },
-    { label: 'DSCR Prudent', value: prudentDSCR, color: COLORS.warning },
-    { label: 'Seuil bancaire', value: 1.20, color: COLORS.danger },
+    { label: 'DSCR Base', value: baseDSCR, color: baseDSCR >= 1.2 ? COLORS.success : COLORS.warning },
+    { label: 'DSCR Prudent', value: prudentDSCR, color: prudentDSCR >= 1.2 ? COLORS.success : COLORS.danger },
+    { label: 'Seuil bancaire (1.20)', value: 1.20, color: COLORS.muted },
   ], {
-    title: 'Comparaison DSCR',
+    title: 'Analyse du ratio de couverture de dette (DSCR)',
     valueFormatter: (v) => v.toFixed(2),
   });
 
   y += 58;
 
-  // Conclusion
-  doc.setFillColor(prudentDSCR >= 1.2 ? COLORS.successLight[0] : COLORS.warningLight[0], prudentDSCR >= 1.2 ? COLORS.successLight[1] : COLORS.warningLight[1], prudentDSCR >= 1.2 ? COLORS.successLight[2] : COLORS.warningLight[2]);
-  doc.roundedRect(margin, y, contentWidth, 20, 3, 3, 'F');
+  // Conclusion with clear interpretation
+  const conclusionBg = prudentDSCR >= 1.2 ? COLORS.successLight : prudentDSCR >= 1 ? COLORS.warningLight : COLORS.dangerLight;
+  const conclusionBorder = prudentDSCR >= 1.2 ? COLORS.success : prudentDSCR >= 1 ? COLORS.warning : COLORS.danger;
+  
+  doc.setFillColor(conclusionBg[0], conclusionBg[1], conclusionBg[2]);
+  doc.roundedRect(margin, y, contentWidth, 22, 3, 3, 'F');
+  doc.setDrawColor(conclusionBorder[0], conclusionBorder[1], conclusionBorder[2]);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(margin, y, contentWidth, 22, 3, 3, 'S');
 
   doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
+  
+  let conclusionTitle = '';
+  let conclusionText = '';
   if (prudentDSCR >= 1.2) {
-    doc.text(normalizeText('Le dossier conserve une marge de securite significative meme en scenario degrade.'), margin + 5, y + 12);
+    conclusionTitle = 'Resilience confirmee';
+    conclusionText = 'Le projet conserve une marge de securite suffisante meme en scenario degrade.';
   } else if (prudentDSCR >= 1) {
-    doc.text(normalizeText('Le projet reste a l\'equilibre en scenario prudent mais sans marge.'), margin + 5, y + 12);
+    conclusionTitle = 'Resilience limite';
+    conclusionText = 'Le projet reste a l\'equilibre en scenario prudent, mais sans marge de securite.';
   } else {
-    doc.text(normalizeText('Attention : le scenario prudent genere un deficit. Risque bancaire eleve.'), margin + 5, y + 12);
+    conclusionTitle = 'Risque identifie';
+    conclusionText = 'Le scenario prudent genere un deficit. Un examen approfondi est recommande.';
   }
+  
+  doc.text(normalizeText(conclusionTitle), margin + 5, y + 10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(normalizeText(conclusionText), margin + 5, y + 18);
 
   // ==========================================================================
   // PAGE 10: WEALTH PROJECTION
@@ -1278,67 +1467,85 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
   // PAGE 11: HYPOTHESES
   // ==========================================================================
   newPage();
-  addSectionTitle('Hypotheses et Methodologie');
+  addSectionTitle('Hypotheses de Simulation');
+
+  // Introduction text
+  doc.setFontSize(8);
+  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+  doc.text(normalizeText('Les projections financieres de ce dossier reposent sur les hypotheses suivantes :'), margin, y);
+  y += 8;
 
   const hypotheses = [
     {
       cat: 'Acquisition', items: [
         `Prix d'achat net vendeur : ${formatCurrencyPDF(acquisition.price_net_seller)}`,
-        `Frais de notaire : ${formatPercentPDF((acquisition.notary_fee_amount / acquisition.price_net_seller) * 100, 1)} ${acquisition.notary_fee_estimated ? '(estimation)' : '(reel)'}`,
-        acquisition.works_amount > 0 ? `Travaux prevus : ${formatCurrencyPDF(acquisition.works_amount)}` : null,
+        `Frais de notaire : ${formatPercentPDF((acquisition.notary_fee_amount / acquisition.price_net_seller) * 100, 1)} ${acquisition.notary_fee_estimated ? '(estimation standard)' : '(montant reel)'}`,
+        acquisition.works_amount > 0 ? `Budget travaux prevu : ${formatCurrencyPDF(acquisition.works_amount)}` : null,
+        acquisition.furniture_amount > 0 ? `Budget mobilier : ${formatCurrencyPDF(acquisition.furniture_amount)}` : null,
       ].filter(Boolean)
     },
     {
-      cat: 'Financement', items: [
-        `Emprunt : ${formatCurrencyPDF(financing.loan_amount)} sur ${(financing.duration_months || 0) / 12} ans`,
-        `Taux nominal : ${formatPercentPDF(financing.nominal_rate || 0)} (fixe)`,
-        `Assurance : ${formatPercentPDF(financing.insurance_value || 0)} du capital/an`,
-        `Apport : ${formatCurrencyPDF(financing.down_payment)} (${formatPercentPDF((financing.down_payment / totalCost) * 100, 0)})`,
+      cat: 'Structure de Financement', items: [
+        `Capital emprunte : ${formatCurrencyPDF(financing.loan_amount)} sur ${(financing.duration_months || 0) / 12} ans`,
+        `Taux d'interet nominal : ${formatPercentPDF(financing.nominal_rate || 0, 2)} (taux fixe)`,
+        `Assurance emprunteur : ${formatPercentPDF(financing.insurance_value || 0, 2)} du capital initial par an`,
+        `Apport personnel : ${formatCurrencyPDF(financing.down_payment)} (${formatPercentPDF((financing.down_payment / totalCost) * 100, 1)} du projet)`,
       ]
     },
     {
-      cat: 'Revenus locatifs', items: [
-        `Loyer mensuel : ${formatCurrencyPDF(rental?.rent_monthly || 0)}`,
-        `Revalorisation annuelle : ${formatPercentPDF(rental?.rent_growth_rate || 1)}`,
-        `Vacance locative : ${formatPercentPDF(rental?.vacancy_rate || 5)}`,
-        `Taux d'impayes : ${formatPercentPDF(rental?.default_rate || 2)}`,
+      cat: 'Revenus Locatifs', items: [
+        `Loyer mensuel hors charges : ${formatCurrencyPDF(rental?.rent_monthly || 0)}`,
+        `Indexation annuelle du loyer : ${formatPercentPDF(rental?.rent_growth_rate || 1, 2)}`,
+        `Taux de vacance locative : ${formatPercentPDF(rental?.vacancy_rate || 5, 2)}`,
+        `Provision pour impayes : ${formatPercentPDF(rental?.default_rate || 2, 2)}`,
       ]
     },
     {
-      cat: 'Charges', items: [
-        `Taxe fonciere : ${formatCurrencyPDF(operating_costs.property_tax_annual || 0)}/an`,
-        `Charges copropriete : ${formatCurrencyPDF(operating_costs.condo_nonrecoverable_annual || 0)}/an`,
-        `Revalorisation charges : ${formatPercentPDF(operating_costs.costs_growth_rate || 2)}/an`,
+      cat: 'Charges d\'Exploitation', items: [
+        `Taxe fonciere annuelle : ${formatCurrencyPDF(operating_costs.property_tax_annual || 0)}`,
+        `Charges de copropriete non recuperables : ${formatCurrencyPDF(operating_costs.condo_nonrecoverable_annual || 0)}/an`,
+        `Assurance PNO : ${formatCurrencyPDF(operating_costs.insurance_annual || 0)}/an`,
+        `Revalorisation annuelle des charges : ${formatPercentPDF(operating_costs.costs_growth_rate || 2, 2)}`,
       ]
     },
     {
-      cat: 'Fiscalite', items: [
-        `Regime : ${normalizeText((tax_config.regime_key || 'Non defini').replace(/_/g, ' '))}`,
-        `TMI : ${formatPercentPDF(tax_config.tmi_rate || 0)}`,
-        `Prelevements sociaux : ${formatPercentPDF(tax_config.social_rate || 0)}`,
-        tax_config.amortization_enabled ? 'Amortissements actives' : null,
+      cat: 'Parametres Fiscaux', items: [
+        `Regime d'imposition : ${normalizeText((tax_config.regime_key || 'Non defini').replace(/_/g, ' ').replace(/lmnp/gi, 'LMNP').replace(/sci/gi, 'SCI'))}`,
+        `Tranche marginale d'imposition (TMI) : ${formatPercentPDF(tax_config.tmi_rate || 0, 0)}`,
+        `Prelevements sociaux : ${formatPercentPDF(tax_config.social_rate || 0, 2)}`,
+        tax_config.amortization_enabled ? 'Amortissements comptables actives' : 'Pas d\'amortissement',
       ].filter(Boolean)
     },
     {
-      cat: 'Revente', items: [
-        `Horizon : ${sale_data.resale_year || 20} ans`,
-        `Croissance valeur : ${formatPercentPDF(sale_data.property_growth_rate || 2)}/an`,
-        `Taxation plus-value : ${formatPercentPDF(sale_data.capital_gain_tax_rate || 36.2)}`,
+      cat: 'Hypotheses de Revente', items: [
+        `Horizon de detention : ${sale_data.resale_year || 20} ans`,
+        `Croissance estimee de la valeur : ${formatPercentPDF(sale_data.property_growth_rate || 2, 2)}/an`,
+        `Taxation des plus-values : ${formatPercentPDF(sale_data.capital_gain_tax_rate || 36.2, 2)} (avant abattements)`,
       ]
     },
   ];
 
   hypotheses.forEach(section => {
-    addSubtitle(section.cat);
+    // Section header with background
+    doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
+    doc.roundedRect(margin, y, contentWidth, 6, 1, 1, 'F');
+    
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
+    doc.text(normalizeText(section.cat), margin + 3, y + 4.5);
+    y += 9;
+    
+    doc.setFont('helvetica', 'normal');
     section.items.forEach(item => {
       if (item) {
-        doc.setFontSize(8);
-        doc.setTextColor(COLORS.muted[0], COLORS.muted[1], COLORS.muted[2]);
-        doc.text(normalizeText(`• ${item}`), margin + 5, y);
+        doc.setFontSize(7);
+        doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+        doc.text(normalizeText(`  ${item}`), margin + 3, y);
         y += 5;
       }
     });
-    y += 4;
+    y += 3;
   });
 
   // ==========================================================================
