@@ -3,23 +3,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
-  Wallet, Home, TrendingUp, Shield, Users, Euro, 
-  Calculator, PiggyBank, AlertTriangle, CheckCircle2, Info,
-  Building2, Percent, BarChart3
+  Wallet, Home, TrendingUp, PiggyBank, Euro, 
+  Calculator, AlertTriangle, CheckCircle2, Info,
+  Building2, Percent
 } from 'lucide-react';
 import { formatCurrency } from '@/data/mockData';
-import { FullProjectData, SimulationResults, PatrimonyYear } from '@/lib/realEstateTypes';
+import { FullProjectData, SimulationResults } from '@/lib/realEstateTypes';
+import { RPMetrics, HouseholdData, calculateRPMetrics, getDebtRatioStatus, getResteAVivreStatus } from '@/lib/rpCalculations';
 import { AmortizationChart } from './AmortizationChart';
 import { PatrimonyEvolutionChart } from './PatrimonyEvolutionChart';
 import { 
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, 
-  CartesianGrid, Tooltip as RechartsTooltip, Legend, 
-  BarChart, Bar, PieChart, Pie, Cell
+  ResponsiveContainer, 
+  BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend
 } from 'recharts';
 
 interface RPResultsDashboardProps {
   data: FullProjectData;
   results: SimulationResults;
+  household: HouseholdData;
 }
 
 // KPI Card component for RP
@@ -77,90 +79,68 @@ const RPKPICard: React.FC<RPKPICardProps> = ({ title, value, subtitle, icon, too
   );
 };
 
-export const RPResultsDashboard: React.FC<RPResultsDashboardProps> = ({ data, results }) => {
-  const { project, acquisition, financing, operating_costs, owner_occupier } = data;
+export const RPResultsDashboard: React.FC<RPResultsDashboardProps> = ({ data, results, household }) => {
+  const { project, acquisition, financing, operating_costs } = data;
   
-  // Calculate RP-specific metrics
-  const totalProjectCost = acquisition.total_project_cost || 
-    (acquisition.price_net_seller + acquisition.agency_fee_amount + acquisition.notary_fee_amount + acquisition.works_amount);
-  
-  const monthlyPaymentTotal = financing.monthly_payment || 0;
-  
-  // Get household data from owner_occupier or defaults
-  const householdIncome = owner_occupier?.avoided_rent_monthly 
-    ? (owner_occupier.avoided_rent_monthly * 4) // Rough estimate if not stored
-    : 5000;
-  
-  // Property tax and charges monthly
-  const propertyTaxMonthly = (operating_costs.property_tax_annual || 0) / 12;
-  const chargesMonthly = (operating_costs.condo_nonrecoverable_annual || 0) / 12;
-  const insuranceMonthly = (operating_costs.insurance_annual || 0) / 12;
-  
-  const totalHousingCostMonthly = monthlyPaymentTotal + propertyTaxMonthly + chargesMonthly + insuranceMonthly;
-  
-  // DTI calculation (using monthly payment vs estimated income)
-  const estimatedMonthlyIncome = householdIncome;
-  const dti = estimatedMonthlyIncome > 0 ? (monthlyPaymentTotal / estimatedMonthlyIncome) * 100 : 0;
-  
-  // Reste à vivre
-  const resteAVivre = estimatedMonthlyIncome - totalHousingCostMonthly;
-  
-  // Effort mensuel (vs avoided rent if RP)
-  const avoidedRent = owner_occupier?.avoided_rent_monthly || 0;
-  const monthlyEffort = totalHousingCostMonthly - avoidedRent;
-  
-  // LTV ratio
-  const ltv = acquisition.price_net_seller > 0 
-    ? (financing.loan_amount / acquisition.price_net_seller) * 100 
-    : 0;
-  
-  // Net patrimony at horizon
-  const horizonYears = project.horizon_years || 20;
-  const lastPatrimony = results.patrimony_series?.[results.patrimony_series.length - 1];
-  const netPatrimony = lastPatrimony?.net_patrimony || results.net_patrimony || 0;
-  const propertyValueAtHorizon = lastPatrimony?.property_value || acquisition.price_net_seller;
-  const remainingDebt = lastPatrimony?.remaining_debt || 0;
-  
-  // Cost of credit
-  const totalCreditCost = (financing.total_interest || 0) + (financing.total_insurance || 0);
+  // Calculate all metrics using centralized function
+  const metrics = calculateRPMetrics(data, household);
   
   // Budget breakdown data for pie chart
   const budgetData = [
-    { name: 'Mensualité crédit', value: monthlyPaymentTotal, color: 'hsl(var(--primary))' },
-    { name: 'Taxe foncière', value: propertyTaxMonthly, color: 'hsl(var(--warning))' },
-    { name: 'Charges copro', value: chargesMonthly, color: 'hsl(var(--chart-2))' },
-    { name: 'Assurance', value: insuranceMonthly, color: 'hsl(var(--chart-3))' },
+    { name: 'Mensualité crédit', value: metrics.monthlyPayment, color: 'hsl(var(--primary))' },
+    { name: 'Taxe foncière', value: metrics.monthlyPropertyTax, color: 'hsl(var(--warning))' },
+    { name: 'Charges copro', value: metrics.monthlyCondoCharges, color: 'hsl(var(--chart-2))' },
+    { name: 'Assurance', value: metrics.monthlyInsurance, color: 'hsl(var(--chart-3))' },
   ].filter(item => item.value > 0);
 
   // Stress test scenarios
+  const horizonYears = project.horizon_years || 20;
+  const debtRatioStatus = getDebtRatioStatus(metrics.debtRatio);
+  const resteAVivreStatus = getResteAVivreStatus(metrics.resteAVivre, metrics.memberCount);
+  
   const stressScenarios = [
     {
       name: 'Base',
-      dti: dti,
-      resteAVivre: resteAVivre,
-      monthlyPayment: monthlyPaymentTotal,
+      dti: metrics.debtRatio,
     },
     {
       name: 'Taux +1%',
-      dti: dti * 1.08, // Approximation
-      resteAVivre: resteAVivre * 0.92,
-      monthlyPayment: monthlyPaymentTotal * 1.08,
+      dti: metrics.debtRatio * 1.08,
     },
     {
       name: 'Charges +20%',
-      dti: dti + 2,
-      resteAVivre: resteAVivre - (chargesMonthly * 0.2),
-      monthlyPayment: monthlyPaymentTotal,
+      dti: metrics.debtRatio + 2,
     },
   ];
 
   return (
     <div className="space-y-6">
+      {/* Summary header */}
+      <Card className="bg-muted/30">
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Analyse du ménage</p>
+              <p className="text-lg font-semibold">
+                {metrics.memberCount} personne{metrics.memberCount > 1 ? 's' : ''} — Revenus : {formatCurrency(metrics.totalHouseholdIncome)}/mois
+              </p>
+            </div>
+            <Badge className={`text-sm ${
+              metrics.statusLevel === 'success' ? 'bg-success text-success-foreground' :
+              metrics.statusLevel === 'warning' ? 'bg-warning text-warning-foreground' :
+              'bg-destructive text-destructive-foreground'
+            }`}>
+              {metrics.statusMessage}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         <RPKPICard
           title="Mensualité totale"
-          value={formatCurrency(monthlyPaymentTotal)}
+          value={formatCurrency(metrics.monthlyPayment)}
           subtitle="Crédit + assurance"
           icon={<Wallet className="h-5 w-5 text-primary" />}
           tooltip="Mensualité de crédit incluant l'assurance emprunteur."
@@ -168,7 +148,7 @@ export const RPResultsDashboard: React.FC<RPResultsDashboardProps> = ({ data, re
         />
         <RPKPICard
           title="Coût logement/mois"
-          value={formatCurrency(totalHousingCostMonthly)}
+          value={formatCurrency(metrics.totalHousingCostMonthly)}
           subtitle="Crédit + charges + taxes"
           icon={<Home className="h-5 w-5 text-chart-2" />}
           tooltip="Coût mensuel total du logement incluant crédit, charges de copropriété, taxe foncière et assurance."
@@ -176,47 +156,47 @@ export const RPResultsDashboard: React.FC<RPResultsDashboardProps> = ({ data, re
         />
         <RPKPICard
           title="Taux d'endettement"
-          value={`${dti.toFixed(1)}%`}
-          subtitle={dti <= 35 ? "Dans les normes" : "Hors normes HCSF"}
+          value={`${metrics.debtRatio.toFixed(1)}%`}
+          subtitle={metrics.debtRatio <= 35 ? "Dans les normes HCSF" : "Hors normes HCSF"}
           icon={<Percent className="h-5 w-5 text-warning" />}
-          tooltip="Ratio entre la mensualité de crédit et les revenus du ménage. Les banques appliquent généralement un seuil de 35%."
-          status={dti <= 30 ? 'success' : dti <= 35 ? 'warning' : 'danger'}
+          tooltip="Ratio entre les crédits totaux (existants + nouveau) et les revenus du ménage. Seuil HCSF : 35%."
+          status={debtRatioStatus.status}
         />
         <RPKPICard
           title="Reste à vivre"
-          value={formatCurrency(resteAVivre)}
-          subtitle="Après charges logement"
+          value={formatCurrency(metrics.resteAVivre)}
+          subtitle={`${formatCurrency(metrics.resteAVivre / metrics.memberCount)}/pers.`}
           icon={<PiggyBank className="h-5 w-5 text-success" />}
-          tooltip="Revenus restants après paiement de toutes les charges liées au logement. Indicateur clé pour les banques."
-          status={resteAVivre >= 1500 ? 'success' : resteAVivre >= 1000 ? 'warning' : 'danger'}
+          tooltip="Revenus restants après paiement de tous les crédits. Indicateur clé pour les banques."
+          status={resteAVivreStatus.status}
         />
         <RPKPICard
           title="Effort mensuel"
-          value={formatCurrency(Math.abs(monthlyEffort))}
-          subtitle={monthlyEffort > 0 ? "vs loyer évité" : "Économie vs location"}
+          value={formatCurrency(Math.abs(metrics.monthlyEffort))}
+          subtitle={metrics.monthlyEffort > 0 ? "vs loyer évité" : "Économie vs location"}
           icon={<Calculator className="h-5 w-5 text-chart-4" />}
           tooltip="Différence entre le coût total du logement et le loyer que vous payeriez en location."
-          status={monthlyEffort <= 200 ? 'success' : monthlyEffort <= 500 ? 'warning' : 'neutral'}
+          status={metrics.monthlyEffort <= 200 ? 'success' : metrics.monthlyEffort <= 500 ? 'warning' : 'neutral'}
         />
         <RPKPICard
           title="LTV (Loan-to-Value)"
-          value={`${ltv.toFixed(0)}%`}
+          value={`${metrics.ltv.toFixed(0)}%`}
           subtitle="Part financée"
           icon={<TrendingUp className="h-5 w-5 text-chart-5" />}
           tooltip="Pourcentage du bien financé par emprunt. Un LTV élevé (>80%) peut nécessiter une garantie supplémentaire."
-          status={ltv <= 80 ? 'success' : ltv <= 90 ? 'warning' : 'danger'}
+          status={metrics.ltv <= 80 ? 'success' : metrics.ltv <= 90 ? 'warning' : 'danger'}
         />
         <RPKPICard
           title="Patrimoine net"
-          value={formatCurrency(netPatrimony)}
+          value={formatCurrency(metrics.netPatrimonyAtHorizon)}
           subtitle={`À ${horizonYears} ans`}
           icon={<Building2 className="h-5 w-5 text-primary" />}
           tooltip="Valeur estimée du bien moins la dette restante à l'horizon de détention."
-          status={netPatrimony > financing.down_payment * 1.5 ? 'success' : 'warning'}
+          status={metrics.netPatrimonyAtHorizon > financing.down_payment * 1.5 ? 'success' : 'warning'}
         />
         <RPKPICard
           title="Coût total crédit"
-          value={formatCurrency(totalCreditCost)}
+          value={formatCurrency(metrics.totalCreditCost)}
           subtitle="Intérêts + assurance"
           icon={<Euro className="h-5 w-5 text-destructive" />}
           tooltip="Coût total du crédit sur toute sa durée, incluant intérêts et assurance."
@@ -224,8 +204,8 @@ export const RPResultsDashboard: React.FC<RPResultsDashboardProps> = ({ data, re
         />
       </div>
 
-      {/* Viability badge */}
-      {dti > 35 && (
+      {/* Viability badges */}
+      {metrics.debtRatio > 35 && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="py-3 flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-destructive" />
@@ -237,7 +217,7 @@ export const RPResultsDashboard: React.FC<RPResultsDashboardProps> = ({ data, re
         </Card>
       )}
 
-      {dti <= 35 && resteAVivre >= 1000 && (
+      {metrics.debtRatio <= 35 && metrics.resteAVivre >= 400 * metrics.memberCount && (
         <Card className="border-success/50 bg-success/5">
           <CardContent className="py-3 flex items-center gap-3">
             <CheckCircle2 className="h-5 w-5 text-success" />
@@ -268,7 +248,7 @@ export const RPResultsDashboard: React.FC<RPResultsDashboardProps> = ({ data, re
                     outerRadius={90}
                     paddingAngle={2}
                     dataKey="value"
-                    label={({ name, value }) => `${formatCurrency(value)}`}
+                    label={({ value }) => formatCurrency(value)}
                     labelLine={false}
                   >
                     {budgetData.map((entry, index) => (
@@ -290,7 +270,7 @@ export const RPResultsDashboard: React.FC<RPResultsDashboardProps> = ({ data, re
             <div className="mt-4 pt-4 border-t">
               <div className="flex justify-between text-sm font-medium">
                 <span>Total mensuel</span>
-                <span className="text-primary">{formatCurrency(totalHousingCostMonthly)}</span>
+                <span className="text-primary">{formatCurrency(metrics.totalHousingCostMonthly)}</span>
               </div>
             </div>
           </CardContent>
@@ -327,8 +307,8 @@ export const RPResultsDashboard: React.FC<RPResultsDashboardProps> = ({ data, re
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Marge de sécurité</span>
-                <span className={`font-medium ${35 - dti > 5 ? 'text-success' : 'text-warning'}`}>
-                  {(35 - dti).toFixed(1)} pts
+                <span className={`font-medium ${35 - metrics.debtRatio > 5 ? 'text-success' : 'text-warning'}`}>
+                  {(35 - metrics.debtRatio).toFixed(1)} pts
                 </span>
               </div>
             </div>
@@ -336,7 +316,7 @@ export const RPResultsDashboard: React.FC<RPResultsDashboardProps> = ({ data, re
         </Card>
       </div>
 
-      {/* Acquisition summary */}
+      {/* Acquisition & Financing summary */}
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -349,7 +329,7 @@ export const RPResultsDashboard: React.FC<RPResultsDashboardProps> = ({ data, re
             {acquisition.works_amount > 0 && <div className="flex justify-between"><span>Travaux</span><span>{formatCurrency(acquisition.works_amount)}</span></div>}
             <div className="border-t pt-2 flex justify-between font-bold">
               <span>Coût total</span>
-              <span>{formatCurrency(totalProjectCost)}</span>
+              <span>{formatCurrency(metrics.totalProjectCost)}</span>
             </div>
           </CardContent>
         </Card>

@@ -4,6 +4,11 @@ import jsPDF from 'jspdf';
 import { FullProjectData, OperatingCosts } from './realEstateTypes';
 import { formatCurrency } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
+import { 
+  HouseholdData as RPHouseholdData, 
+  HouseholdMember as RPHouseholdMember,
+  calculateRPMetrics 
+} from './rpCalculations';
 
 interface ClientInfo {
   fullName: string;
@@ -15,6 +20,7 @@ interface ClientInfo {
   netMonthlySalary?: number;
 }
 
+// Legacy interfaces for backward compatibility with PDF config
 interface HouseholdMember {
   firstName: string;
   relation: string;
@@ -383,24 +389,37 @@ export async function generateRPBankPDF(
     light: [248, 250, 252] as [number, number, number],
   };
 
-  // Calculate household metrics
-  const householdIncome = config.household.totalIncome || clientInfo.netMonthlySalary || 3500;
-  const existingCredits = config.household.totalExistingCredits || 0;
-  const monthlyPayment = financing.monthly_payment || 0;
-  const memberCount = config.household.members.length > 0 ? config.household.members.length : 1;
+  // Convert config to RPHouseholdData format for centralized calculations
+  const rpHouseholdData: RPHouseholdData = {
+    primaryIncome: config.household.totalIncome || clientInfo.netMonthlySalary || 0,
+    primaryExistingCredits: config.household.totalExistingCredits || 0,
+    members: config.household.members.map(m => ({
+      id: crypto.randomUUID(),
+      firstName: m.firstName,
+      relation: m.relation,
+      professionalStatus: m.professionalStatus,
+      netMonthlySalary: m.netMonthlySalary,
+      contractType: m.contractType,
+      existingCredits: m.existingCredits,
+    })),
+    otherChargesMonthly: 0,
+  };
   
-  // Operating costs for RP
-  const monthlyPropertyTax = (operating_costs.property_tax_annual || 0) / 12;
-  const monthlyCondoCharges = (operating_costs.condo_nonrecoverable_annual || 0) / 12;
-  const monthlyInsurance = (operating_costs.insurance_annual || 0) / 12;
-  const monthlyEnergy = 150; // Estimation
-  const monthlyMaintenance = 100; // Estimation
-  const totalHousingCost = monthlyPayment + monthlyPropertyTax + monthlyCondoCharges + monthlyInsurance + monthlyEnergy + monthlyMaintenance;
+  // Use centralized calculations for consistency with dashboard
+  const metrics = calculateRPMetrics(data, rpHouseholdData);
   
-  // Banking metrics
-  const totalCreditsAfterProject = existingCredits + monthlyPayment;
-  const debtRatio = (totalCreditsAfterProject / householdIncome) * 100;
-  const resteAVivre = householdIncome - totalCreditsAfterProject - totalHousingCost + monthlyPayment;
+  // Extract metrics for use in PDF
+  const householdIncome = metrics.totalHouseholdIncome;
+  const existingCredits = metrics.totalExistingCredits;
+  const monthlyPayment = metrics.monthlyPayment;
+  const memberCount = metrics.memberCount;
+  const monthlyPropertyTax = metrics.monthlyPropertyTax;
+  const monthlyCondoCharges = metrics.monthlyCondoCharges;
+  const monthlyInsurance = metrics.monthlyInsurance;
+  const totalHousingCost = metrics.totalHousingCostMonthly;
+  const totalCreditsAfterProject = metrics.totalCreditsAfterProject;
+  const debtRatio = metrics.debtRatio;
+  const resteAVivre = metrics.resteAVivre;
   const securityMargin = financing.down_payment - (acquisition.notary_fee_amount || 0) - (acquisition.works_amount || 0);
 
   // Helper functions
@@ -821,8 +840,6 @@ export async function generateRPBankPDF(
   addLine('Taxe fonciere', formatCurrency(monthlyPropertyTax) + '/mois', 5);
   addLine('Charges copropriete', formatCurrency(monthlyCondoCharges) + '/mois', 5);
   addLine('Assurance habitation', formatCurrency(monthlyInsurance) + '/mois', 5);
-  addLine('Energie (estimation)', formatCurrency(monthlyEnergy) + '/mois', 5);
-  addLine('Entretien courant', formatCurrency(monthlyMaintenance) + '/mois', 5);
   addSeparator();
   addLine('COUT MENSUEL GLOBAL LOGEMENT', formatCurrency(totalHousingCost), 0, true);
   
@@ -842,8 +859,6 @@ export async function generateRPBankPDF(
     { label: 'Taxe fonciere', value: monthlyPropertyTax, color: colors.warning },
     { label: 'Charges', value: monthlyCondoCharges, color: colors.muted },
     { label: 'Assurance', value: monthlyInsurance, color: colors.success },
-    { label: 'Energie', value: monthlyEnergy, color: colors.danger },
-    { label: 'Entretien', value: monthlyMaintenance, color: [100, 100, 100] as [number, number, number] },
   ];
   
   drawStackedBarChart(doc, margin, y, contentWidth, 55, budgetData, 'Repartition du budget logement mensuel');
