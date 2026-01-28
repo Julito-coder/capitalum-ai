@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { generateBankPDF } from "@/lib/simulationPdfExport";
 import { generateRPBankPDF } from "@/lib/rpPdfExport";
 import { supabase } from "@/integrations/supabase/client";
+import { HouseholdData, createHouseholdFromProfile } from "@/lib/rpCalculations";
 
 // Professional components for LOCATIF
 import { KPICardsGrid } from "@/components/simulator/results/KPICardsGrid";
@@ -35,11 +36,19 @@ const SimulationDetails = () => {
   const [data, setData] = useState<FullProjectData | null>(null);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
+  const [householdData, setHouseholdData] = useState<HouseholdData>({
+    primaryIncome: 0,
+    primaryExistingCredits: 0,
+    members: [],
+    otherChargesMonthly: 0,
+  });
   const [clientProfile, setClientProfile] = useState<{
     fullName: string;
     professionalStatus?: string;
     contractType?: string;
     netMonthlySalary?: number;
+    spouseIncome?: number;
+    mortgageRemaining?: number;
   }>({ fullName: "Client" });
 
   useEffect(() => {
@@ -54,7 +63,7 @@ const SimulationDetails = () => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, professional_status, contract_type, net_monthly_salary")
+        .select("full_name, professional_status, contract_type, net_monthly_salary, spouse_income, mortgage_remaining")
         .eq("user_id", user.id)
         .single();
 
@@ -64,7 +73,13 @@ const SimulationDetails = () => {
           professionalStatus: profile.professional_status || undefined,
           contractType: profile.contract_type || undefined,
           netMonthlySalary: profile.net_monthly_salary || undefined,
+          spouseIncome: profile.spouse_income || undefined,
+          mortgageRemaining: profile.mortgage_remaining || undefined,
         });
+        
+        // Create household data from profile
+        const household = createHouseholdFromProfile(profile);
+        setHouseholdData(household);
       }
     } catch (error) {
       console.error("Error loading profile:", error);
@@ -101,20 +116,19 @@ const SimulationDetails = () => {
     
     try {
       if (data.project.type === 'RP') {
-        // For RP projects, use dedicated RP PDF export
-        // Household config is now part of the wizard, use owner_occupier data
+        // For RP projects, use dedicated RP PDF export with household data
         const config = {
           household: {
-            members: [{
-              firstName: clientProfile.fullName.split(' ')[0] || 'Client',
-              relation: 'principal',
-              professionalStatus: clientProfile.professionalStatus || 'Salarié',
-              netMonthlySalary: clientProfile.netMonthlySalary || data.owner_occupier?.avoided_rent_monthly || 3000,
-              contractType: clientProfile.contractType || 'CDI',
-              existingCredits: 0,
-            }],
-            totalIncome: clientProfile.netMonthlySalary || data.owner_occupier?.avoided_rent_monthly || 3000,
-            totalExistingCredits: 0,
+            members: householdData.members.map(m => ({
+              firstName: m.firstName,
+              relation: m.relation,
+              professionalStatus: m.professionalStatus,
+              netMonthlySalary: m.netMonthlySalary,
+              contractType: m.contractType,
+              existingCredits: m.existingCredits,
+            })),
+            totalIncome: householdData.primaryIncome + householdData.members.reduce((sum, m) => sum + m.netMonthlySalary, 0),
+            totalExistingCredits: householdData.primaryExistingCredits + householdData.members.reduce((sum, m) => sum + m.existingCredits, 0),
           },
           stressTests: {
             rateIncrease: 1,
@@ -206,7 +220,7 @@ const SimulationDetails = () => {
         {/* Conditional Dashboard based on project type */}
         {isRP ? (
           // RP Dashboard - focused on solvency and household analysis
-          <RPResultsDashboard data={data} results={r} />
+          <RPResultsDashboard data={data} results={r} household={householdData} />
         ) : (
           // LOCATIF Dashboard - focused on profitability
           <>
