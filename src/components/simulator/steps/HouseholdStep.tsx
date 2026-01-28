@@ -130,7 +130,8 @@ export function HouseholdStep({ state, updateState, monthlyPayment = 0 }: Househ
       setProfileLoading(false);
     }
   };
-  const members = state.ownerOccupier.householdMembers || [];
+  // Utiliser directement le state pour garantir les valeurs à jour
+  const householdMembers = state.ownerOccupier.householdMembers || [];
 
   const addMember = () => {
     const newMember: HouseholdMember = {
@@ -142,30 +143,33 @@ export function HouseholdStep({ state, updateState, monthlyPayment = 0 }: Househ
       contractType: "cdi",
       existingCredits: 0,
     };
+    const currentMembers = state.ownerOccupier.householdMembers || [];
     updateState("ownerOccupier", {
-      householdMembers: [...members, newMember],
+      householdMembers: [...currentMembers, newMember],
     });
   };
 
   const updateMember = (id: string, field: keyof HouseholdMember, value: string | number) => {
-    const updated = members.map((m) =>
+    const currentMembers = state.ownerOccupier.householdMembers || [];
+    const updated = currentMembers.map((m) =>
       m.id === id ? { ...m, [field]: value } : m
     );
     updateState("ownerOccupier", { householdMembers: updated });
   };
 
   const removeMember = (id: string) => {
+    const currentMembers = state.ownerOccupier.householdMembers || [];
     updateState("ownerOccupier", {
-      householdMembers: members.filter((m) => m.id !== id),
+      householdMembers: currentMembers.filter((m) => m.id !== id),
     });
   };
 
-  // Calculs de solvabilité
+  // Calculs de solvabilité - toujours utiliser les valeurs fraîches du state
   const primaryIncome = state.ownerOccupier.householdIncomeMonthly || 0;
-  const membersIncome = members.reduce((sum, m) => sum + m.netMonthlySalary, 0);
+  const membersIncome = householdMembers.reduce((sum, m) => sum + (Number(m.netMonthlySalary) || 0), 0);
   const totalIncome = primaryIncome + membersIncome;
   const existingCredits = state.ownerOccupier.existingCreditsMonthly || 0;
-  const membersCredits = members.reduce((sum, m) => sum + m.existingCredits, 0);
+  const membersCredits = householdMembers.reduce((sum, m) => sum + (Number(m.existingCredits) || 0), 0);
   const totalExistingCredits = existingCredits + membersCredits;
   const totalCreditsAfterProject = totalExistingCredits + monthlyPayment;
   const debtRatio = totalIncome > 0 ? (totalCreditsAfterProject / totalIncome) * 100 : 0;
@@ -279,7 +283,7 @@ export function HouseholdStep({ state, updateState, monthlyPayment = 0 }: Househ
           </div>
         </CardHeader>
         <CardContent>
-          {members.length === 0 ? (
+          {householdMembers.length === 0 ? (
             <div className="text-center py-8 border border-dashed rounded-lg text-muted-foreground">
               <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">Aucun membre supplémentaire</p>
@@ -287,7 +291,7 @@ export function HouseholdStep({ state, updateState, monthlyPayment = 0 }: Househ
             </div>
           ) : (
             <div className="space-y-4">
-              {members.map((member, index) => (
+              {householdMembers.map((member, index) => (
                 <Card key={member.id} className="relative border-muted">
                   <Button
                     variant="ghost"
