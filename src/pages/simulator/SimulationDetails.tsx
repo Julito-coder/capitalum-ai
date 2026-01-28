@@ -9,10 +9,11 @@ import { fetchFullProject, recalculateProject } from "@/lib/realEstateService";
 import { FullProjectData, SimulationResults } from "@/lib/realEstateTypes";
 import { formatCurrency } from "@/data/mockData";
 import { 
-  ArrowLeft, RefreshCw, FileDown, Loader2, AlertTriangle, CheckCircle2
+  ArrowLeft, RefreshCw, FileDown, Loader2, AlertTriangle, CheckCircle2, Edit
 } from "lucide-react";
 import { toast } from "sonner";
 import { generateBankPDF } from "@/lib/simulationPdfExport";
+import { generateRPBankPDF } from "@/lib/rpPdfExport";
 
 // New professional components
 import { KPICardsGrid } from "@/components/simulator/results/KPICardsGrid";
@@ -63,9 +64,15 @@ const SimulationDetails = () => {
   const handleExportPDF = async () => {
     if (!data) return;
     try {
-      await generateBankPDF(data);
+      // Use appropriate PDF generator based on project type
+      if (data.project.type === 'RP') {
+        await generateRPBankPDF(data);
+      } else {
+        await generateBankPDF(data);
+      }
       toast.success("PDF exporté");
     } catch (error) {
+      console.error('PDF export error:', error);
       toast.error("Erreur lors de l'export");
     }
   };
@@ -123,7 +130,7 @@ const SimulationDetails = () => {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate(`/simulator/edit/${id}`)}>
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <Edit className="h-4 w-4 mr-2" />
               Modifier
             </Button>
             <Button variant="outline" onClick={handleRecalculate} disabled={recalculating}>
