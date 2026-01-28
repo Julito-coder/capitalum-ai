@@ -14,6 +14,8 @@ import {
 import { toast } from "sonner";
 import { generateBankPDF } from "@/lib/simulationPdfExport";
 import { generateRPBankPDF } from "@/lib/rpPdfExport";
+import { HouseholdConfigModal, HouseholdConfig, StressTestConfig } from "@/components/simulator/HouseholdConfigModal";
+import { supabase } from "@/integrations/supabase/client";
 
 // New professional components
 import { KPICardsGrid } from "@/components/simulator/results/KPICardsGrid";
@@ -31,10 +33,42 @@ const SimulationDetails = () => {
   const [data, setData] = useState<FullProjectData | null>(null);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
+  const [showHouseholdModal, setShowHouseholdModal] = useState(false);
+  const [clientProfile, setClientProfile] = useState<{
+    fullName: string;
+    professionalStatus?: string;
+    contractType?: string;
+    netMonthlySalary?: number;
+  }>({ fullName: "Client" });
 
   useEffect(() => {
     if (id) loadData();
+    loadClientProfile();
   }, [id]);
+
+  const loadClientProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, professional_status, contract_type, net_monthly_salary")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profile) {
+        setClientProfile({
+          fullName: profile.full_name || user.user_metadata?.full_name || "Client",
+          professionalStatus: profile.professional_status || undefined,
+          contractType: profile.contract_type || undefined,
+          netMonthlySalary: profile.net_monthly_salary || undefined,
+        });
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -63,14 +97,44 @@ const SimulationDetails = () => {
 
   const handleExportPDF = async () => {
     if (!data) return;
+    
+    // For RP projects, show household config modal first
+    if (data.project.type === 'RP') {
+      setShowHouseholdModal(true);
+      return;
+    }
+    
     try {
-      // Use appropriate PDF generator based on project type
-      if (data.project.type === 'RP') {
-        await generateRPBankPDF(data);
-      } else {
-        await generateBankPDF(data);
-      }
+      await generateBankPDF(data);
       toast.success("PDF exporté");
+    } catch (error) {
+      console.error('PDF export error:', error);
+      toast.error("Erreur lors de l'export");
+    }
+  };
+
+  const handleRPExport = async (household: HouseholdConfig, stressTests: StressTestConfig) => {
+    if (!data) return;
+    setShowHouseholdModal(false);
+    
+    try {
+      const config = {
+        household: {
+          members: household.members.map(m => ({
+            firstName: m.firstName,
+            relation: m.relation,
+            professionalStatus: m.professionalStatus,
+            netMonthlySalary: m.netMonthlySalary,
+            contractType: m.contractType,
+            existingCredits: m.existingCredits,
+          })),
+          totalIncome: household.totalIncome,
+          totalExistingCredits: household.totalExistingCredits,
+        },
+        stressTests,
+      };
+      await generateRPBankPDF(data, config);
+      toast.success("Dossier de financement RP exporté");
     } catch (error) {
       console.error('PDF export error:', error);
       toast.error("Erreur lors de l'export");
@@ -349,6 +413,15 @@ const SimulationDetails = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Household Config Modal for RP projects */}
+      <HouseholdConfigModal
+        open={showHouseholdModal}
+        onOpenChange={setShowHouseholdModal}
+        onExport={handleRPExport}
+        primaryMember={clientProfile}
+        monthlyPayment={financing.monthly_payment || 0}
+      />
     </Layout>
   );
 };
