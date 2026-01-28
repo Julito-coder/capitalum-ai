@@ -4,13 +4,25 @@
 
 import jsPDF from 'jspdf';
 import { FullProjectData, OperatingCosts } from './realEstateTypes';
-import { formatCurrency } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   HouseholdData as RPHouseholdData, 
   HouseholdMember as RPHouseholdMember,
   calculateRPMetrics 
 } from './rpCalculations';
+
+// =============================================
+// PDF-SAFE CURRENCY FORMATTER
+// =============================================
+// jsPDF doesn't handle non-breaking spaces (U+00A0) from Intl.NumberFormat
+// This function uses regular spaces that render correctly in PDF
+function formatCurrencyPDF(amount: number): string {
+  const rounded = Math.round(amount);
+  const parts = rounded.toString().split('.');
+  const intPart = parts[0];
+  const formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' '); // Regular space
+  return `${formatted} €`;
+}
 
 // =============================================
 // TYPES & INTERFACES
@@ -217,7 +229,7 @@ function drawHorizontalBarChart(
   const chartHeight = height - padding.top - padding.bottom;
   
   const maxValue = options.maxValue || Math.max(...data.map(d => d.value)) * 1.15;
-  const yFormatter = options.yFormatter || formatCurrency;
+  const yFormatter = options.yFormatter || formatCurrencyPDF;
   
   if (options.title) {
     doc.setFontSize(9);
@@ -787,21 +799,21 @@ export async function generateRPBankPDF(
   const projectContent = [
     `Type de bien: ${project.property_type === 'apartment' ? 'Appartement' : 'Maison'}`,
     `Localisation: ${project.city || 'Non définie'}`,
-    `Prix total projet: ${formatCurrency(totalCost)}`,
-    `Apport personnel: ${formatCurrency(financing.down_payment)}`,
-    `Montant financé: ${formatCurrency(financing.loan_amount)}`,
+    `Prix total projet: ${formatCurrencyPDF(totalCost)}`,
+    `Apport personnel: ${formatCurrencyPDF(financing.down_payment)}`,
+    `Montant financé: ${formatCurrencyPDF(financing.loan_amount)}`,
     `Durée & taux: ${financing.duration_months / 12} ans à ${financing.nominal_rate}%`,
-    `Mensualité: ${formatCurrency(monthlyPayment)}`,
+    `Mensualité: ${formatCurrencyPDF(monthlyPayment)}`,
   ];
   addInfoCard('Projet Immobilier', projectContent, margin, cardWidth, cardHeight, COLORS.navy);
   
   // Right card: Household
   const householdContent = [
-    `Revenus nets/mois: ${formatCurrency(householdIncome)}`,
-    `Crédits existants: ${formatCurrency(existingCredits)}`,
-    `Mensualité projet: ${formatCurrency(monthlyPayment)}`,
+    `Revenus nets/mois: ${formatCurrencyPDF(householdIncome)}`,
+    `Crédits existants: ${formatCurrencyPDF(existingCredits)}`,
+    `Mensualité projet: ${formatCurrencyPDF(monthlyPayment)}`,
     `Taux d'endettement: ${debtRatio.toFixed(1)}%`,
-    `Reste à vivre: ${formatCurrency(resteAVivre)}`,
+    `Reste à vivre: ${formatCurrencyPDF(resteAVivre)}`,
     `LTV: ${ltv.toFixed(0)}%`,
   ];
   addInfoCard('Lecture Ménage', householdContent, margin + cardWidth + 8, cardWidth, cardHeight, COLORS.success);
@@ -842,11 +854,11 @@ export async function generateRPBankPDF(
   
   let synthesisText: string;
   if (isDanger) {
-    synthesisText = `Avec un taux d'endettement de ${debtRatio.toFixed(1)}% et un reste à vivre de ${formatCurrency(resteAVivre)}, le dossier présente des tensions budgétaires significatives. Une révision du projet ou un apport complémentaire serait recommandé.`;
+    synthesisText = `Avec un taux d'endettement de ${debtRatio.toFixed(1)}% et un reste a vivre de ${formatCurrencyPDF(resteAVivre)}, le dossier presente des tensions budgetaires significatives. Une revision du projet ou un apport complementaire serait recommande.`;
   } else if (isWarning) {
-    synthesisText = `Le taux d'endettement de ${debtRatio.toFixed(1)}% approche la limite HCSF de 35%. Le reste à vivre de ${formatCurrency(resteAVivre)} est acceptable mais sans marge confortable. Dossier à étudier avec attention.`;
+    synthesisText = `Le taux d'endettement de ${debtRatio.toFixed(1)}% approche la limite HCSF de 35%. Le reste a vivre de ${formatCurrencyPDF(resteAVivre)} est acceptable mais sans marge confortable. Dossier a etudier avec attention.`;
   } else {
-    synthesisText = `Le dossier présente une structure financière équilibrée avec un taux d'endettement de ${debtRatio.toFixed(1)}% (sous le seuil HCSF de 35%) et un reste à vivre confortable de ${formatCurrency(resteAVivre)}. Le ménage dispose d'une capacité financière adaptée au projet.`;
+    synthesisText = `Le dossier presente une structure financiere equilibree avec un taux d'endettement de ${debtRatio.toFixed(1)}% (sous le seuil HCSF de 35%) et un reste a vivre confortable de ${formatCurrencyPDF(resteAVivre)}. Le menage dispose d'une capacite financiere adaptee au projet.`;
   }
   
   const synthesisLines = doc.splitTextToSize(synthesisText, contentWidth - 10);
@@ -899,8 +911,8 @@ export async function generateRPBankPDF(
   doc.text(clientInfo.fullName, colX[0], y + 6);
   doc.text(formatProfessionalStatus(clientInfo.professionalStatus), colX[1], y + 6);
   doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(primaryIncome), colX[2], y + 6);
-  doc.text(formatCurrency(primaryCredits), colX[3], y + 6);
+  doc.text(formatCurrencyPDF(primaryIncome), colX[2], y + 6);
+  doc.text(formatCurrencyPDF(primaryCredits), colX[3], y + 6);
   doc.setFont('helvetica', 'normal');
   
   y += rowHeight;
@@ -918,8 +930,8 @@ export async function generateRPBankPDF(
     doc.text(`${member.firstName} (${formatRelation(member.relation)})`, colX[0], y + 6);
     doc.text(formatProfessionalStatus(member.professionalStatus), colX[1], y + 6);
     doc.setFont('helvetica', 'bold');
-    doc.text(formatCurrency(member.netMonthlySalary), colX[2], y + 6);
-    doc.text(formatCurrency(member.existingCredits), colX[3], y + 6);
+    doc.text(formatCurrencyPDF(member.netMonthlySalary), colX[2], y + 6);
+    doc.text(formatCurrencyPDF(member.existingCredits), colX[3], y + 6);
     doc.setFont('helvetica', 'normal');
     
     y += rowHeight;
@@ -931,9 +943,9 @@ export async function generateRPBankPDF(
   doc.setFontSize(7);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text('TOTAL MÉNAGE', colX[0], y + 6);
-  doc.text(formatCurrency(householdIncome), colX[2], y + 6);
-  doc.text(formatCurrency(existingCredits), colX[3], y + 6);
+  doc.text('TOTAL MENAGE', colX[0], y + 6);
+  doc.text(formatCurrencyPDF(householdIncome), colX[2], y + 6);
+  doc.text(formatCurrencyPDF(existingCredits), colX[3], y + 6);
   
   y += rowHeight + 15;
   
@@ -955,9 +967,9 @@ export async function generateRPBankPDF(
   doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
   
   const financialAvailable = householdIncome - existingCredits;
-  const financialReadingText = `Le ménage dispose d'une capacité financière mensuelle de ${formatCurrency(financialAvailable)} après déduction des crédits existants. ` +
-    `Avec une mensualité projet de ${formatCurrency(monthlyPayment)}, le taux d'endettement global s'établit à ${debtRatio.toFixed(1)}%. ` +
-    (debtRatio <= 35 ? `Ce ratio est conforme aux recommandations du HCSF (≤35%).` : `Ce ratio dépasse le seuil HCSF recommandé de 35%.`);
+  const financialReadingText = `Le menage dispose d'une capacite financiere mensuelle de ${formatCurrencyPDF(financialAvailable)} apres deduction des credits existants. ` +
+    `Avec une mensualite projet de ${formatCurrencyPDF(monthlyPayment)}, le taux d'endettement global s'etablit a ${debtRatio.toFixed(1)}%. ` +
+    (debtRatio <= 35 ? `Ce ratio est conforme aux recommandations du HCSF (max 35%).` : `Ce ratio depasse le seuil HCSF recommande de 35%.`);
   
   const readingLines = doc.splitTextToSize(financialReadingText, contentWidth - 20);
   doc.text(readingLines, margin + 12, y + 20);
@@ -973,18 +985,18 @@ export async function generateRPBankPDF(
   addSubsectionTitle('Détail des coûts d\'acquisition');
   
   y += 2;
-  addKeyValueLine('Prix net vendeur', formatCurrency(acquisition.price_net_seller), { bold: true, highlight: true });
-  addKeyValueLine('Frais d\'agence', formatCurrency(acquisition.agency_fee_amount || 0), { indent: 5 });
-  addKeyValueLine('Frais de notaire', formatCurrency(acquisition.notary_fee_amount || 0) + (acquisition.notary_fee_estimated ? ' (estimés)' : ''), { indent: 5 });
+  addKeyValueLine('Prix net vendeur', formatCurrencyPDF(acquisition.price_net_seller), { bold: true, highlight: true });
+  addKeyValueLine('Frais d\'agence', formatCurrencyPDF(acquisition.agency_fee_amount || 0), { indent: 5 });
+  addKeyValueLine('Frais de notaire', formatCurrencyPDF(acquisition.notary_fee_amount || 0) + (acquisition.notary_fee_estimated ? ' (estimes)' : ''), { indent: 5 });
   if (acquisition.works_amount && acquisition.works_amount > 0) {
-    addKeyValueLine('Travaux', formatCurrency(acquisition.works_amount), { indent: 5 });
+    addKeyValueLine('Travaux', formatCurrencyPDF(acquisition.works_amount), { indent: 5 });
   }
-  addKeyValueLine('Frais bancaires', formatCurrency(acquisition.bank_fees || 0), { indent: 5 });
-  addKeyValueLine('Frais de garantie', formatCurrency(acquisition.guarantee_fees || 0), { indent: 5 });
+  addKeyValueLine('Frais bancaires', formatCurrencyPDF(acquisition.bank_fees || 0), { indent: 5 });
+  addKeyValueLine('Frais de garantie', formatCurrencyPDF(acquisition.guarantee_fees || 0), { indent: 5 });
   
   addSeparator();
   
-  addKeyValueLine('COÛT TOTAL DU PROJET', formatCurrency(totalCost), { bold: true, highlight: true });
+  addKeyValueLine('COUT TOTAL DU PROJET', formatCurrencyPDF(totalCost), { bold: true, highlight: true });
   
   y += 15;
   
@@ -1023,7 +1035,7 @@ export async function generateRPBankPDF(
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text(formatCurrency(acquisition.price_net_seller), margin + boxWidth / 2, y + 12, { align: 'center' });
+  doc.text(formatCurrencyPDF(acquisition.price_net_seller), margin + boxWidth / 2, y + 12, { align: 'center' });
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.text('Prix net vendeur', margin + boxWidth / 2, y + 22, { align: 'center' });
@@ -1033,7 +1045,7 @@ export async function generateRPBankPDF(
   doc.roundedRect(margin + boxWidth + 5, y, boxWidth, 28, 2, 2, 'F');
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(totalFees), margin + boxWidth + 5 + boxWidth / 2, y + 12, { align: 'center' });
+  doc.text(formatCurrencyPDF(totalFees), margin + boxWidth + 5 + boxWidth / 2, y + 12, { align: 'center' });
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.text('Total frais annexes', margin + boxWidth + 5 + boxWidth / 2, y + 22, { align: 'center' });
@@ -1043,10 +1055,10 @@ export async function generateRPBankPDF(
   doc.roundedRect(margin + 2 * (boxWidth + 5), y, boxWidth, 28, 2, 2, 'F');
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(totalCost), margin + 2 * (boxWidth + 5) + boxWidth / 2, y + 12, { align: 'center' });
+  doc.text(formatCurrencyPDF(totalCost), margin + 2 * (boxWidth + 5) + boxWidth / 2, y + 12, { align: 'center' });
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
-  doc.text('Coût total projet', margin + 2 * (boxWidth + 5) + boxWidth / 2, y + 22, { align: 'center' });
+  doc.text('Cout total projet', margin + 2 * (boxWidth + 5) + boxWidth / 2, y + 22, { align: 'center' });
   
   // ============================================
   // PAGE 5: FINANCING & DEBT
@@ -1057,22 +1069,22 @@ export async function generateRPBankPDF(
   
   addSubsectionTitle('Structure de financement');
   
-  addKeyValueLine('Apport personnel', formatCurrency(financing.down_payment), { bold: true, highlight: true });
+  addKeyValueLine('Apport personnel', formatCurrencyPDF(financing.down_payment), { bold: true, highlight: true });
   addKeyValueLine('Affectation de l\'apport', financing.down_payment_allocation === 'fees' ? 'Frais annexes' : financing.down_payment_allocation === 'capital' ? 'Capital' : 'Mixte', { indent: 5 });
   
   addSeparator(true);
   
-  addKeyValueLine('Montant emprunté', formatCurrency(financing.loan_amount), { bold: true, highlight: true });
-  addKeyValueLine('Durée du prêt', `${financing.duration_months} mois (${financing.duration_months / 12} ans)`, { indent: 5 });
+  addKeyValueLine('Montant emprunte', formatCurrencyPDF(financing.loan_amount), { bold: true, highlight: true });
+  addKeyValueLine('Duree du pret', `${financing.duration_months} mois (${financing.duration_months / 12} ans)`, { indent: 5 });
   addKeyValueLine('Taux nominal (fixe)', `${financing.nominal_rate}%`, { indent: 5 });
   addKeyValueLine('Assurance emprunteur', `${financing.insurance_value}% du capital/an`, { indent: 5 });
   if (financing.deferment_months && financing.deferment_months > 0) {
-    addKeyValueLine('Différé de remboursement', `${financing.deferment_months} mois (${financing.deferment_type === 'total' ? 'total' : 'partiel'})`, { indent: 5 });
+    addKeyValueLine('Differe de remboursement', `${financing.deferment_months} mois (${financing.deferment_type === 'total' ? 'total' : 'partiel'})`, { indent: 5 });
   }
   
   addSeparator();
   
-  addKeyValueLine('MENSUALITÉ TOTALE', formatCurrency(monthlyPayment), { bold: true, highlight: true });
+  addKeyValueLine('MENSUALITE TOTALE', formatCurrencyPDF(monthlyPayment), { bold: true, highlight: true });
   
   y += 10;
   
@@ -1098,10 +1110,10 @@ export async function generateRPBankPDF(
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(COLORS.dark[0], COLORS.dark[1], COLORS.dark[2]);
-  doc.text(formatCurrency(financing.total_interest || 0), margin + 12, creditInfoY + 8);
-  doc.text(formatCurrency(financing.total_insurance || 0), margin + 12 + 55, creditInfoY + 8);
+  doc.text(formatCurrencyPDF(financing.total_interest || 0), margin + 12, creditInfoY + 8);
+  doc.text(formatCurrencyPDF(financing.total_insurance || 0), margin + 12 + 55, creditInfoY + 8);
   doc.setTextColor(COLORS.navy[0], COLORS.navy[1], COLORS.navy[2]);
-  doc.text(formatCurrency((financing.total_interest || 0) + (financing.total_insurance || 0)), margin + 12 + 110, creditInfoY + 8);
+  doc.text(formatCurrencyPDF((financing.total_interest || 0) + (financing.total_insurance || 0)), margin + 12 + 110, creditInfoY + 8);
   
   y += 50;
   
@@ -1138,16 +1150,16 @@ export async function generateRPBankPDF(
   
   addSectionTitle('Budget Logement et Effort Mensuel');
   
-  addSubsectionTitle('Détail du coût mensuel du logement');
+  addSubsectionTitle('Detail du cout mensuel du logement');
   
-  addKeyValueLine('Mensualité crédit', formatCurrency(monthlyPayment), { bold: true });
-  addKeyValueLine('Taxe foncière', formatCurrency(monthlyPropertyTax) + '/mois', { indent: 5 });
-  addKeyValueLine('Charges copropriété', formatCurrency(monthlyCondoCharges) + '/mois', { indent: 5 });
-  addKeyValueLine('Assurance habitation (PNO)', formatCurrency(monthlyInsurance) + '/mois', { indent: 5 });
+  addKeyValueLine('Mensualite credit', formatCurrencyPDF(monthlyPayment), { bold: true });
+  addKeyValueLine('Taxe fonciere', formatCurrencyPDF(monthlyPropertyTax) + '/mois', { indent: 5 });
+  addKeyValueLine('Charges copropriete', formatCurrencyPDF(monthlyCondoCharges) + '/mois', { indent: 5 });
+  addKeyValueLine('Assurance habitation (PNO)', formatCurrencyPDF(monthlyInsurance) + '/mois', { indent: 5 });
   
   addSeparator();
   
-  addKeyValueLine('COÛT MENSUEL GLOBAL LOGEMENT', formatCurrency(totalHousingCost), { bold: true, highlight: true });
+  addKeyValueLine('COUT MENSUEL GLOBAL LOGEMENT', formatCurrencyPDF(totalHousingCost), { bold: true, highlight: true });
   
   y += 12;
   
@@ -1170,10 +1182,16 @@ export async function generateRPBankPDF(
   
   // Monthly effort analysis box
   const effortAnalysisText = resteAVivre >= 600 * memberCount 
-    ? 'Effort confortable : le ménage conserve une marge financière importante après logement.'
+    ? 'Effort confortable'
     : resteAVivre >= 400 * memberCount
-    ? 'Effort modéré : le reste à vivre est correct mais sans grande marge de manœuvre.'
-    : 'Effort élevé : le reste à vivre après logement est limité. Vigilance recommandée.';
+    ? 'Effort modere'
+    : 'Effort eleve';
+  
+  const effortDetailText = resteAVivre >= 600 * memberCount 
+    ? 'Le menage conserve une marge financiere importante apres logement.'
+    : resteAVivre >= 400 * memberCount
+    ? 'Le reste a vivre est correct mais sans grande marge de manoeuvre.'
+    : 'Le reste a vivre apres logement est limite. Vigilance recommandee.';
   
   const effortColor = resteAVivre >= 600 * memberCount ? COLORS.success : resteAVivre >= 400 * memberCount ? COLORS.warning : COLORS.danger;
   
@@ -1188,15 +1206,15 @@ export async function generateRPBankPDF(
   doc.text('Analyse de l\'Effort Mensuel', margin + 12, y + 10);
   
   doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-  
-  doc.text(`Effort mensuel net : ${formatCurrency(totalHousingCost)}`, margin + 12, y + 20);
-  doc.text(`Reste à vivre après logement : ${formatCurrency(resteAVivre)}`, margin + 12, y + 27);
-  
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(effortColor[0], effortColor[1], effortColor[2]);
-  doc.text(effortAnalysisText, margin + contentWidth / 2, y + 20, { align: 'center' });
+  doc.text(`${effortAnalysisText} : ${formatCurrencyPDF(totalHousingCost)}`, margin + 12, y + 20);
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+  doc.text(effortDetailText, margin + 12, y + 27);
+  
+  doc.text(`Reste a vivre apres logement : ${formatCurrencyPDF(resteAVivre)}`, margin + 12, y + 34);
   
   // ============================================
   // PAGE 7: BANK ANALYSIS & STRESS TESTS
@@ -1251,10 +1269,10 @@ export async function generateRPBankPDF(
   y += 11;
   
   const comparisonData = [
-    { label: 'Mensualité crédit', base: monthlyPayment, stress: stressedMonthlyPayment, format: formatCurrency, pct: false },
-    { label: 'Revenus nets', base: householdIncome, stress: stressedIncome, format: formatCurrency, pct: false },
+    { label: 'Mensualite credit', base: monthlyPayment, stress: stressedMonthlyPayment, format: formatCurrencyPDF, pct: false },
+    { label: 'Revenus nets', base: householdIncome, stress: stressedIncome, format: formatCurrencyPDF, pct: false },
     { label: 'Taux d\'endettement', base: debtRatio, stress: stressedDebtRatio, format: (v: number) => `${v.toFixed(1)}%`, pct: true },
-    { label: 'Reste à vivre', base: resteAVivre, stress: stressedResteAVivre, format: formatCurrency, pct: false },
+    { label: 'Reste a vivre', base: resteAVivre, stress: stressedResteAVivre, format: formatCurrencyPDF, pct: false },
   ];
   
   comparisonData.forEach((row, i) => {
@@ -1270,7 +1288,7 @@ export async function generateRPBankPDF(
     
     const variation = row.pct ? (row.stress - row.base) : ((row.stress - row.base) / (row.base || 1)) * 100;
     const variationText = row.pct ? `${variation >= 0 ? '+' : ''}${variation.toFixed(1)} pts` : `${variation >= 0 ? '+' : ''}${variation.toFixed(0)}%`;
-    const variationColor = (row.label === 'Reste à vivre' ? variation < 0 : variation > 0) ? COLORS.danger : COLORS.success;
+    const variationColor = (row.label === 'Reste a vivre' ? variation < 0 : variation > 0) ? COLORS.danger : COLORS.success;
     doc.setTextColor(variationColor[0], variationColor[1], variationColor[2]);
     doc.setFont('helvetica', 'bold');
     doc.text(variationText, margin + 155, y + 5.5);
@@ -1326,15 +1344,15 @@ export async function generateRPBankPDF(
   const remainingDebtAtTerm = results?.patrimony_series?.[results.patrimony_series.length - 1]?.remaining_debt || 0;
   const netEquity = futurePropertyValue - remainingDebtAtTerm;
   
-  addSubsectionTitle(`Projection à ${resaleYear} ans`);
+  addSubsectionTitle(`Projection a ${resaleYear} ans`);
   
-  addKeyValueLine('Valeur estimée du bien', formatCurrency(futurePropertyValue), { bold: true });
-  addKeyValueLine('Hypothèse de croissance annuelle', `${propertyGrowth}%/an`, { indent: 5 });
-  addKeyValueLine('Dette restante à terme', formatCurrency(remainingDebtAtTerm), { indent: 5 });
+  addKeyValueLine('Valeur estimee du bien', formatCurrencyPDF(futurePropertyValue), { bold: true });
+  addKeyValueLine('Hypothese de croissance annuelle', `${propertyGrowth}%/an`, { indent: 5 });
+  addKeyValueLine('Dette restante a terme', formatCurrencyPDF(remainingDebtAtTerm), { indent: 5 });
   
   addSeparator();
   
-  addKeyValueLine('ÉQUITÉ NETTE ESTIMÉE', formatCurrency(netEquity), { bold: true, highlight: true });
+  addKeyValueLine('EQUITE NETTE ESTIMEE', formatCurrencyPDF(netEquity), { bold: true, highlight: true });
   
   y += 10;
   
@@ -1346,7 +1364,7 @@ export async function generateRPBankPDF(
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text(formatCurrency(futurePropertyValue), margin + patCardWidth / 2, y + 13, { align: 'center' });
+  doc.text(formatCurrencyPDF(futurePropertyValue), margin + patCardWidth / 2, y + 13, { align: 'center' });
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.text('Valeur du bien', margin + patCardWidth / 2, y + 23, { align: 'center' });
@@ -1355,7 +1373,7 @@ export async function generateRPBankPDF(
   doc.roundedRect(margin + patCardWidth + 5, y, patCardWidth, 30, 2, 2, 'F');
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(remainingDebtAtTerm), margin + patCardWidth + 5 + patCardWidth / 2, y + 13, { align: 'center' });
+  doc.text(formatCurrencyPDF(remainingDebtAtTerm), margin + patCardWidth + 5 + patCardWidth / 2, y + 13, { align: 'center' });
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   doc.text('Dette restante', margin + patCardWidth + 5 + patCardWidth / 2, y + 23, { align: 'center' });
@@ -1364,10 +1382,10 @@ export async function generateRPBankPDF(
   doc.roundedRect(margin + 2 * (patCardWidth + 5), y, patCardWidth, 30, 2, 2, 'F');
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(netEquity), margin + 2 * (patCardWidth + 5) + patCardWidth / 2, y + 13, { align: 'center' });
+  doc.text(formatCurrencyPDF(netEquity), margin + 2 * (patCardWidth + 5) + patCardWidth / 2, y + 13, { align: 'center' });
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
-  doc.text('Équité nette', margin + 2 * (patCardWidth + 5) + patCardWidth / 2, y + 23, { align: 'center' });
+  doc.text('Equite nette', margin + 2 * (patCardWidth + 5) + patCardWidth / 2, y + 23, { align: 'center' });
   
   y += 42;
   
@@ -1413,49 +1431,49 @@ export async function generateRPBankPDF(
   
   const hypothesisCategories = [
     {
-      title: 'Revenus du ménage',
+      title: 'Revenus du menage',
       items: [
-        `Revenu net mensuel total : ${formatCurrency(householdIncome)}`,
-        `Composition du ménage : ${memberCount} personne(s)`,
+        `Revenu net mensuel total : ${formatCurrencyPDF(householdIncome)}`,
+        `Composition du menage : ${memberCount} personne(s)`,
         config.household.members.length > 0 ? `Revenus co-emprunteurs inclus` : null,
       ].filter(Boolean),
     },
     {
       title: 'Charges existantes',
       items: [
-        `Crédits en cours : ${formatCurrency(existingCredits)}/mois`,
+        `Credits en cours : ${formatCurrencyPDF(existingCredits)}/mois`,
       ],
     },
     {
       title: 'Acquisition',
       items: [
-        `Prix d'achat net vendeur : ${formatCurrency(acquisition.price_net_seller)}`,
+        `Prix d'achat net vendeur : ${formatCurrencyPDF(acquisition.price_net_seller)}`,
         `Frais de notaire : ${((acquisition.notary_fee_amount || 0) / acquisition.price_net_seller * 100).toFixed(1)}%`,
-        acquisition.works_amount && acquisition.works_amount > 0 ? `Travaux prévus : ${formatCurrency(acquisition.works_amount)}` : null,
+        acquisition.works_amount && acquisition.works_amount > 0 ? `Travaux prevus : ${formatCurrencyPDF(acquisition.works_amount)}` : null,
       ].filter(Boolean),
     },
     {
       title: 'Financement',
       items: [
-        `Emprunt : ${formatCurrency(financing.loan_amount)} sur ${financing.duration_months / 12} ans`,
+        `Emprunt : ${formatCurrencyPDF(financing.loan_amount)} sur ${financing.duration_months / 12} ans`,
         `Taux nominal : ${financing.nominal_rate}% (fixe)`,
         `Assurance emprunteur : ${financing.insurance_value}%/an du capital`,
-        `Apport personnel : ${formatCurrency(financing.down_payment)}`,
+        `Apport personnel : ${formatCurrencyPDF(financing.down_payment)}`,
       ],
     },
     {
       title: 'Charges logement',
       items: [
-        `Taxe foncière : ${formatCurrency(operating_costs.property_tax_annual || 0)}/an`,
-        `Charges copropriété : ${formatCurrency(operating_costs.condo_nonrecoverable_annual || 0)}/an`,
+        `Taxe fonciere : ${formatCurrencyPDF(operating_costs.property_tax_annual || 0)}/an`,
+        `Charges copropriete : ${formatCurrencyPDF(operating_costs.condo_nonrecoverable_annual || 0)}/an`,
         `Inflation des charges : ${operating_costs.costs_growth_rate || 2}%/an`,
       ],
     },
     {
-      title: 'Hypothèses patrimoniales',
+      title: 'Hypotheses patrimoniales',
       items: [
         `Horizon d'analyse : ${resaleYear} ans`,
-        `Croissance valeur immobilière : ${propertyGrowth}%/an`,
+        `Croissance valeur immobiliere : ${propertyGrowth}%/an`,
       ],
     },
   ];
