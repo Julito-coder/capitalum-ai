@@ -12,7 +12,7 @@ import {
   ArrowLeft, RefreshCw, FileDown, Loader2, AlertTriangle, CheckCircle2, Edit
 } from "lucide-react";
 import { toast } from "sonner";
-import { generateBankPDF } from "@/lib/simulationPdfExport";
+import { generateLocatifBankPDF } from "@/lib/locatifPdfExport";
 import { generateRPBankPDF } from "@/lib/rpPdfExport";
 import { supabase } from "@/integrations/supabase/client";
 import { HouseholdData, createHouseholdFromProfile } from "@/lib/rpCalculations";
@@ -188,9 +188,9 @@ const SimulationDetails = () => {
         await generateRPBankPDF(data, config);
         toast.success("Dossier de financement RP exporté");
       } else {
-        // For LOCATIF projects, use standard bank PDF
-        await generateBankPDF(data);
-        toast.success("PDF exporté");
+        // For LOCATIF projects, use professional bank PDF
+        await generateLocatifBankPDF(data);
+        toast.success("Dossier de financement locatif exporté");
       }
     } catch (error) {
       console.error('PDF export error:', error);
