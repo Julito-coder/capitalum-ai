@@ -14,7 +14,10 @@ import {
   Scale,
   AlertTriangle,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  BarChart3,
+  Settings2,
+  Layers
 } from 'lucide-react';
 import { SavingsInputs, SavingsSimulationResults } from '@/lib/savingsTypes';
 import { generateSavingsSimulation, formatEuro } from '@/lib/savingsCalculations';
@@ -23,11 +26,18 @@ import { SavingsInputForm } from '@/components/savings/SavingsInputForm';
 import { SimulationResults } from '@/components/savings/SimulationResults';
 import { ComparisonTable } from '@/components/savings/ComparisonTable';
 import { WarningsAndDisclaimer } from '@/components/savings/WarningsAndDisclaimer';
+import { IndicesSelector } from '@/components/savings/IndicesSelector';
+import { RiskAnalysis } from '@/components/savings/RiskAnalysis';
+import { PersonalizationStep } from '@/components/savings/PersonalizationStep';
 
 const STEPS = [
   { id: 'intro', title: 'Introduction', icon: BookOpen },
   { id: 'envelopes', title: 'Enveloppes', icon: PiggyBank },
   { id: 'params', title: 'Paramètres', icon: Target },
+  { id: 'personalization', title: 'Personnalisation', icon: Settings2 },
+  { id: 'indices-pea', title: 'Indices PEA', icon: Layers },
+  { id: 'indices-per', title: 'Indices PER', icon: Layers },
+  { id: 'risks', title: 'Analyse risques', icon: BarChart3 },
   { id: 'pea', title: 'Simulation PEA', icon: TrendingUp },
   { id: 'per', title: 'Simulation PER', icon: Shield },
   { id: 'comparison', title: 'Comparaison', icon: Scale },
@@ -47,6 +57,9 @@ const DEFAULT_INPUTS: SavingsInputs = {
 export default function SavingsSimulator() {
   const [currentStep, setCurrentStep] = useState(0);
   const [inputs, setInputs] = useState<SavingsInputs>(DEFAULT_INPUTS);
+  const [selectedProfileId, setSelectedProfileId] = useState('equilibre');
+  const [selectedPeaIndices, setSelectedPeaIndices] = useState<string[]>(['msci-world']);
+  const [selectedPerIndices, setSelectedPerIndices] = useState<string[]>(['msci-world', 'fonds-euros']);
 
   // Generate simulation results
   const results: SavingsSimulationResults = useMemo(() => {
@@ -75,6 +88,39 @@ export default function SavingsSimulator() {
         return <EnvelopesOverview />;
       case 'params':
         return <SavingsInputForm inputs={inputs} onChange={setInputs} />;
+      case 'personalization':
+        return (
+          <PersonalizationStep 
+            inputs={inputs} 
+            onChange={setInputs}
+            onProfileSelect={setSelectedProfileId}
+            selectedProfileId={selectedProfileId}
+          />
+        );
+      case 'indices-pea':
+        return (
+          <IndicesSelector 
+            envelope="pea" 
+            selectedIndices={selectedPeaIndices}
+            onSelect={setSelectedPeaIndices}
+          />
+        );
+      case 'indices-per':
+        return (
+          <IndicesSelector 
+            envelope="per" 
+            selectedIndices={selectedPerIndices}
+            onSelect={setSelectedPerIndices}
+          />
+        );
+      case 'risks':
+        return (
+          <RiskAnalysis 
+            selectedProfileId={selectedProfileId}
+            horizon={inputs.durationYears}
+            monthlyContribution={inputs.monthlyContribution}
+          />
+        );
       case 'pea':
         return <SimulationResults title="PEA" simulations={results.pea} />;
       case 'per':
@@ -84,7 +130,14 @@ export default function SavingsSimulator() {
       case 'warnings':
         return <WarningsAndDisclaimer />;
       case 'conclusion':
-        return <ConclusionStep inputs={inputs} results={results} onRestart={() => setCurrentStep(0)} />;
+        return (
+          <ConclusionStep 
+            inputs={inputs} 
+            results={results} 
+            profileId={selectedProfileId}
+            onRestart={() => setCurrentStep(0)} 
+          />
+        );
       default:
         return null;
     }
@@ -102,7 +155,7 @@ export default function SavingsSimulator() {
             <h1 className="text-2xl lg:text-3xl font-bold">Simulation d'épargne long terme</h1>
           </div>
           <p className="text-muted-foreground">
-            Comprenez et projetez votre épargne avec les enveloppes PEA et PER.
+            Comprenez et projetez votre épargne avec les enveloppes PEA et PER — indices détaillés, risques et performances.
           </p>
         </div>
 
@@ -116,8 +169,8 @@ export default function SavingsSimulator() {
           </div>
           <Progress value={progress} className="h-2" />
           
-          {/* Step indicators */}
-          <div className="flex justify-between mt-4">
+          {/* Step indicators - scrollable on mobile */}
+          <div className="flex justify-between mt-4 overflow-x-auto pb-2 gap-1">
             {STEPS.map((step, idx) => {
               const StepIcon = step.icon;
               const isActive = idx === currentStep;
@@ -127,17 +180,17 @@ export default function SavingsSimulator() {
                 <button
                   key={step.id}
                   onClick={() => setCurrentStep(idx)}
-                  className={`flex flex-col items-center gap-1 transition-all ${
+                  className={`flex flex-col items-center gap-1 transition-all min-w-[48px] ${
                     isActive ? 'text-primary' : isPast ? 'text-success' : 'text-muted-foreground'
                   }`}
                 >
-                  <div className={`p-2 rounded-full transition-all ${
+                  <div className={`p-1.5 md:p-2 rounded-full transition-all ${
                     isActive ? 'bg-primary/10 ring-2 ring-primary' : 
                     isPast ? 'bg-success/10' : 'bg-muted/30'
                   }`}>
-                    <StepIcon className="h-4 w-4" />
+                    <StepIcon className="h-3 w-3 md:h-4 md:w-4" />
                   </div>
-                  <span className="text-xs hidden md:block">{step.title}</span>
+                  <span className="text-[10px] md:text-xs hidden lg:block whitespace-nowrap">{step.title}</span>
                 </button>
               );
             })}
@@ -226,6 +279,46 @@ function IntroductionStep({ inputs }: { inputs: SavingsInputs }) {
         </CardContent>
       </Card>
 
+      {/* What's new */}
+      <Card className="glass-card border-primary/20">
+        <CardContent className="p-6">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Ce que vous allez découvrir
+          </h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+              <Layers className="h-5 w-5 text-primary mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">Indices détaillés</p>
+                <p className="text-xs text-muted-foreground">MSCI World, S&P 500, STOXX 600, Émergents...</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+              <BarChart3 className="h-5 w-5 text-success mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">Performances historiques</p>
+                <p className="text-xs text-muted-foreground">Données réelles 2015-2024</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+              <AlertTriangle className="h-5 w-5 text-warning mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">Analyse des risques</p>
+                <p className="text-xs text-muted-foreground">Volatilité, drawdown, scénarios</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+              <Settings2 className="h-5 w-5 text-accent mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">5 profils de risque</p>
+                <p className="text-xs text-muted-foreground">De sécuritaire à offensif</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Key Message */}
       <div className="p-6 rounded-xl bg-primary/5 border border-primary/20 text-center">
         <p className="text-lg font-medium text-primary">
@@ -243,10 +336,12 @@ function IntroductionStep({ inputs }: { inputs: SavingsInputs }) {
 function ConclusionStep({ 
   inputs, 
   results,
+  profileId,
   onRestart 
 }: { 
   inputs: SavingsInputs; 
   results: SavingsSimulationResults;
+  profileId: string;
   onRestart: () => void;
 }) {
   const peaEquilibre = results.pea.equilibre;
@@ -259,7 +354,8 @@ function ConclusionStep({
           <CheckCircle2 className="h-16 w-16 text-success mx-auto mb-6" />
           <h2 className="text-3xl font-bold mb-4">Comprendre est la première étape</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Vous avez maintenant une vision claire des mécanismes d'épargne long terme en France.
+            Vous avez maintenant une vision claire des mécanismes d'épargne long terme en France,
+            des indices disponibles et des risques associés.
           </p>
         </CardContent>
       </Card>
@@ -302,6 +398,36 @@ function ConclusionStep({
         </CardContent>
       </Card>
 
+      {/* Key Learnings */}
+      <Card className="glass-card">
+        <CardContent className="p-6">
+          <h3 className="font-semibold mb-4">Ce que vous avez appris</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="p-3 rounded-lg bg-muted/30">
+              <Layers className="h-5 w-5 text-primary mb-2" />
+              <p className="text-sm font-medium">Indices</p>
+              <p className="text-xs text-muted-foreground">
+                MSCI World, S&P 500, STOXX 600 et leurs caractéristiques
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/30">
+              <BarChart3 className="h-5 w-5 text-success mb-2" />
+              <p className="text-sm font-medium">Performances</p>
+              <p className="text-xs text-muted-foreground">
+                8-13% annualisés sur 10 ans pour les actions monde
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/30">
+              <AlertTriangle className="h-5 w-5 text-warning mb-2" />
+              <p className="text-sm font-medium">Risques</p>
+              <p className="text-xs text-muted-foreground">
+                Volatilité, change, timing - importance de l'horizon
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Next Steps */}
       <Card className="glass-card">
         <CardContent className="p-6">
@@ -314,19 +440,19 @@ function ConclusionStep({
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
               <span className="text-primary font-bold">1</span>
               <p className="text-sm text-muted-foreground">
-                <strong>Ajustez les paramètres</strong> pour explorer d'autres durées ou montants
+                <strong>Ajustez les paramètres</strong> pour explorer d'autres durées, montants ou profils de risque
               </p>
             </div>
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
               <span className="text-primary font-bold">2</span>
               <p className="text-sm text-muted-foreground">
-                <strong>Renseignez-vous</strong> sur les courtiers proposant des PEA/PER à faibles frais
+                <strong>Comparez les courtiers</strong> proposant des PEA/PER à faibles frais (Boursorama, Fortuneo, Trade Republic...)
               </p>
             </div>
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
               <span className="text-primary font-bold">3</span>
               <p className="text-sm text-muted-foreground">
-                <strong>Consultez un conseiller</strong> pour un accompagnement personnalisé
+                <strong>Consultez un conseiller</strong> pour un accompagnement personnalisé si nécessaire
               </p>
             </div>
           </div>
