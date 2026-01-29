@@ -20,6 +20,8 @@ import RealEstateSimulator from "./pages/RealEstateSimulator";
 import NewSimulation from "./pages/simulator/NewSimulation";
 import SimulationDetails from "./pages/simulator/SimulationDetails";
 import CompareSimulations from "./pages/simulator/CompareSimulations";
+// Savings Simulator
+import SavingsSimulator from "./pages/SavingsSimulator";
 // Pro pages
 import URSSAFTracking from "./pages/pro/URSSAFTracking";
 import InvoiceManager from "./pages/pro/InvoiceManager";
@@ -53,6 +55,8 @@ const App = () => (
               <Route path="/simulator/edit/:id" element={<ProtectedRoute><NewSimulation /></ProtectedRoute>} />
               <Route path="/simulator/compare" element={<ProtectedRoute><CompareSimulations /></ProtectedRoute>} />
               <Route path="/simulator/:id" element={<ProtectedRoute><SimulationDetails /></ProtectedRoute>} />
+              {/* Savings Simulator */}
+              <Route path="/savings" element={<ProtectedRoute><SavingsSimulator /></ProtectedRoute>} />
               {/* Pro routes */}
               <Route path="/pro/onboarding" element={<ProtectedRoute><ProOnboarding /></ProtectedRoute>} />
               <Route path="/pro/urssaf" element={<ProtectedRoute><URSSAFTracking /></ProtectedRoute>} />
