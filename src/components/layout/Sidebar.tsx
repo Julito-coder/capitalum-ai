@@ -29,6 +29,7 @@ const personalNavItems = [
   { path: '/scanner', icon: ScanSearch, label: 'Scanner fiscal' },
   { path: '/calendar', icon: Calendar, label: 'Calendrier' },
   { path: '/simulator', icon: Building2, label: 'Simulateur Immo' },
+  { path: '/savings', icon: PiggyBank, label: 'Épargne long terme' },
   { path: '/glossary', icon: FileText, label: 'Glossaire' },
 ];
 
