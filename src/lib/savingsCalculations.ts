@@ -1,6 +1,6 @@
 /**
  * Moteur de calcul pour le simulateur d'épargne long terme
- * Calculs des intérêts composés, projections PEA/PER
+ * Calculs des intérêts composés, projections PEA/PER avec indices détaillés
  */
 
 import {
@@ -12,6 +12,13 @@ import {
   EnvelopeType,
   SAVINGS_CONSTANTS,
 } from './savingsTypes';
+
+import {
+  RiskProfile,
+  RISK_PROFILES,
+  getRiskProfileById,
+  getIndexById,
+} from './savingsIndicesData';
 
 /**
  * Calcule la projection annuelle avec intérêts composés
@@ -48,6 +55,74 @@ export function calculateYearlyProjections(
   }
   
   return projections;
+}
+
+/**
+ * Calcule le rendement pondéré d'un portefeuille basé sur un profil de risque
+ */
+export function calculatePortfolioReturn(profileId: string): number {
+  const profile = getRiskProfileById(profileId);
+  if (!profile) return 5; // Default équilibré
+  
+  let weightedReturn = 0;
+  let totalWeight = 0;
+  
+  for (const alloc of profile.suggestedAllocation) {
+    const index = getIndexById(alloc.indexId);
+    if (index) {
+      weightedReturn += index.annualizedReturn10Y * alloc.weight;
+      totalWeight += alloc.weight;
+    }
+  }
+  
+  return totalWeight > 0 ? weightedReturn / totalWeight : profile.expectedReturn;
+}
+
+/**
+ * Calcule la volatilité pondérée du portefeuille
+ */
+export function calculatePortfolioVolatility(profileId: string): number {
+  const profile = getRiskProfileById(profileId);
+  if (!profile) return 10;
+  
+  let weightedVolatility = 0;
+  let totalWeight = 0;
+  
+  for (const alloc of profile.suggestedAllocation) {
+    const index = getIndexById(alloc.indexId);
+    if (index) {
+      // Simplification : on suppose une corrélation de 0.7 entre actifs
+      weightedVolatility += Math.pow(index.volatility * alloc.weight / 100, 2);
+      totalWeight += alloc.weight;
+    }
+  }
+  
+  return Math.sqrt(weightedVolatility) * 100 * 0.85; // Factor for diversification
+}
+
+/**
+ * Projections avec scénarios Monte Carlo simplifiés
+ */
+export function calculateScenarioProjections(
+  monthlyContribution: number,
+  durationYears: number,
+  expectedReturn: number,
+  volatility: number
+): {
+  optimistic: YearlyProjection[];
+  median: YearlyProjection[];
+  pessimistic: YearlyProjection[];
+} {
+  // Optimistic: expected + 0.5 * volatility
+  const optimisticRate = expectedReturn + volatility * 0.3;
+  // Pessimistic: expected - 0.5 * volatility  
+  const pessimisticRate = Math.max(0, expectedReturn - volatility * 0.3);
+  
+  return {
+    optimistic: calculateYearlyProjections(monthlyContribution, durationYears, optimisticRate),
+    median: calculateYearlyProjections(monthlyContribution, durationYears, expectedReturn),
+    pessimistic: calculateYearlyProjections(monthlyContribution, durationYears, pessimisticRate),
+  };
 }
 
 /**
@@ -89,6 +164,66 @@ export function calculateEnvelopeSimulation(
   }
   
   return simulation;
+}
+
+/**
+ * Calcule une simulation avancée basée sur un profil de risque personnalisé
+ */
+export function calculateAdvancedSimulation(
+  inputs: SavingsInputs,
+  envelope: EnvelopeType,
+  profileId: string
+): EnvelopeSimulation & {
+  volatility: number;
+  scenarios: {
+    optimistic: YearlyProjection[];
+    median: YearlyProjection[];
+    pessimistic: YearlyProjection[];
+  };
+} {
+  const riskProfile = getRiskProfileById(profileId);
+  const annualRate = riskProfile?.expectedReturn ?? 5;
+  const volatility = riskProfile?.expectedVolatility ?? 10;
+  
+  const projections = calculateYearlyProjections(
+    inputs.monthlyContribution,
+    inputs.durationYears,
+    annualRate
+  );
+  
+  const scenarios = calculateScenarioProjections(
+    inputs.monthlyContribution,
+    inputs.durationYears,
+    annualRate,
+    volatility
+  );
+  
+  const lastProjection = projections[projections.length - 1];
+  const totalContributed = lastProjection?.totalContributed ?? 0;
+  const capitalEnd = lastProjection?.capitalEnd ?? 0;
+  const interestTotal = lastProjection?.interestCumulated ?? 0;
+  
+  const simulation = {
+    envelope,
+    profile: profileId as SavingsProfile,
+    annualRate,
+    totalContributed,
+    capitalEnd,
+    interestTotal,
+    projections,
+    volatility,
+    scenarios,
+  };
+  
+  // Calculs spécifiques PER
+  if (envelope === 'per' && inputs.tmi > 0) {
+    const yearlyContribution = inputs.monthlyContribution * 12;
+    const annualTaxSavings = yearlyContribution * (inputs.tmi / 100);
+    (simulation as any).taxSavings = Math.round(annualTaxSavings * inputs.durationYears);
+    (simulation as any).netEffort = totalContributed - (simulation as any).taxSavings;
+  }
+  
+  return simulation as any;
 }
 
 /**
@@ -162,4 +297,53 @@ export function checkPEACeiling(totalContributed: number): {
     exceeded,
     excess: exceeded ? totalContributed - SAVINGS_CONSTANTS.PEA_CEILING : 0,
   };
+}
+
+/**
+ * Calcule le nombre d'années avant d'atteindre un objectif
+ */
+export function calculateYearsToGoal(
+  monthlyContribution: number,
+  targetAmount: number,
+  annualRate: number
+): number {
+  const yearlyContribution = monthlyContribution * 12;
+  const rate = annualRate / 100;
+  
+  if (rate === 0) {
+    return Math.ceil(targetAmount / yearlyContribution);
+  }
+  
+  // Formule inverse des intérêts composés avec versements réguliers
+  let capital = 0;
+  let years = 0;
+  
+  while (capital < targetAmount && years < 100) {
+    years++;
+    const interest = capital * rate + (yearlyContribution * rate * 0.5);
+    capital = capital + yearlyContribution + interest;
+  }
+  
+  return years;
+}
+
+/**
+ * Calcule le versement mensuel nécessaire pour atteindre un objectif
+ */
+export function calculateRequiredMonthly(
+  targetAmount: number,
+  durationYears: number,
+  annualRate: number
+): number {
+  const rate = annualRate / 100;
+  const months = durationYears * 12;
+  const monthlyRate = rate / 12;
+  
+  if (monthlyRate === 0) {
+    return targetAmount / months;
+  }
+  
+  // Formule PMT inversée
+  const factor = (Math.pow(1 + monthlyRate, months) - 1) / monthlyRate;
+  return Math.round(targetAmount / factor);
 }
