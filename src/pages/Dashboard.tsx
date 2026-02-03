@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { 
   RefreshCw,
-  Bell,
   UserCircle,
   Briefcase,
   Rocket,
   PiggyBank,
   BarChart3,
   Loader2,
-  Building
+  Building,
+  Wallet,
+  Calendar,
+  Target,
+  LineChart,
+  Sparkles,
+  TrendingUp,
+  FileText
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
@@ -21,6 +28,11 @@ import {
   UserProfile,
   DashboardMetrics
 } from '@/lib/dashboardService';
+
+// Dashboard components
+import { AnimatedCard } from '@/components/dashboard/AnimatedCard';
+import { DashboardSection } from '@/components/dashboard/DashboardSection';
+import { NotificationsPanel } from '@/components/dashboard/NotificationsPanel';
 
 // Personal dashboard cards
 import { CurrentSituationCard } from '@/components/dashboard/personal/CurrentSituationCard';
@@ -37,6 +49,26 @@ import { ProOptimizationsCard } from '@/components/dashboard/professional/ProOpt
 import { StatusStructureCard } from '@/components/dashboard/professional/StatusStructureCard';
 import { DocumentsExportsCard } from '@/components/dashboard/professional/DocumentsExportsCard';
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1
+    }
+  }
+};
+
+const headerVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.4, ease: 'easeOut' as const }
+  }
+};
+
 const Dashboard = () => {
   const { user } = useAuth();
   const { isPersonalSpace, isProfessionalSpace } = useSpace();
@@ -44,6 +76,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const loadData = async () => {
     if (!user) return;
@@ -97,123 +130,211 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-        <div className="flex items-center gap-4">
-          <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${
-            isProfessionalSpace ? 'bg-accent/10' : 'bg-primary/10'
-          }`}>
-            <ProfileIcon className={`h-6 w-6 ${isProfessionalSpace ? 'text-accent' : 'text-primary'}`} />
-          </div>
-          <div>
-            <p className="text-muted-foreground text-sm mb-1">
-              Bonjour, {displayName} 👋
-            </p>
-            <h1 className="text-2xl lg:text-3xl font-bold">
-              {isProfessionalSpace ? 'Pilotage Pro' : 'Tableau de bord'}
-            </h1>
-            {metrics && metrics.profileTypes.length > 0 && isPersonalSpace && (
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {metrics.profileTypes.join(' • ')}
-              </p>
-            )}
-            {isProfessionalSpace && profile?.fiscalStatus && (
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {profile.fiscalStatus === 'micro' ? 'Micro-entrepreneur' : 
-                 profile.fiscalStatus === 'sasu' ? 'SASU' : 
-                 profile.fiscalStatus === 'eurl' ? 'EURL' : profile.fiscalStatus}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {!hasRealData && (
-            <button 
-              onClick={() => navigate(isProfessionalSpace ? '/pro/onboarding' : '/onboarding')}
-              className="btn-primary px-4 py-2.5"
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="space-y-8"
+      >
+        {/* Header */}
+        <motion.div 
+          variants={headerVariants}
+          className="flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-4">
+            <motion.div 
+              whileHover={{ scale: 1.05, rotate: 5 }}
+              className={`h-14 w-14 rounded-2xl flex items-center justify-center shadow-lg ${
+                isProfessionalSpace 
+                  ? 'bg-gradient-to-br from-accent/20 to-accent/10' 
+                  : 'bg-gradient-to-br from-primary/20 to-primary/10'
+              }`}
             >
-              <UserCircle className="h-4 w-4" />
-              <span>Compléter mon profil</span>
-            </button>
-          )}
-          <button onClick={handleRefresh} className="btn-secondary px-4 py-2.5">
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Actualiser</span>
-          </button>
-          <button className="relative p-2.5 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-            <Bell className="h-5 w-5" />
-            {metrics && metrics.alerts.filter(a => a.severity === 'critical').length > 0 && (
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-[10px] font-bold rounded-full flex items-center justify-center">
-                {metrics.alerts.filter(a => a.severity === 'critical').length}
-              </span>
+              <ProfileIcon className={`h-7 w-7 ${isProfessionalSpace ? 'text-accent' : 'text-primary'}`} />
+            </motion.div>
+            <div>
+              <p className="text-muted-foreground text-sm mb-1">
+                Bonjour, {displayName} 👋
+              </p>
+              <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                {isProfessionalSpace ? 'Pilotage Pro' : 'Tableau de bord'}
+              </h1>
+              {metrics && metrics.profileTypes.length > 0 && isPersonalSpace && (
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {metrics.profileTypes.join(' • ')}
+                </p>
+              )}
+              {isProfessionalSpace && profile?.fiscalStatus && (
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {profile.fiscalStatus === 'micro' ? 'Micro-entrepreneur' : 
+                   profile.fiscalStatus === 'sasu' ? 'SASU' : 
+                   profile.fiscalStatus === 'eurl' ? 'EURL' : profile.fiscalStatus}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {!hasRealData && (
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => navigate(isProfessionalSpace ? '/pro/onboarding' : '/onboarding')}
+                className="btn-primary px-4 py-2.5"
+              >
+                <UserCircle className="h-4 w-4" />
+                <span>Compléter mon profil</span>
+              </motion.button>
             )}
-          </button>
-        </div>
-      </div>
-
-      {/* Personal Dashboard */}
-      {isPersonalSpace && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {/* Row 1: Situation + Upcoming */}
-          <CurrentSituationCard profile={profile} hasRealData={!!hasRealData} />
-          <UpcomingEventsCard alerts={metrics?.alerts || []} profile={profile} />
-          
-          {/* Row 2: Actions (full width on medium) */}
-          <div className="lg:col-span-2 xl:col-span-1">
-            <PriorityActionsCard 
-              recommendations={metrics?.recommendations || []} 
-              hasRealData={!!hasRealData} 
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleRefresh} 
+              className="btn-secondary px-4 py-2.5"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Actualiser</span>
+            </motion.button>
+            <NotificationsPanel 
+              unreadCount={metrics?.alerts.filter(a => a.severity === 'critical').length}
+              onCountChange={setUnreadCount}
             />
           </div>
-          
-          {/* Row 3: Projects + Optimization */}
-          <ProjectsSimulationsCard />
-          <TaxOptimizationCard 
-            profile={profile} 
-            hasRealData={!!hasRealData}
-            potentialSavings={metrics?.potentialSavings || 0}
-          />
-          
-          {/* Row 4: Glossary & AI */}
-          <GlossaryAICard profile={profile} />
-        </div>
-      )}
+        </motion.div>
 
-      {/* Professional Dashboard */}
-      {isProfessionalSpace && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {/* Row 1: Financial Health + Forecasts */}
-          <FinancialHealthCard profile={profile} hasRealData={!!hasRealData} />
-          <ForecastsCard profile={profile} />
-          
-          {/* Row 2: Optimizations */}
-          <div className="lg:col-span-2 xl:col-span-1">
-            <ProOptimizationsCard profile={profile} hasRealData={!!hasRealData} />
+        {/* Personal Dashboard */}
+        {isPersonalSpace && (
+          <div className="space-y-8">
+            {/* Section 1: Vue d'ensemble */}
+            <DashboardSection
+              title="Vue d'ensemble"
+              subtitle="Votre situation financière en un coup d'œil"
+              icon={Wallet}
+              iconColor="text-primary"
+              columns={2}
+            >
+              <AnimatedCard index={0}>
+                <CurrentSituationCard profile={profile} hasRealData={!!hasRealData} />
+              </AnimatedCard>
+              <AnimatedCard index={1}>
+                <UpcomingEventsCard alerts={metrics?.alerts || []} profile={profile} />
+              </AnimatedCard>
+            </DashboardSection>
+
+            {/* Section 2: Actions & Optimisation */}
+            <DashboardSection
+              title="Actions & Optimisation"
+              subtitle="Recommandations personnalisées pour optimiser votre situation"
+              icon={Target}
+              iconColor="text-success"
+              columns={2}
+            >
+              <AnimatedCard index={2} className="lg:col-span-1">
+                <PriorityActionsCard 
+                  recommendations={metrics?.recommendations || []} 
+                  hasRealData={!!hasRealData} 
+                />
+              </AnimatedCard>
+              <AnimatedCard index={3}>
+                <TaxOptimizationCard 
+                  profile={profile} 
+                  hasRealData={!!hasRealData}
+                  potentialSavings={metrics?.potentialSavings || 0}
+                />
+              </AnimatedCard>
+            </DashboardSection>
+
+            {/* Section 3: Projets & Ressources */}
+            <DashboardSection
+              title="Projets & Ressources"
+              subtitle="Vos simulations et outils d'aide à la décision"
+              icon={LineChart}
+              iconColor="text-info"
+              columns={2}
+            >
+              <AnimatedCard index={4}>
+                <ProjectsSimulationsCard />
+              </AnimatedCard>
+              <AnimatedCard index={5}>
+                <GlossaryAICard profile={profile} />
+              </AnimatedCard>
+            </DashboardSection>
           </div>
-          
-          {/* Row 3: Status + Documents */}
-          <StatusStructureCard profile={profile} hasRealData={!!hasRealData} />
-          <DocumentsExportsCard />
-        </div>
-      )}
+        )}
 
-      {/* Pedagogical footer */}
-      <div className="mt-8 p-4 rounded-xl bg-muted/30 border border-border/50 text-center">
-        <p className="text-sm text-muted-foreground">
-          💡 <strong>Capitalum</strong> analyse votre situation pour vous aider à décider sereinement.
-          {!hasRealData && (
-            <span className="block mt-1">
-              <button 
-                onClick={() => navigate(isProfessionalSpace ? '/pro/onboarding' : '/onboarding')}
-                className="text-primary hover:underline"
-              >
-                Complétez votre profil
-              </button>
-              {' '}pour des recommandations personnalisées.
-            </span>
-          )}
-        </p>
-      </div>
+        {/* Professional Dashboard */}
+        {isProfessionalSpace && (
+          <div className="space-y-8">
+            {/* Section 1: Santé Financière */}
+            <DashboardSection
+              title="Santé Financière"
+              subtitle="Vue d'ensemble de votre activité professionnelle"
+              icon={TrendingUp}
+              iconColor="text-accent"
+              columns={2}
+            >
+              <AnimatedCard index={0} variant="accent">
+                <FinancialHealthCard profile={profile} hasRealData={!!hasRealData} />
+              </AnimatedCard>
+              <AnimatedCard index={1}>
+                <ForecastsCard profile={profile} />
+              </AnimatedCard>
+            </DashboardSection>
+
+            {/* Section 2: Optimisation & Statut */}
+            <DashboardSection
+              title="Optimisation & Statut"
+              subtitle="Analyse de votre structure et recommandations"
+              icon={Rocket}
+              iconColor="text-success"
+              columns={2}
+            >
+              <AnimatedCard index={2}>
+                <ProOptimizationsCard profile={profile} hasRealData={!!hasRealData} />
+              </AnimatedCard>
+              <AnimatedCard index={3}>
+                <StatusStructureCard profile={profile} hasRealData={!!hasRealData} />
+              </AnimatedCard>
+            </DashboardSection>
+
+            {/* Section 3: Documents */}
+            <DashboardSection
+              title="Documents & Exports"
+              subtitle="Vos documents et exports récents"
+              icon={FileText}
+              iconColor="text-info"
+              columns={1}
+            >
+              <AnimatedCard index={4}>
+                <DocumentsExportsCard />
+              </AnimatedCard>
+            </DashboardSection>
+          </div>
+        )}
+
+        {/* Pedagogical footer */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mt-8 p-5 rounded-2xl bg-gradient-to-r from-muted/30 to-muted/10 border border-border/30 text-center"
+        >
+          <p className="text-sm text-muted-foreground">
+            <Sparkles className="inline h-4 w-4 mr-1 text-primary" />
+            <strong>Capitalum</strong> analyse votre situation pour vous aider à décider sereinement.
+            {!hasRealData && (
+              <span className="block mt-2">
+                <button 
+                  onClick={() => navigate(isProfessionalSpace ? '/pro/onboarding' : '/onboarding')}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Complétez votre profil
+                </button>
+                {' '}pour des recommandations personnalisées.
+              </span>
+            )}
+          </p>
+        </motion.div>
+      </motion.div>
     </Layout>
   );
 };
