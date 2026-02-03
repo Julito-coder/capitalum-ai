@@ -22,93 +22,36 @@ const getUpcomingObligations = (profile: UserProfile | null): ForecastItem[] => 
   const now = new Date();
   const year = now.getFullYear();
   const ca = profile?.annualRevenueHt || 0;
-  
-  // Estimate URSSAF (quarterly for micro)
   const urssafQuarterly = ca * 0.22 / 4;
-  
-  // Estimate IR based on net income
-  const estimatedIR = ca * 0.15; // Rough estimate
+  const estimatedIR = ca * 0.15;
   
   const items: ForecastItem[] = [
-    {
-      id: 'urssaf-q1',
-      label: 'URSSAF T1',
-      amount: urssafQuarterly,
-      dueDate: new Date(year, 0, 31),
-      type: 'urssaf' as const,
-      isPaid: now > new Date(year, 0, 31)
-    },
-    {
-      id: 'urssaf-q2',
-      label: 'URSSAF T2',
-      amount: urssafQuarterly,
-      dueDate: new Date(year, 3, 30),
-      type: 'urssaf' as const,
-      isPaid: now > new Date(year, 3, 30)
-    },
-    {
-      id: 'ir-acompte-1',
-      label: 'Acompte IR',
-      amount: estimatedIR / 3,
-      dueDate: new Date(year, 1, 15),
-      type: 'ir' as const,
-      isPaid: now > new Date(year, 1, 15)
-    },
-    {
-      id: 'urssaf-q3',
-      label: 'URSSAF T3',
-      amount: urssafQuarterly,
-      dueDate: new Date(year, 6, 31),
-      type: 'urssaf' as const,
-      isPaid: now > new Date(year, 6, 31)
-    },
-    {
-      id: 'ir-acompte-2',
-      label: 'Acompte IR',
-      amount: estimatedIR / 3,
-      dueDate: new Date(year, 4, 15),
-      type: 'ir' as const,
-      isPaid: now > new Date(year, 4, 15)
-    },
-    {
-      id: 'urssaf-q4',
-      label: 'URSSAF T4',
-      amount: urssafQuarterly,
-      dueDate: new Date(year, 9, 31),
-      type: 'urssaf' as const,
-      isPaid: now > new Date(year, 9, 31)
-    },
-    {
-      id: 'ir-solde',
-      label: 'Solde IR',
-      amount: estimatedIR / 3,
-      dueDate: new Date(year, 8, 15),
-      type: 'ir' as const,
-      isPaid: now > new Date(year, 8, 15)
-    },
+    { id: 'urssaf-q1', label: 'URSSAF T1', amount: urssafQuarterly, dueDate: new Date(year, 0, 31), type: 'urssaf', isPaid: now > new Date(year, 0, 31) },
+    { id: 'urssaf-q2', label: 'URSSAF T2', amount: urssafQuarterly, dueDate: new Date(year, 3, 30), type: 'urssaf', isPaid: now > new Date(year, 3, 30) },
+    { id: 'ir-acompte-1', label: 'Acompte IR', amount: estimatedIR / 3, dueDate: new Date(year, 1, 15), type: 'ir', isPaid: now > new Date(year, 1, 15) },
+    { id: 'urssaf-q3', label: 'URSSAF T3', amount: urssafQuarterly, dueDate: new Date(year, 6, 31), type: 'urssaf', isPaid: now > new Date(year, 6, 31) },
+    { id: 'ir-acompte-2', label: 'Acompte IR', amount: estimatedIR / 3, dueDate: new Date(year, 4, 15), type: 'ir', isPaid: now > new Date(year, 4, 15) },
+    { id: 'urssaf-q4', label: 'URSSAF T4', amount: urssafQuarterly, dueDate: new Date(year, 9, 31), type: 'urssaf', isPaid: now > new Date(year, 9, 31) },
+    { id: 'ir-solde', label: 'Solde IR', amount: estimatedIR / 3, dueDate: new Date(year, 8, 15), type: 'ir', isPaid: now > new Date(year, 8, 15) },
   ];
   
-  return items.filter(item => item.dueDate > now || !item.isPaid)
-              .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+  return items.filter(item => item.dueDate > now || !item.isPaid).sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
 };
 
 const getTypeColor = (type: string) => {
   switch (type) {
-    case 'urssaf': return 'bg-info/10 text-info border-info/30';
-    case 'ir': return 'bg-warning/10 text-warning border-warning/30';
-    case 'is': return 'bg-destructive/10 text-destructive border-destructive/30';
-    case 'tva': return 'bg-accent/10 text-accent border-accent/30';
-    default: return 'bg-muted text-muted-foreground border-border';
+    case 'urssaf': return 'bg-info/10 text-info';
+    case 'ir': return 'bg-warning/10 text-warning';
+    case 'is': return 'bg-destructive/10 text-destructive';
+    case 'tva': return 'bg-accent/10 text-accent';
+    default: return 'bg-muted text-muted-foreground';
   }
 };
 
-const formatDate = (date: Date) => {
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-};
+const formatDate = (date: Date) => date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 
 const getDaysUntil = (date: Date) => {
-  const now = new Date();
-  const diff = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const diff = Math.ceil((date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
   if (diff <= 0) return 'Échue';
   if (diff === 1) return 'Demain';
   if (diff < 7) return `${diff}j`;
@@ -117,8 +60,8 @@ const getDaysUntil = (date: Date) => {
 };
 
 const filterByHorizon = (items: ForecastItem[], months: number) => {
-  const now = new Date();
-  const limit = new Date(now.getFullYear(), now.getMonth() + months, now.getDate());
+  const limit = new Date();
+  limit.setMonth(limit.getMonth() + months);
   return items.filter(item => item.dueDate <= limit);
 };
 
@@ -129,7 +72,7 @@ export const ForecastsCard = ({ profile }: ForecastsCardProps) => {
   const renderTimeline = (items: ForecastItem[]) => {
     if (items.length === 0) {
       return (
-        <div className="text-center py-4 text-muted-foreground text-sm">
+        <div className="text-center py-6 text-muted-foreground text-sm">
           Aucune échéance sur cette période
         </div>
       );
@@ -138,33 +81,25 @@ export const ForecastsCard = ({ profile }: ForecastsCardProps) => {
     const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
 
     return (
-      <div className="space-y-3">
-        {items.slice(0, 4).map((item, index) => {
+      <div className="space-y-2.5">
+        {items.slice(0, 3).map((item) => {
           const daysUntil = getDaysUntil(item.dueDate);
           const isUrgent = daysUntil === 'Demain' || daysUntil.includes('j');
           
           return (
             <div 
               key={item.id}
-              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                isUrgent ? 'bg-warning/5 border-warning/30' : 'bg-secondary/30 border-border/50'
+              className={`flex items-center gap-3 p-3.5 rounded-xl border min-h-[60px] ${
+                isUrgent ? 'bg-warning/5 border-warning/20' : 'bg-secondary/30 border-border/20'
               }`}
             >
-              <div className={`p-2 rounded-lg ${getTypeColor(item.type)}`}>
-                {item.isPaid ? (
-                  <Check className="h-4 w-4" />
-                ) : isUrgent ? (
-                  <AlertTriangle className="h-4 w-4" />
-                ) : (
-                  <Clock className="h-4 w-4" />
-                )}
+              <div className={`p-2 rounded-lg shrink-0 ${getTypeColor(item.type)}`}>
+                {item.isPaid ? <Check className="h-4 w-4" /> : isUrgent ? <AlertTriangle className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
               </div>
               
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{item.label}</p>
-                <p className="text-xs text-muted-foreground">
-                  Échéance : {formatDate(item.dueDate)}
-                </p>
+                <p className="text-xs text-muted-foreground">{formatDate(item.dueDate)}</p>
               </div>
               
               <div className="text-right shrink-0">
@@ -178,8 +113,8 @@ export const ForecastsCard = ({ profile }: ForecastsCardProps) => {
         })}
 
         {/* Total */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
-          <span className="text-sm font-medium">Total à provisionner</span>
+        <div className="flex items-center justify-between p-3.5 rounded-xl bg-primary/5 border border-primary/15 mt-3">
+          <span className="text-sm font-medium">À provisionner</span>
           <span className="text-lg font-bold text-primary">{formatCurrency(totalAmount)}</span>
         </div>
       </div>
@@ -187,32 +122,33 @@ export const ForecastsCard = ({ profile }: ForecastsCardProps) => {
   };
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <div className="p-2 rounded-lg bg-warning/10">
+    <Card className="border border-border/30 bg-card/80 backdrop-blur-sm">
+      <CardHeader className="pb-3 pt-5 px-5 sm:px-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-warning/10 shrink-0">
             <CalendarClock className="h-5 w-5 text-warning" />
           </div>
-          Prévisions & Échéances
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">Obligations fiscales et sociales</p>
+          <div className="min-w-0">
+            <CardTitle className="text-base sm:text-lg font-semibold">Prévisions</CardTitle>
+            <p className="text-xs sm:text-sm text-muted-foreground">Échéances fiscales</p>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
+
+      <CardContent className="px-5 sm:px-6 pb-5 sm:pb-6">
         <Tabs defaultValue="3m" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="3m">3 mois</TabsTrigger>
-            <TabsTrigger value="6m">6 mois</TabsTrigger>
-            <TabsTrigger value="12m">12 mois</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 mb-4 h-11">
+            <TabsTrigger value="3m" className="text-sm">3 mois</TabsTrigger>
+            <TabsTrigger value="6m" className="text-sm">6 mois</TabsTrigger>
+            <TabsTrigger value="12m" className="text-sm">12 mois</TabsTrigger>
           </TabsList>
           
           <TabsContent value="3m" className="mt-0">
             {renderTimeline(filterByHorizon(allObligations, 3))}
           </TabsContent>
-          
           <TabsContent value="6m" className="mt-0">
             {renderTimeline(filterByHorizon(allObligations, 6))}
           </TabsContent>
-          
           <TabsContent value="12m" className="mt-0">
             {renderTimeline(filterByHorizon(allObligations, 12))}
           </TabsContent>
@@ -220,12 +156,12 @@ export const ForecastsCard = ({ profile }: ForecastsCardProps) => {
 
         <Button 
           variant="ghost" 
-          className="w-full justify-between text-muted-foreground hover:text-foreground mt-4"
+          className="w-full justify-between text-muted-foreground hover:text-foreground min-h-[44px] mt-4 -mx-1"
           onClick={() => navigate('/pro/urssaf')}
         >
           <span className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Voir toutes les prévisions
+            Toutes les prévisions
           </span>
           <ChevronRight className="h-4 w-4" />
         </Button>

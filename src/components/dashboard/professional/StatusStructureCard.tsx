@@ -99,7 +99,7 @@ export const StatusStructureCard = ({ profile, hasRealData }: StatusStructureCar
   
   if (!hasRealData || !profile?.isSelfEmployed) {
     return (
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="border border-border/30 bg-card/80 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <div className="p-2 rounded-lg bg-accent/10">
@@ -138,7 +138,7 @@ export const StatusStructureCard = ({ profile, hasRealData }: StatusStructureCar
   const potentialGain = bestAlternative ? bestAlternative.revenueNet - currentComparison.revenueNet : 0;
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+    <Card className="border border-border/30 bg-card/80 backdrop-blur-sm">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <div className="p-2 rounded-lg bg-accent/10">

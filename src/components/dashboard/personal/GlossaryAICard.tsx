@@ -11,24 +11,22 @@ interface GlossaryAICardProps {
 interface SuggestedQuestion {
   id: string;
   question: string;
-  category: 'fiscal' | 'epargne' | 'immobilier' | 'general';
+  category: 'fiscal' | 'epargne' | 'immobilier';
 }
 
-// Context-aware question suggestions
 const getContextualQuestions = (profile: UserProfile | null): SuggestedQuestion[] => {
   const questions: SuggestedQuestion[] = [];
   
-  // Always relevant
   questions.push({
     id: 'tmi',
-    question: 'Comment calculer ma tranche marginale d\'imposition ?',
+    question: 'Comment calculer ma TMI ?',
     category: 'fiscal'
   });
   
   if (profile?.isEmployee) {
     questions.push({
       id: 'frais-reels',
-      question: 'Frais réels vs abattement 10% : que choisir ?',
+      question: 'Frais réels vs 10% : que choisir ?',
       category: 'fiscal'
     });
   }
@@ -36,16 +34,8 @@ const getContextualQuestions = (profile: UserProfile | null): SuggestedQuestion[
   if (profile?.isSelfEmployed) {
     questions.push({
       id: 'micro-reel',
-      question: 'Micro-entreprise vs régime réel : comparaison',
+      question: 'Micro vs réel : comparaison',
       category: 'fiscal'
-    });
-  }
-  
-  if ((profile?.peaBalance || 0) > 0) {
-    questions.push({
-      id: 'pea-fiscalite',
-      question: 'Fiscalité du PEA après 5 ans',
-      category: 'epargne'
     });
   }
   
@@ -61,14 +51,14 @@ const getContextualQuestions = (profile: UserProfile | null): SuggestedQuestion[
     category: 'immobilier'
   });
   
-  return questions.slice(0, 4);
+  return questions.slice(0, 3);
 };
 
-const getCategoryColor = (category: string) => {
+const getCategoryStyle = (category: string) => {
   switch (category) {
-    case 'fiscal': return 'bg-info/10 text-info border-info/30';
-    case 'epargne': return 'bg-success/10 text-success border-success/30';
-    case 'immobilier': return 'bg-warning/10 text-warning border-warning/30';
+    case 'fiscal': return 'bg-info/10 text-info border-info/20';
+    case 'epargne': return 'bg-success/10 text-success border-success/20';
+    case 'immobilier': return 'bg-warning/10 text-warning border-warning/20';
     default: return 'bg-muted text-muted-foreground border-border';
   }
 };
@@ -87,61 +77,61 @@ export const GlossaryAICard = ({ profile }: GlossaryAICardProps) => {
   const suggestedQuestions = getContextualQuestions(profile);
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <div className="p-2 rounded-lg bg-primary/10">
+    <Card className="border border-border/30 bg-card/80 backdrop-blur-sm">
+      <CardHeader className="pb-3 pt-5 px-5 sm:px-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-primary/10 shrink-0">
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
-          Glossaire & Aide IA
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">Posez vos questions fiscales</p>
+          <div className="min-w-0">
+            <CardTitle className="text-base sm:text-lg font-semibold">Glossaire & Aide</CardTitle>
+            <p className="text-xs sm:text-sm text-muted-foreground">Questions fiscales</p>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Suggested questions */}
+
+      <CardContent className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-4">
+        {/* Suggested questions - touch-friendly */}
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-            Questions suggérées
-          </p>
           {suggestedQuestions.map((q) => (
             <button
               key={q.id}
-              className="w-full flex items-center gap-3 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors text-left group"
+              className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-secondary/30 border border-border/20 text-left min-h-[52px] active:scale-[0.99] transition-transform"
               onClick={() => navigate('/glossary')}
             >
               <HelpCircle className="h-4 w-4 text-muted-foreground shrink-0" />
-              <span className="text-sm flex-1 group-hover:text-primary transition-colors">
+              <span className="text-sm flex-1 truncate">
                 {q.question}
               </span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getCategoryColor(q.category)}`}>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border shrink-0 ${getCategoryStyle(q.category)}`}>
                 {getCategoryLabel(q.category)}
               </span>
             </button>
           ))}
         </div>
 
-        {/* Quick actions */}
-        <div className="grid grid-cols-2 gap-2 pt-2">
+        {/* Quick actions - two column grid */}
+        <div className="grid grid-cols-2 gap-2.5 pt-1">
           <Button 
             variant="outline" 
-            className="justify-start h-auto py-3"
+            className="justify-center h-12"
             onClick={() => navigate('/glossary')}
           >
             <BookOpen className="h-4 w-4 mr-2" />
             Glossaire
           </Button>
           <Button 
-            className="justify-start h-auto py-3 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
+            className="justify-center h-12 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
             onClick={() => navigate('/glossary')}
           >
             <MessageCircle className="h-4 w-4 mr-2" />
-            Poser une question
+            Question
           </Button>
         </div>
 
-        {/* AI disclaimer */}
-        <p className="text-[10px] text-muted-foreground/60 text-center">
-          L'assistant IA fournit des informations générales. Consultez un professionnel pour un conseil personnalisé.
+        {/* Disclaimer */}
+        <p className="text-[10px] text-muted-foreground/50 text-center pt-1">
+          L'assistant IA fournit des informations générales uniquement.
         </p>
       </CardContent>
     </Card>

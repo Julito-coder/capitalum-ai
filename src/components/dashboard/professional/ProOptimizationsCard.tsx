@@ -116,7 +116,7 @@ export const ProOptimizationsCard = ({ profile, hasRealData }: ProOptimizationsC
   const totalFiscalGain = optimizations.reduce((sum, o) => sum + Math.max(0, o.impactFiscal), 0);
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+    <Card className="border border-border/30 bg-card/80 backdrop-blur-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">

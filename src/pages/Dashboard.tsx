@@ -272,7 +272,7 @@ const Dashboard = () => {
               iconColor="text-accent"
               columns={2}
             >
-              <AnimatedCard index={0} variant="accent">
+              <AnimatedCard index={0}>
                 <FinancialHealthCard profile={profile} hasRealData={!!hasRealData} />
               </AnimatedCard>
               <AnimatedCard index={1}>
