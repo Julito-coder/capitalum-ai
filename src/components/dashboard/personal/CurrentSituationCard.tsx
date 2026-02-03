@@ -29,9 +29,9 @@ const getSituationStatus = (savingsRate: number): SituationStatus => {
 };
 
 const statusColors = {
-  success: 'bg-success/10 text-success border-success/30',
-  warning: 'bg-warning/10 text-warning border-warning/30',
-  critical: 'bg-destructive/10 text-destructive border-destructive/30',
+  success: 'bg-success/10 text-success border-success/20',
+  warning: 'bg-warning/10 text-warning border-warning/20',
+  critical: 'bg-destructive/10 text-destructive border-destructive/20',
 };
 
 export const CurrentSituationCard = ({ profile, hasRealData }: CurrentSituationCardProps) => {
@@ -46,17 +46,14 @@ export const CurrentSituationCard = ({ profile, hasRealData }: CurrentSituationC
         ? profile.mainPensionAnnual / 12
         : 0;
 
-  // Estimate monthly charges (simplified)
   const monthlyCharges = profile?.isSelfEmployed
     ? (profile.officeRent + profile.vehicleExpenses + profile.professionalSupplies) / 12
     : 0;
 
-  // Calculate savings capacity (simplified estimate)
-  const estimatedLivingExpenses = monthlyIncome * 0.6; // Rough estimate
+  const estimatedLivingExpenses = monthlyIncome * 0.6;
   const savingsCapacity = Math.max(0, monthlyIncome - estimatedLivingExpenses - monthlyCharges);
   const savingsRate = monthlyIncome > 0 ? (savingsCapacity / monthlyIncome) * 100 : 0;
 
-  // Effective tax rate (simplified)
   const annualIncome = monthlyIncome * 12;
   let estimatedTax = 0;
   if (annualIncome > 11294) estimatedTax += (Math.min(annualIncome, 28797) - 11294) * 0.11;
@@ -65,34 +62,28 @@ export const CurrentSituationCard = ({ profile, hasRealData }: CurrentSituationC
   if (annualIncome > 177106) estimatedTax += (annualIncome - 177106) * 0.45;
   const effectiveTaxRate = annualIncome > 0 ? (estimatedTax / annualIncome) * 100 : 0;
 
-  // Reste à vivre
   const resteAVivre = monthlyIncome - monthlyCharges - (estimatedTax / 12);
-
   const status = getSituationStatus(savingsRate);
 
   if (!hasRealData) {
     return (
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Wallet className="h-5 w-5 text-primary" />
-            </div>
-            Situation actuelle
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <div className="p-4 rounded-full bg-muted/50 mb-4">
+      <Card className="border border-border/30 bg-card/80 backdrop-blur-sm">
+        <CardContent className="p-5 sm:p-6">
+          <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-center">
+            <div className="p-4 rounded-2xl bg-muted/30 mb-4">
               <Wallet className="h-8 w-8 text-muted-foreground" />
             </div>
-            <p className="text-muted-foreground mb-2">
+            <p className="text-base font-medium text-foreground mb-1">
               Données manquantes
             </p>
-            <p className="text-sm text-muted-foreground/70 mb-4 max-w-xs">
-              Complétez votre profil pour visualiser votre situation financière personnalisée.
+            <p className="text-sm text-muted-foreground mb-5 max-w-[280px]">
+              Complétez votre profil pour voir votre situation financière.
             </p>
-            <Button onClick={() => navigate('/onboarding')} size="sm">
+            <Button 
+              onClick={() => navigate('/onboarding')} 
+              size="lg"
+              className="min-h-[44px] px-6"
+            >
               Compléter mon profil
             </Button>
           </div>
@@ -102,71 +93,76 @@ export const CurrentSituationCard = ({ profile, hasRealData }: CurrentSituationC
   }
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="p-2 rounded-lg bg-primary/10">
+    <Card className="border border-border/30 bg-card/80 backdrop-blur-sm overflow-hidden">
+      {/* Header with status badge */}
+      <CardHeader className="pb-3 pt-5 px-5 sm:px-6">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2.5 rounded-xl bg-primary/10 shrink-0">
               <Wallet className="h-5 w-5 text-primary" />
             </div>
-            Situation actuelle
-          </CardTitle>
-          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusColors[status.color]}`}>
+            <div className="min-w-0">
+              <CardTitle className="text-base sm:text-lg font-semibold">
+                Situation actuelle
+              </CardTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">
+                {status.description}
+              </p>
+            </div>
+          </div>
+          <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border shrink-0 ${statusColors[status.color]}`}>
             {status.label}
           </span>
         </div>
-        <p className="text-sm text-muted-foreground mt-1">{status.description}</p>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Main metrics */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-3 rounded-lg bg-secondary/30">
-            <div className="flex items-center gap-2 mb-1">
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Revenu net mensuel</span>
+
+      <CardContent className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-4">
+        {/* Primary metric - large and prominent for mobile */}
+        <div className="p-4 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Revenu net mensuel</p>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground">
+                {formatCurrency(monthlyIncome)}
+              </p>
             </div>
-            <p className="text-lg font-semibold">{formatCurrency(monthlyIncome)}</p>
+            <div className="p-3 rounded-xl bg-primary/10">
+              <Wallet className="h-6 w-6 text-primary" />
+            </div>
           </div>
-          
-          <div className="p-3 rounded-lg bg-secondary/30">
-            <div className="flex items-center gap-2 mb-1">
+        </div>
+
+        {/* Secondary metrics grid - 2 columns on mobile */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3.5 rounded-xl bg-secondary/40 border border-border/20">
+            <div className="flex items-center gap-2 mb-1.5">
               <TrendingDown className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Charges mensuelles</span>
+              <span className="text-xs text-muted-foreground">Charges</span>
             </div>
             <p className="text-lg font-semibold">{formatCurrency(monthlyCharges + estimatedLivingExpenses)}</p>
           </div>
-        </div>
-
-        {/* Secondary metrics */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="p-3 rounded-lg bg-success/5 border border-success/20">
-            <div className="flex items-center gap-1 mb-1">
-              <PiggyBank className="h-3.5 w-3.5 text-success" />
-              <span className="text-xs text-muted-foreground">Capacité épargne</span>
-            </div>
-            <p className="text-base font-semibold text-success">{formatCurrency(savingsCapacity)}/mois</p>
-          </div>
           
-          <div className="p-3 rounded-lg bg-info/5 border border-info/20">
-            <div className="flex items-center gap-1 mb-1">
-              <Percent className="h-3.5 w-3.5 text-info" />
-              <span className="text-xs text-muted-foreground">Taux imposition</span>
+          <div className="p-3.5 rounded-xl bg-success/5 border border-success/15">
+            <div className="flex items-center gap-2 mb-1.5">
+              <PiggyBank className="h-4 w-4 text-success" />
+              <span className="text-xs text-muted-foreground">Épargne</span>
             </div>
-            <p className="text-base font-semibold text-info">{effectiveTaxRate.toFixed(1)}%</p>
-          </div>
-          
-          <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-            <div className="flex items-center gap-1 mb-1">
-              <CreditCard className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs text-muted-foreground">Reste à vivre</span>
-            </div>
-            <p className="text-base font-semibold text-primary">{formatCurrency(resteAVivre)}</p>
+            <p className="text-lg font-semibold text-success">{formatCurrency(savingsCapacity)}</p>
           </div>
         </div>
 
-        {/* Info tooltip */}
-        <p className="text-xs text-muted-foreground/70 italic">
-          💡 Ces estimations sont basées sur votre profil. Complétez vos données pour plus de précision.
+        {/* Tertiary metrics - compact row */}
+        <div className="flex items-center justify-between p-3 rounded-xl bg-muted/20 border border-border/10">
+          <div className="flex items-center gap-2">
+            <Percent className="h-4 w-4 text-info" />
+            <span className="text-xs text-muted-foreground">Taux imposition</span>
+          </div>
+          <span className="text-sm font-semibold text-info">{effectiveTaxRate.toFixed(1)}%</span>
+        </div>
+
+        {/* Info footer */}
+        <p className="text-[11px] text-muted-foreground/60 text-center pt-1">
+          💡 Estimations basées sur votre profil
         </p>
       </CardContent>
     </Card>

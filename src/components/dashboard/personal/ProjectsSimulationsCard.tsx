@@ -14,7 +14,6 @@ interface ProjectSummary {
   status: 'draft' | 'active' | 'completed';
 }
 
-// Mock projects - in real app, this would come from Supabase
 const mockProjects: ProjectSummary[] = [
   {
     id: '1',
@@ -64,20 +63,16 @@ const ProjectItem = ({ project }: { project: ProjectSummary }) => {
   const statusBadge = getStatusBadge(project.status);
   
   const handleClick = () => {
-    if (project.type === 'immobilier') {
-      navigate('/simulator');
-    } else {
-      navigate('/savings');
-    }
+    navigate(project.type === 'immobilier' ? '/simulator' : '/savings');
   };
 
   return (
     <div 
-      className="p-4 rounded-xl bg-secondary/30 border border-border/50 hover:border-primary/30 transition-all cursor-pointer group"
+      className="p-4 rounded-xl bg-secondary/30 border border-border/20 active:scale-[0.99] transition-transform cursor-pointer min-h-[72px]"
       onClick={handleClick}
     >
-      <div className="flex items-start gap-3">
-        <div className={`p-2.5 rounded-lg ${
+      <div className="flex items-center gap-3">
+        <div className={`p-2.5 rounded-xl shrink-0 ${
           project.type === 'immobilier' ? 'bg-info/10 text-info' : 'bg-success/10 text-success'
         }`}>
           {getProjectIcon(project.type)}
@@ -85,20 +80,20 @@ const ProjectItem = ({ project }: { project: ProjectSummary }) => {
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h4 className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
+            <h4 className="text-sm font-semibold truncate">
               {project.title}
             </h4>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${statusBadge.color}`}>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0 ${statusBadge.color}`}>
               {statusBadge.label}
             </span>
           </div>
           
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span>
               <strong className="text-foreground">{formatCurrency(project.effortMensuel)}</strong>/mois
             </span>
             <span>
-              Rdt <strong className="text-success">{project.rendementEstime.toFixed(1)}%</strong>
+              <strong className="text-success">{project.rendementEstime.toFixed(1)}%</strong>
             </span>
             <span className={getRiskColor(project.risqueLabel)}>
               {project.risqueLabel}
@@ -106,14 +101,7 @@ const ProjectItem = ({ project }: { project: ProjectSummary }) => {
           </div>
         </div>
         
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Settings className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <FileDown className="h-4 w-4" />
-          </Button>
-        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
       </div>
     </div>
   );
@@ -121,70 +109,78 @@ const ProjectItem = ({ project }: { project: ProjectSummary }) => {
 
 export const ProjectsSimulationsCard = () => {
   const navigate = useNavigate();
-  const projects = mockProjects; // In real app: useQuery to fetch from Supabase
+  const projects = mockProjects;
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="p-2 rounded-lg bg-info/10">
+    <Card className="border border-border/30 bg-card/80 backdrop-blur-sm">
+      <CardHeader className="pb-3 pt-5 px-5 sm:px-6">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2.5 rounded-xl bg-info/10 shrink-0">
               <LineChart className="h-5 w-5 text-info" />
             </div>
-            Projets & Simulations
-          </CardTitle>
-          <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => navigate('/simulator/new')}>
-            <Plus className="h-3.5 w-3.5" />
-            Nouveau
+            <div className="min-w-0">
+              <CardTitle className="text-base sm:text-lg font-semibold">
+                Projets & Simulations
+              </CardTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground">Vos investissements</p>
+            </div>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-9 gap-1.5 shrink-0 min-w-[44px]" 
+            onClick={() => navigate('/simulator/new')}
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Nouveau</span>
           </Button>
         </div>
-        <p className="text-sm text-muted-foreground">Vos projets d'investissement actifs</p>
       </CardHeader>
-      <CardContent className="space-y-3">
+
+      <CardContent className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-3">
         {projects.length > 0 ? (
           <>
             {projects.map((project) => (
               <ProjectItem key={project.id} project={project} />
             ))}
             
-            {/* Quick access links */}
-            <div className="grid grid-cols-2 gap-2 pt-2">
+            {/* Quick access - mobile friendly grid */}
+            <div className="grid grid-cols-2 gap-2 pt-1">
               <Button 
                 variant="ghost" 
-                className="justify-start text-muted-foreground hover:text-foreground h-auto py-2"
+                className="justify-start text-muted-foreground hover:text-foreground h-11 px-3"
                 onClick={() => navigate('/simulator')}
               >
-                <Building2 className="h-4 w-4 mr-2" />
-                Simulateur Immo
-                <ChevronRight className="h-4 w-4 ml-auto" />
+                <Building2 className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">Immo</span>
               </Button>
               <Button 
                 variant="ghost" 
-                className="justify-start text-muted-foreground hover:text-foreground h-auto py-2"
+                className="justify-start text-muted-foreground hover:text-foreground h-11 px-3"
                 onClick={() => navigate('/savings')}
               >
-                <PiggyBank className="h-4 w-4 mr-2" />
-                Simulateur Épargne
-                <ChevronRight className="h-4 w-4 ml-auto" />
+                <PiggyBank className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">Épargne</span>
               </Button>
             </div>
           </>
         ) : (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="p-4 rounded-full bg-muted/50 mb-4">
+            <div className="p-4 rounded-2xl bg-muted/30 mb-4">
               <LineChart className="h-8 w-8 text-muted-foreground" />
             </div>
-            <p className="text-muted-foreground mb-2">Aucun projet en cours</p>
-            <p className="text-sm text-muted-foreground/70 mb-4 max-w-xs">
-              Lancez une simulation immobilière ou d'épargne pour visualiser votre patrimoine futur.
+            <p className="text-base font-medium mb-1">Aucun projet</p>
+            <p className="text-sm text-muted-foreground mb-5 max-w-[260px]">
+              Lancez une simulation pour visualiser votre patrimoine futur.
             </p>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate('/simulator/new')}>
-                <Building2 className="h-4 w-4 mr-1" />
+              <Button variant="outline" className="min-h-[44px]" onClick={() => navigate('/simulator/new')}>
+                <Building2 className="h-4 w-4 mr-1.5" />
                 Immobilier
               </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate('/savings')}>
-                <PiggyBank className="h-4 w-4 mr-1" />
+              <Button variant="outline" className="min-h-[44px]" onClick={() => navigate('/savings')}>
+                <PiggyBank className="h-4 w-4 mr-1.5" />
                 Épargne
               </Button>
             </div>

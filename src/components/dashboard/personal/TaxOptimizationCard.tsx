@@ -14,7 +14,6 @@ interface TaxOptimizationCardProps {
 interface OptimizationLever {
   id: string;
   label: string;
-  description: string;
   isActivated: boolean;
   potentialGain: number;
   condition: (profile: UserProfile | null) => boolean;
@@ -24,7 +23,6 @@ const getOptimizationLevers = (profile: UserProfile | null): OptimizationLever[]
   {
     id: 'frais-reels',
     label: 'Frais réels',
-    description: 'Déduction des frais professionnels réels',
     isActivated: profile?.hasRealExpenses || false,
     potentialGain: profile?.realExpensesAmount ? Math.round(profile.realExpensesAmount * 0.15) : 500,
     condition: (p) => !!p?.isEmployee
@@ -32,7 +30,6 @@ const getOptimizationLevers = (profile: UserProfile | null): OptimizationLever[]
   {
     id: 'pea',
     label: 'PEA',
-    description: 'Optimisation fiscale après 5 ans',
     isActivated: (profile?.peaBalance || 0) > 0,
     potentialGain: Math.round((profile?.peaBalance || 0) * 0.05 * 0.17),
     condition: () => true
@@ -40,69 +37,38 @@ const getOptimizationLevers = (profile: UserProfile | null): OptimizationLever[]
   {
     id: 'per',
     label: 'PER',
-    description: 'Déduction des versements de l\'IR',
     isActivated: (profile?.percoAmount || 0) > 0,
-    potentialGain: 900, // Estimated for 3000€ at 30%
+    potentialGain: 900,
     condition: () => true
   },
   {
     id: 'pee-perco',
-    label: 'Épargne salariale',
-    description: 'PEE/PERCO avec abondement',
+    label: 'Épargne sal.',
     isActivated: (profile?.peeAmount || 0) + (profile?.percoAmount || 0) > 0,
     potentialGain: Math.round(((profile?.peeAmount || 0) + (profile?.percoAmount || 0)) * 0.15),
     condition: (p) => !!p?.isEmployee
   },
   {
-    id: 'deficit-foncier',
-    label: 'Déficit foncier',
-    description: 'Déduction travaux locatifs',
-    isActivated: (profile?.annualRentalWorks || 0) > 0,
-    potentialGain: Math.round((profile?.annualRentalWorks || 0) * 0.3),
-    condition: (p) => p?.rentalPropertiesCount ? p.rentalPropertiesCount > 0 : false
-  },
-  {
     id: 'quotient-familial',
-    label: 'Quotient familial',
-    description: 'Parts fiscales enfants',
+    label: 'Quotient fam.',
     isActivated: (profile?.childrenCount || 0) > 0,
     potentialGain: (profile?.childrenCount || 0) * 1500,
     condition: () => true
   }
 ];
 
-const getOptimizationLevel = (activatedCount: number, totalCount: number): { 
-  label: string; 
-  color: string; 
-  bgColor: string;
-  description: string;
-} => {
+const getOptimizationLevel = (activatedCount: number, totalCount: number) => {
   const ratio = activatedCount / totalCount;
   if (ratio >= 0.75) {
-    return { 
-      label: 'Forte', 
-      color: 'text-success', 
-      bgColor: 'bg-success',
-      description: 'Votre situation est bien optimisée'
-    };
+    return { label: 'Forte', color: 'text-success', bgColor: 'bg-success' };
   }
   if (ratio >= 0.5) {
-    return { 
-      label: 'Moyenne', 
-      color: 'text-warning', 
-      bgColor: 'bg-warning',
-      description: 'Des optimisations sont encore possibles'
-    };
+    return { label: 'Moyenne', color: 'text-warning', bgColor: 'bg-warning' };
   }
-  return { 
-    label: 'Faible', 
-    color: 'text-destructive', 
-    bgColor: 'bg-destructive',
-    description: 'Potentiel d\'optimisation important'
-  };
+  return { label: 'Faible', color: 'text-destructive', bgColor: 'bg-destructive' };
 };
 
-export const TaxOptimizationCard = ({ profile, hasRealData, potentialSavings }: TaxOptimizationCardProps) => {
+export const TaxOptimizationCard = ({ profile, hasRealData }: TaxOptimizationCardProps) => {
   const navigate = useNavigate();
   
   const allLevers = getOptimizationLevers(profile);
@@ -111,100 +77,95 @@ export const TaxOptimizationCard = ({ profile, hasRealData, potentialSavings }: 
   const inactiveLevers = applicableLevers.filter(l => !l.isActivated);
   
   const optimizationLevel = getOptimizationLevel(activatedLevers.length, applicableLevers.length);
-  const progressPercent = (activatedLevers.length / applicableLevers.length) * 100;
-  
+  const progressPercent = applicableLevers.length > 0 ? (activatedLevers.length / applicableLevers.length) * 100 : 0;
   const remainingPotential = inactiveLevers.reduce((sum, l) => sum + l.potentialGain, 0);
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <div className="p-2 rounded-lg bg-accent/10">
+    <Card className="border border-border/30 bg-card/80 backdrop-blur-sm">
+      <CardHeader className="pb-3 pt-5 px-5 sm:px-6">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2.5 rounded-xl bg-accent/10 shrink-0">
               <Target className="h-5 w-5 text-accent" />
             </div>
-            Optimisation fiscale
-          </CardTitle>
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${optimizationLevel.color} ${optimizationLevel.bgColor}/10 border border-current/30`}>
+            <div className="min-w-0">
+              <CardTitle className="text-base sm:text-lg font-semibold">
+                Optimisation fiscale
+              </CardTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground">Vos leviers</p>
+            </div>
+          </div>
+          <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${optimizationLevel.color} ${optimizationLevel.bgColor}/10 border border-current/20 shrink-0`}>
             {optimizationLevel.label}
           </span>
         </div>
-        <p className="text-sm text-muted-foreground">{optimizationLevel.description}</p>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Progress bar */}
-        <div className="space-y-2">
+
+      <CardContent className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-4">
+        {/* Progress bar - prominent metric */}
+        <div className="space-y-2.5">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Leviers activés</span>
-            <span className="font-medium">{activatedLevers.length}/{applicableLevers.length}</span>
+            <span className="font-semibold">{activatedLevers.length}/{applicableLevers.length}</span>
           </div>
-          <Progress value={progressPercent} className="h-2" />
+          <Progress value={progressPercent} className="h-2.5" />
         </div>
 
-        {/* Activated levers */}
-        {activatedLevers.length > 0 && (
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-2">
-              Leviers activés
-            </p>
+        {/* Levers display - compact pills */}
+        <div className="space-y-3">
+          {activatedLevers.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {activatedLevers.map((lever) => (
                 <div 
                   key={lever.id}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 border border-success/30 text-success text-xs"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-success/10 border border-success/20 text-success text-xs font-medium"
                 >
                   <Check className="h-3 w-3" />
                   {lever.label}
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Inactive levers */}
-        {inactiveLevers.length > 0 && (
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-2">
-              Non activés
-            </p>
+          )}
+          
+          {inactiveLevers.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {inactiveLevers.slice(0, 4).map((lever) => (
+              {inactiveLevers.slice(0, 3).map((lever) => (
                 <div 
                   key={lever.id}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50 border border-border/50 text-muted-foreground text-xs"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border/30 text-muted-foreground text-xs"
                 >
                   <X className="h-3 w-3" />
                   {lever.label}
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Remaining potential */}
+        {/* Potential savings - key metric prominent */}
         {remainingPotential > 0 && (
-          <div className="p-3 rounded-lg bg-success/5 border border-success/20">
+          <div className="p-4 rounded-xl bg-success/5 border border-success/15">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Lightbulb className="h-4 w-4 text-success" />
-                <span className="text-sm">Potentiel restant estimé</span>
+              <div className="flex items-center gap-2.5">
+                <Lightbulb className="h-5 w-5 text-success" />
+                <span className="text-sm font-medium">Potentiel restant</span>
               </div>
-              <span className="text-lg font-bold text-success">
+              <span className="text-xl font-bold text-success">
                 +{formatCurrency(remainingPotential)}
               </span>
             </div>
           </div>
         )}
 
-        {/* Scanner link */}
+        {/* CTA - touch friendly */}
         <Button 
           variant="ghost" 
-          className="w-full justify-between text-muted-foreground hover:text-foreground"
+          className="w-full justify-between text-muted-foreground hover:text-foreground min-h-[44px] -mx-1"
           onClick={() => navigate('/scanner')}
         >
           <span className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Analyser ma situation fiscale
+            Analyser ma situation
           </span>
           <ChevronRight className="h-4 w-4" />
         </Button>
