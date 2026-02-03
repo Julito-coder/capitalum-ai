@@ -1,9 +1,5 @@
 import { useEffect, useState } from 'react';
 import { 
-  Wallet, 
-  TrendingUp, 
-  Receipt, 
-  Landmark,
   RefreshCw,
   Bell,
   UserCircle,
@@ -11,16 +7,13 @@ import {
   Rocket,
   PiggyBank,
   BarChart3,
-  Loader2
+  Loader2,
+  Building
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
-import { MetricCard } from '@/components/dashboard/MetricCard';
-import { AlertCard } from '@/components/dashboard/AlertCard';
-import { RecommendationCard } from '@/components/dashboard/RecommendationCard';
-import { CalendarPreview } from '@/components/dashboard/CalendarPreview';
-import { ProgressRing } from '@/components/dashboard/ProgressRing';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSpace } from '@/contexts/SpaceContext';
 import { 
   loadUserProfile, 
   calculateDashboardMetrics, 
@@ -28,18 +21,30 @@ import {
   UserProfile,
   DashboardMetrics
 } from '@/lib/dashboardService';
-import { mockUserData, checkMicroThreshold, SEUIL_MICRO_2024 } from '@/data/mockData';
 
-const MICRO_THRESHOLD = 77700;
+// Personal dashboard cards
+import { CurrentSituationCard } from '@/components/dashboard/personal/CurrentSituationCard';
+import { UpcomingEventsCard } from '@/components/dashboard/personal/UpcomingEventsCard';
+import { PriorityActionsCard } from '@/components/dashboard/personal/PriorityActionsCard';
+import { ProjectsSimulationsCard } from '@/components/dashboard/personal/ProjectsSimulationsCard';
+import { TaxOptimizationCard } from '@/components/dashboard/personal/TaxOptimizationCard';
+import { GlossaryAICard } from '@/components/dashboard/personal/GlossaryAICard';
+
+// Professional dashboard cards
+import { FinancialHealthCard } from '@/components/dashboard/professional/FinancialHealthCard';
+import { ForecastsCard } from '@/components/dashboard/professional/ForecastsCard';
+import { ProOptimizationsCard } from '@/components/dashboard/professional/ProOptimizationsCard';
+import { StatusStructureCard } from '@/components/dashboard/professional/StatusStructureCard';
+import { DocumentsExportsCard } from '@/components/dashboard/professional/DocumentsExportsCard';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { isPersonalSpace, isProfessionalSpace } = useSpace();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Function to load dashboard data
   const loadData = async () => {
     if (!user) return;
     
@@ -58,7 +63,6 @@ const Dashboard = () => {
     }
   };
 
-  // Load data on mount and when returning from other pages
   useEffect(() => {
     loadData();
   }, [user]);
@@ -67,21 +71,11 @@ const Dashboard = () => {
     loadData();
   };
 
-  // Use real data if available, fallback to mock
-  const displayName = profile?.fullName || mockUserData.profile.name;
+  const displayName = profile?.fullName || 'Utilisateur';
   const hasRealData = profile?.onboardingCompleted;
-  
-  // Micro status for self-employed
-  const microStatus = profile?.isSelfEmployed 
-    ? {
-        percentageUsed: (profile.annualRevenueHt / MICRO_THRESHOLD) * 100,
-        remainingCapacity: MICRO_THRESHOLD - profile.annualRevenueHt,
-        riskLevel: profile.annualRevenueHt / MICRO_THRESHOLD > 0.9 ? 'high' : profile.annualRevenueHt / MICRO_THRESHOLD > 0.7 ? 'medium' : 'low'
-      }
-    : checkMicroThreshold(mockUserData.financials.caProjected);
 
-  // Profile icons
   const getProfileIcon = () => {
+    if (isProfessionalSpace) return Building;
     if (profile?.isEmployee) return Briefcase;
     if (profile?.isSelfEmployed) return Rocket;
     if (profile?.isRetired) return PiggyBank;
@@ -106,15 +100,28 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-            <ProfileIcon className="h-6 w-6 text-primary" />
+          <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${
+            isProfessionalSpace ? 'bg-accent/10' : 'bg-primary/10'
+          }`}>
+            <ProfileIcon className={`h-6 w-6 ${isProfessionalSpace ? 'text-accent' : 'text-primary'}`} />
           </div>
           <div>
-            <p className="text-muted-foreground text-sm mb-1">Bonjour, {displayName} 👋</p>
-            <h1 className="text-2xl lg:text-3xl font-bold">Tableau de bord fiscal</h1>
-            {metrics && metrics.profileTypes.length > 0 && (
+            <p className="text-muted-foreground text-sm mb-1">
+              Bonjour, {displayName} 👋
+            </p>
+            <h1 className="text-2xl lg:text-3xl font-bold">
+              {isProfessionalSpace ? 'Pilotage Pro' : 'Tableau de bord'}
+            </h1>
+            {metrics && metrics.profileTypes.length > 0 && isPersonalSpace && (
               <p className="text-sm text-muted-foreground mt-0.5">
                 {metrics.profileTypes.join(' • ')}
+              </p>
+            )}
+            {isProfessionalSpace && profile?.fiscalStatus && (
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {profile.fiscalStatus === 'micro' ? 'Micro-entrepreneur' : 
+                 profile.fiscalStatus === 'sasu' ? 'SASU' : 
+                 profile.fiscalStatus === 'eurl' ? 'EURL' : profile.fiscalStatus}
               </p>
             )}
           </div>
@@ -122,7 +129,7 @@ const Dashboard = () => {
         <div className="flex items-center gap-3">
           {!hasRealData && (
             <button 
-              onClick={() => navigate('/onboarding')}
+              onClick={() => navigate(isProfessionalSpace ? '/pro/onboarding' : '/onboarding')}
               className="btn-primary px-4 py-2.5"
             >
               <UserCircle className="h-4 w-4" />
@@ -144,203 +151,68 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-        <MetricCard
-          title={profile?.isSelfEmployed ? "Chiffre d'affaires 2025" : "Revenus annuels"}
-          value={formatCurrency(metrics?.totalAnnualIncome || 0)}
-          subtitle={hasRealData ? "Basé sur votre profil" : "Complétez votre profil"}
-          icon={Wallet}
-          status={hasRealData ? 'success' : 'info'}
-        />
-        <MetricCard
-          title="IR estimé"
-          value={formatCurrency(metrics?.estimatedTax || 0)}
-          subtitle="Avant optimisations"
-          icon={Landmark}
-          status="info"
-        />
-        <MetricCard
-          title="Dépenses déductibles"
-          value={formatCurrency(metrics?.deductibleExpenses || 0)}
-          subtitle={profile?.isSelfEmployed ? "Charges pro déclarées" : "Frais et cotisations"}
-          icon={Receipt}
-        />
-        <MetricCard
-          title="Économies possibles"
-          value={`+${formatCurrency(metrics?.potentialSavings || 0)}`}
-          subtitle={`${metrics?.recommendations.length || 0} optimisation(s)`}
-          icon={TrendingUp}
-          status="success"
-        />
-      </div>
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-        {/* Left Column - Alerts & Recommendations */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Alerts */}
-          <section>
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
-              Alertes actives
-            </h2>
-            {metrics && metrics.alerts.length > 0 ? (
-              <div className="space-y-3">
-                {metrics.alerts.map((alert) => (
-                  <AlertCard 
-                    key={alert.id} 
-                    alert={alert} 
-                    onAction={() => {
-                      if (alert.id === 'complete-profile') navigate('/onboarding');
-                    }}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="glass-card rounded-xl p-6 text-center">
-                <p className="text-muted-foreground">Aucune alerte active 🎉</p>
-              </div>
-            )}
-          </section>
-
-          {/* Recommendations */}
-          <section>
-            <h2 className="text-lg font-semibold mb-4">💡 Recommandations personnalisées</h2>
-            {metrics && metrics.recommendations.length > 0 ? (
-              <div className="space-y-4">
-                {metrics.recommendations.map((rec) => (
-                  <RecommendationCard key={rec.id} recommendation={rec} />
-                ))}
-              </div>
-            ) : (
-              <div className="glass-card rounded-xl p-6 text-center">
-                <p className="text-muted-foreground">
-                  {hasRealData 
-                    ? "Votre situation est déjà optimisée ! 🏆" 
-                    : "Complétez votre profil pour des recommandations personnalisées."}
-                </p>
-                {!hasRealData && (
-                  <button 
-                    onClick={() => navigate('/onboarding')}
-                    className="btn-primary mt-4"
-                  >
-                    Compléter mon profil
-                  </button>
-                )}
-              </div>
-            )}
-          </section>
+      {/* Personal Dashboard */}
+      {isPersonalSpace && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {/* Row 1: Situation + Upcoming */}
+          <CurrentSituationCard profile={profile} hasRealData={!!hasRealData} />
+          <UpcomingEventsCard alerts={metrics?.alerts || []} profile={profile} />
+          
+          {/* Row 2: Actions (full width on medium) */}
+          <div className="lg:col-span-2 xl:col-span-1">
+            <PriorityActionsCard 
+              recommendations={metrics?.recommendations || []} 
+              hasRealData={!!hasRealData} 
+            />
+          </div>
+          
+          {/* Row 3: Projects + Optimization */}
+          <ProjectsSimulationsCard />
+          <TaxOptimizationCard 
+            profile={profile} 
+            hasRealData={!!hasRealData}
+            potentialSavings={metrics?.potentialSavings || 0}
+          />
+          
+          {/* Row 4: Glossary & AI */}
+          <GlossaryAICard profile={profile} />
         </div>
+      )}
 
-        {/* Right Column - Status & Calendar */}
-        <div className="space-y-6">
-          {/* Micro Status - Only for self-employed */}
-          {(profile?.isSelfEmployed || !hasRealData) && (
-            <div className="glass-card rounded-2xl p-6">
-              <h3 className="text-lg font-semibold mb-6">
-                {profile?.isSelfEmployed ? "Statut micro-entrepreneur" : "Seuil micro-entreprise"}
-              </h3>
-              <div className="flex flex-col items-center">
-                <ProgressRing 
-                  progress={microStatus.percentageUsed} 
-                  status={microStatus.riskLevel === 'high' ? 'warning' : microStatus.riskLevel === 'medium' ? 'warning' : 'success'}
-                />
-                <div className="mt-4 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    {formatCurrency(profile?.annualRevenueHt || mockUserData.financials.caProjected)} / {formatCurrency(MICRO_THRESHOLD)}
-                  </p>
-                  {microStatus.remainingCapacity > 0 ? (
-                    <p className="text-sm mt-1">
-                      <span className="text-success font-medium">
-                        {formatCurrency(Math.abs(microStatus.remainingCapacity))}
-                      </span> de marge
-                    </p>
-                  ) : (
-                    <p className="text-sm mt-1">
-                      <span className="text-destructive font-medium">
-                        Dépassement de {formatCurrency(Math.abs(microStatus.remainingCapacity))}
-                      </span>
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+      {/* Professional Dashboard */}
+      {isProfessionalSpace && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {/* Row 1: Financial Health + Forecasts */}
+          <FinancialHealthCard profile={profile} hasRealData={!!hasRealData} />
+          <ForecastsCard profile={profile} />
+          
+          {/* Row 2: Optimizations */}
+          <div className="lg:col-span-2 xl:col-span-1">
+            <ProOptimizationsCard profile={profile} hasRealData={!!hasRealData} />
+          </div>
+          
+          {/* Row 3: Status + Documents */}
+          <StatusStructureCard profile={profile} hasRealData={!!hasRealData} />
+          <DocumentsExportsCard />
+        </div>
+      )}
 
-          {/* Profile Summary for other types */}
-          {hasRealData && !profile?.isSelfEmployed && (
-            <div className="glass-card rounded-2xl p-6">
-              <h3 className="text-lg font-semibold mb-4">Résumé du profil</h3>
-              <div className="space-y-3">
-                {profile?.isEmployee && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Salaire mensuel brut</span>
-                    <span className="font-medium">{formatCurrency(profile.grossMonthlySalary)}</span>
-                  </div>
-                )}
-                {profile?.isRetired && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Pension annuelle</span>
-                    <span className="font-medium">{formatCurrency(profile.mainPensionAnnual)}</span>
-                  </div>
-                )}
-                {profile?.isInvestor && (
-                  <>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">PEA</span>
-                      <span className="font-medium">{formatCurrency(profile.peaBalance)}</span>
-                    </div>
-                    {profile.lifeInsuranceBalance > 0 && (
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Assurance-vie</span>
-                        <span className="font-medium">{formatCurrency(profile.lifeInsuranceBalance)}</span>
-                      </div>
-                    )}
-                  </>
-                )}
-                {profile?.childrenCount > 0 && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Enfants à charge</span>
-                    <span className="font-medium">{profile.childrenCount}</span>
-                  </div>
-                )}
-              </div>
+      {/* Pedagogical footer */}
+      <div className="mt-8 p-4 rounded-xl bg-muted/30 border border-border/50 text-center">
+        <p className="text-sm text-muted-foreground">
+          💡 <strong>Capitalum</strong> analyse votre situation pour vous aider à décider sereinement.
+          {!hasRealData && (
+            <span className="block mt-1">
               <button 
-                onClick={() => navigate('/onboarding')}
-                className="w-full btn-secondary text-sm py-2 mt-4"
+                onClick={() => navigate(isProfessionalSpace ? '/pro/onboarding' : '/onboarding')}
+                className="text-primary hover:underline"
               >
-                Modifier mon profil
+                Complétez votre profil
               </button>
-            </div>
+              {' '}pour des recommandations personnalisées.
+            </span>
           )}
-
-          {/* URSSAF Summary - Only for self-employed */}
-          {profile?.isSelfEmployed && (
-            <div className="glass-card rounded-2xl p-6">
-              <h3 className="text-lg font-semibold mb-4">Cotisations sociales</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Charges payées</span>
-                  <span className="font-semibold">{formatCurrency(profile.socialChargesPaid)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Charges pro totales</span>
-                  <span className="font-semibold">
-                    {formatCurrency(profile.officeRent + profile.vehicleExpenses + profile.professionalSupplies)}
-                  </span>
-                </div>
-                <div className="h-px bg-border" />
-                <button className="w-full btn-secondary text-sm py-2">
-                  Simuler mes cotisations
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Calendar Preview */}
-          <CalendarPreview tasks={mockUserData.calendar} />
-        </div>
+        </p>
       </div>
     </Layout>
   );
