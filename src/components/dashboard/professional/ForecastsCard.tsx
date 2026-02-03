@@ -1,0 +1,235 @@
+import { CalendarClock, TrendingUp, AlertTriangle, Check, Clock, ChevronRight } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNavigate } from 'react-router-dom';
+import { UserProfile, formatCurrency } from '@/lib/dashboardService';
+
+interface ForecastsCardProps {
+  profile: UserProfile | null;
+}
+
+interface ForecastItem {
+  id: string;
+  label: string;
+  amount: number;
+  dueDate: Date;
+  type: 'urssaf' | 'tva' | 'ir' | 'is' | 'other';
+  isPaid: boolean;
+}
+
+const getUpcomingObligations = (profile: UserProfile | null): ForecastItem[] => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const ca = profile?.annualRevenueHt || 0;
+  
+  // Estimate URSSAF (quarterly for micro)
+  const urssafQuarterly = ca * 0.22 / 4;
+  
+  // Estimate IR based on net income
+  const estimatedIR = ca * 0.15; // Rough estimate
+  
+  const items: ForecastItem[] = [
+    {
+      id: 'urssaf-q1',
+      label: 'URSSAF T1',
+      amount: urssafQuarterly,
+      dueDate: new Date(year, 0, 31),
+      type: 'urssaf' as const,
+      isPaid: now > new Date(year, 0, 31)
+    },
+    {
+      id: 'urssaf-q2',
+      label: 'URSSAF T2',
+      amount: urssafQuarterly,
+      dueDate: new Date(year, 3, 30),
+      type: 'urssaf' as const,
+      isPaid: now > new Date(year, 3, 30)
+    },
+    {
+      id: 'ir-acompte-1',
+      label: 'Acompte IR',
+      amount: estimatedIR / 3,
+      dueDate: new Date(year, 1, 15),
+      type: 'ir' as const,
+      isPaid: now > new Date(year, 1, 15)
+    },
+    {
+      id: 'urssaf-q3',
+      label: 'URSSAF T3',
+      amount: urssafQuarterly,
+      dueDate: new Date(year, 6, 31),
+      type: 'urssaf' as const,
+      isPaid: now > new Date(year, 6, 31)
+    },
+    {
+      id: 'ir-acompte-2',
+      label: 'Acompte IR',
+      amount: estimatedIR / 3,
+      dueDate: new Date(year, 4, 15),
+      type: 'ir' as const,
+      isPaid: now > new Date(year, 4, 15)
+    },
+    {
+      id: 'urssaf-q4',
+      label: 'URSSAF T4',
+      amount: urssafQuarterly,
+      dueDate: new Date(year, 9, 31),
+      type: 'urssaf' as const,
+      isPaid: now > new Date(year, 9, 31)
+    },
+    {
+      id: 'ir-solde',
+      label: 'Solde IR',
+      amount: estimatedIR / 3,
+      dueDate: new Date(year, 8, 15),
+      type: 'ir' as const,
+      isPaid: now > new Date(year, 8, 15)
+    },
+  ];
+  
+  return items.filter(item => item.dueDate > now || !item.isPaid)
+              .sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+};
+
+const getTypeColor = (type: string) => {
+  switch (type) {
+    case 'urssaf': return 'bg-info/10 text-info border-info/30';
+    case 'ir': return 'bg-warning/10 text-warning border-warning/30';
+    case 'is': return 'bg-destructive/10 text-destructive border-destructive/30';
+    case 'tva': return 'bg-accent/10 text-accent border-accent/30';
+    default: return 'bg-muted text-muted-foreground border-border';
+  }
+};
+
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+};
+
+const getDaysUntil = (date: Date) => {
+  const now = new Date();
+  const diff = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff <= 0) return 'Échue';
+  if (diff === 1) return 'Demain';
+  if (diff < 7) return `${diff}j`;
+  if (diff < 30) return `${Math.ceil(diff / 7)}sem`;
+  return `${Math.ceil(diff / 30)}m`;
+};
+
+const filterByHorizon = (items: ForecastItem[], months: number) => {
+  const now = new Date();
+  const limit = new Date(now.getFullYear(), now.getMonth() + months, now.getDate());
+  return items.filter(item => item.dueDate <= limit);
+};
+
+export const ForecastsCard = ({ profile }: ForecastsCardProps) => {
+  const navigate = useNavigate();
+  const allObligations = getUpcomingObligations(profile);
+
+  const renderTimeline = (items: ForecastItem[]) => {
+    if (items.length === 0) {
+      return (
+        <div className="text-center py-4 text-muted-foreground text-sm">
+          Aucune échéance sur cette période
+        </div>
+      );
+    }
+
+    const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
+
+    return (
+      <div className="space-y-3">
+        {items.slice(0, 4).map((item, index) => {
+          const daysUntil = getDaysUntil(item.dueDate);
+          const isUrgent = daysUntil === 'Demain' || daysUntil.includes('j');
+          
+          return (
+            <div 
+              key={item.id}
+              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                isUrgent ? 'bg-warning/5 border-warning/30' : 'bg-secondary/30 border-border/50'
+              }`}
+            >
+              <div className={`p-2 rounded-lg ${getTypeColor(item.type)}`}>
+                {item.isPaid ? (
+                  <Check className="h-4 w-4" />
+                ) : isUrgent ? (
+                  <AlertTriangle className="h-4 w-4" />
+                ) : (
+                  <Clock className="h-4 w-4" />
+                )}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{item.label}</p>
+                <p className="text-xs text-muted-foreground">
+                  Échéance : {formatDate(item.dueDate)}
+                </p>
+              </div>
+              
+              <div className="text-right shrink-0">
+                <p className="text-sm font-semibold">{formatCurrency(item.amount)}</p>
+                <p className={`text-xs ${isUrgent ? 'text-warning font-medium' : 'text-muted-foreground'}`}>
+                  {daysUntil}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Total */}
+        <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+          <span className="text-sm font-medium">Total à provisionner</span>
+          <span className="text-lg font-bold text-primary">{formatCurrency(totalAmount)}</span>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <div className="p-2 rounded-lg bg-warning/10">
+            <CalendarClock className="h-5 w-5 text-warning" />
+          </div>
+          Prévisions & Échéances
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">Obligations fiscales et sociales</p>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="3m" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="3m">3 mois</TabsTrigger>
+            <TabsTrigger value="6m">6 mois</TabsTrigger>
+            <TabsTrigger value="12m">12 mois</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="3m" className="mt-0">
+            {renderTimeline(filterByHorizon(allObligations, 3))}
+          </TabsContent>
+          
+          <TabsContent value="6m" className="mt-0">
+            {renderTimeline(filterByHorizon(allObligations, 6))}
+          </TabsContent>
+          
+          <TabsContent value="12m" className="mt-0">
+            {renderTimeline(filterByHorizon(allObligations, 12))}
+          </TabsContent>
+        </Tabs>
+
+        <Button 
+          variant="ghost" 
+          className="w-full justify-between text-muted-foreground hover:text-foreground mt-4"
+          onClick={() => navigate('/pro/urssaf')}
+        >
+          <span className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Voir toutes les prévisions
+          </span>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
