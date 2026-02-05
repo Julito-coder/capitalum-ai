@@ -4,6 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import { UserProfile, formatCurrency } from '@/lib/dashboardService';
+import { 
+  useActionGuide, 
+  createPERGuide, 
+  createPEAGuide,
+  createEpargneSalarialeGuide,
+  createFraisReelsGuide,
+  createRegimeReelGuide
+} from '@/components/guides';
 
 interface TaxOptimizationCardProps {
   profile: UserProfile | null;
@@ -17,6 +25,7 @@ interface OptimizationLever {
   isActivated: boolean;
   potentialGain: number;
   condition: (profile: UserProfile | null) => boolean;
+  guideType: 'per' | 'pea' | 'epargne-salariale' | 'frais-reels' | 'quotient';
 }
 
 const getOptimizationLevers = (profile: UserProfile | null): OptimizationLever[] => [
@@ -25,35 +34,40 @@ const getOptimizationLevers = (profile: UserProfile | null): OptimizationLever[]
     label: 'Frais réels',
     isActivated: profile?.hasRealExpenses || false,
     potentialGain: profile?.realExpensesAmount ? Math.round(profile.realExpensesAmount * 0.15) : 500,
-    condition: (p) => !!p?.isEmployee
+    condition: (p) => !!p?.isEmployee,
+    guideType: 'frais-reels'
   },
   {
     id: 'pea',
     label: 'PEA',
     isActivated: (profile?.peaBalance || 0) > 0,
-    potentialGain: Math.round((profile?.peaBalance || 0) * 0.05 * 0.17),
-    condition: () => true
+    potentialGain: Math.max(500, Math.round((profile?.peaBalance || 0) * 0.05 * 0.17)),
+    condition: () => true,
+    guideType: 'pea'
   },
   {
     id: 'per',
     label: 'PER',
     isActivated: (profile?.percoAmount || 0) > 0,
     potentialGain: 900,
-    condition: () => true
+    condition: () => true,
+    guideType: 'per'
   },
   {
     id: 'pee-perco',
     label: 'Épargne sal.',
     isActivated: (profile?.peeAmount || 0) + (profile?.percoAmount || 0) > 0,
-    potentialGain: Math.round(((profile?.peeAmount || 0) + (profile?.percoAmount || 0)) * 0.15),
-    condition: (p) => !!p?.isEmployee
+    potentialGain: Math.max(500, Math.round(((profile?.peeAmount || 0) + (profile?.percoAmount || 0)) * 0.15)),
+    condition: (p) => !!p?.isEmployee,
+    guideType: 'epargne-salariale'
   },
   {
     id: 'quotient-familial',
     label: 'Quotient fam.',
     isActivated: (profile?.childrenCount || 0) > 0,
     potentialGain: (profile?.childrenCount || 0) * 1500,
-    condition: () => true
+    condition: () => true,
+    guideType: 'quotient'
   }
 ];
 
@@ -68,17 +82,44 @@ const getOptimizationLevel = (activatedCount: number, totalCount: number) => {
   return { label: 'Faible', color: 'text-destructive', bgColor: 'bg-destructive' };
 };
 
+const getGuideForLever = (lever: OptimizationLever) => {
+  switch (lever.guideType) {
+    case 'per':
+      return createPERGuide(lever.potentialGain);
+    case 'pea':
+      return createPEAGuide(lever.potentialGain);
+    case 'epargne-salariale':
+      return createEpargneSalarialeGuide(lever.potentialGain);
+    case 'frais-reels':
+      return createFraisReelsGuide(lever.potentialGain);
+    default:
+      return null;
+  }
+};
+
 export const TaxOptimizationCard = ({ profile, hasRealData }: TaxOptimizationCardProps) => {
   const navigate = useNavigate();
+  const { openGuide, isActionCompleted, isActionPending } = useActionGuide();
   
   const allLevers = getOptimizationLevers(profile);
   const applicableLevers = allLevers.filter(l => l.condition(profile));
-  const activatedLevers = applicableLevers.filter(l => l.isActivated);
-  const inactiveLevers = applicableLevers.filter(l => !l.isActivated);
+  const activatedLevers = applicableLevers.filter(l => l.isActivated || isActionCompleted(l.id));
+  const inactiveLevers = applicableLevers.filter(l => !l.isActivated && !isActionCompleted(l.id));
   
   const optimizationLevel = getOptimizationLevel(activatedLevers.length, applicableLevers.length);
   const progressPercent = applicableLevers.length > 0 ? (activatedLevers.length / applicableLevers.length) * 100 : 0;
   const remainingPotential = inactiveLevers.reduce((sum, l) => sum + l.potentialGain, 0);
+
+  const handleLeverClick = (lever: OptimizationLever) => {
+    if (lever.guideType === 'quotient') {
+      // Quotient familial doesn't have a guide, it's informational
+      return;
+    }
+    const guide = getGuideForLever(lever);
+    if (guide) {
+      openGuide(guide, profile);
+    }
+  };
 
   return (
     <Card className="border border-border/30 bg-card/80 backdrop-blur-sm">
@@ -130,13 +171,21 @@ export const TaxOptimizationCard = ({ profile, hasRealData }: TaxOptimizationCar
           {inactiveLevers.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {inactiveLevers.slice(0, 3).map((lever) => (
-                <div 
+                <button 
                   key={lever.id}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border/30 text-muted-foreground text-xs"
+                  onClick={() => handleLeverClick(lever)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition-all ${
+                    lever.guideType !== 'quotient'
+                      ? 'bg-muted/40 border-border/30 text-muted-foreground hover:bg-primary/10 hover:border-primary/30 hover:text-primary cursor-pointer'
+                      : 'bg-muted/40 border-border/30 text-muted-foreground cursor-default'
+                  } ${isActionPending(lever.id) ? 'border-warning/30 bg-warning/5' : ''}`}
                 >
                   <X className="h-3 w-3" />
                   {lever.label}
-                </div>
+                  {lever.guideType !== 'quotient' && (
+                    <span className="text-success font-medium">+{formatCurrency(lever.potentialGain)}</span>
+                  )}
+                </button>
               ))}
             </div>
           )}
@@ -154,6 +203,9 @@ export const TaxOptimizationCard = ({ profile, hasRealData }: TaxOptimizationCar
                 +{formatCurrency(remainingPotential)}
               </span>
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Cliquez sur un levier inactif pour débloquer cette économie
+            </p>
           </div>
         )}
 
