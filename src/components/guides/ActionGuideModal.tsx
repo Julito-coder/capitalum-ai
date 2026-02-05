@@ -105,7 +105,9 @@ export const ActionGuideModal = () => {
                     <Sparkles className="h-4 w-4 text-primary shrink-0" />
                     <h2 className="text-lg font-semibold truncate">{currentGuide.title}</h2>
                   </div>
-                  <p className="text-sm text-muted-foreground truncate">{currentGuide.subtitle}</p>
+                  {currentGuide.subtitle && (
+                    <p className="text-sm text-muted-foreground truncate">{currentGuide.subtitle}</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="text-right">
@@ -146,7 +148,9 @@ export const ActionGuideModal = () => {
                   animate="center"
                   exit="exit"
                 >
-                  {StepComponent ? (
+                  {step.content ? (
+                    step.content
+                  ) : StepComponent ? (
                     <StepComponent 
                       onNext={nextStep} 
                       onBack={!isFirstStep ? prevStep : undefined}

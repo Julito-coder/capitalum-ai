@@ -1,9 +1,12 @@
-import { CalendarClock, TrendingUp, AlertTriangle, Check, Clock, ChevronRight } from 'lucide-react';
+import { CalendarClock, TrendingUp, AlertTriangle, Check, Clock, ChevronRight, Play } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import { UserProfile, formatCurrency } from '@/lib/dashboardService';
+import { useActionGuide } from '@/components/guides/ActionGuideContext';
+import { createFiscaliteISGuide } from '@/components/guides';
 
 interface ForecastsCardProps {
   profile: UserProfile | null;
@@ -67,7 +70,12 @@ const filterByHorizon = (items: ForecastItem[], months: number) => {
 
 export const ForecastsCard = ({ profile }: ForecastsCardProps) => {
   const navigate = useNavigate();
+  const { openGuide } = useActionGuide();
   const allObligations = getUpcomingObligations(profile);
+
+  const handleOptimizeClick = () => {
+    openGuide(createFiscaliteISGuide(profile), profile);
+  };
 
   const renderTimeline = (items: ForecastItem[]) => {
     if (items.length === 0) {
@@ -79,6 +87,7 @@ export const ForecastsCard = ({ profile }: ForecastsCardProps) => {
     }
 
     const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
+    const estimatedSavings = Math.round(totalAmount * 0.1); // 10% d'économie potentielle
 
     return (
       <div className="space-y-2.5">
@@ -112,10 +121,33 @@ export const ForecastsCard = ({ profile }: ForecastsCardProps) => {
           );
         })}
 
-        {/* Total */}
-        <div className="flex items-center justify-between p-3.5 rounded-xl bg-primary/5 border border-primary/15 mt-3">
-          <span className="text-sm font-medium">À provisionner</span>
-          <span className="text-lg font-bold text-primary">{formatCurrency(totalAmount)}</span>
+        {/* Total + optimization CTA */}
+        <div className="space-y-2 mt-3">
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-primary/5 border border-primary/15">
+            <span className="text-sm font-medium">À provisionner</span>
+            <span className="text-lg font-bold text-primary">{formatCurrency(totalAmount)}</span>
+          </div>
+
+          {/* Actionable optimization */}
+          {estimatedSavings > 500 && (
+            <button
+              onClick={handleOptimizeClick}
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-success/5 border border-success/20 hover:border-success/40 transition-all group"
+            >
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-success" />
+                <span className="text-sm font-medium group-hover:text-success transition-colors">
+                  Réduire ces montants
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-success/10 text-success border-success/30 text-xs">
+                  -{formatCurrency(estimatedSavings)}
+                </Badge>
+                <Play className="h-4 w-4 text-success" />
+              </div>
+            </button>
+          )}
         </div>
       </div>
     );
@@ -130,7 +162,7 @@ export const ForecastsCard = ({ profile }: ForecastsCardProps) => {
           </div>
           <div className="min-w-0">
             <CardTitle className="text-base sm:text-lg font-semibold">Prévisions</CardTitle>
-            <p className="text-xs sm:text-sm text-muted-foreground">Échéances fiscales</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Échéances fiscales & sociales</p>
           </div>
         </div>
       </CardHeader>

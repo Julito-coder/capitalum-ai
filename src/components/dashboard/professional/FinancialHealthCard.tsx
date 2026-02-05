@@ -1,9 +1,12 @@
-import { Activity, Wallet, TrendingUp, AlertTriangle, Target } from 'lucide-react';
+import { Activity, Wallet, TrendingUp, AlertTriangle, Target, Sparkles, ChevronRight } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { UserProfile, formatCurrency } from '@/lib/dashboardService';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { useActionGuide } from '@/components/guides/ActionGuideContext';
+import { createTresorerieGuide, createRemunerationGuide } from '@/components/guides';
 
 interface FinancialHealthCardProps {
   profile: UserProfile | null;
@@ -15,6 +18,15 @@ interface HealthStatus {
   color: 'success' | 'warning' | 'critical';
   description: string;
   score: number;
+}
+
+interface ActionableInsight {
+  id: string;
+  signal: string;
+  gain: number;
+  action: string;
+  guide: 'tresorerie' | 'remuneration';
+  priority: 'urgent' | 'important' | 'opportunite';
 }
 
 const calculateHealthStatus = (profile: UserProfile | null): HealthStatus => {
@@ -34,14 +46,54 @@ const calculateHealthStatus = (profile: UserProfile | null): HealthStatus => {
   return { label: 'Tendue', color: 'critical', description: 'Optimisation requise', score: 30 };
 };
 
+const getActionableInsights = (profile: UserProfile | null): ActionableInsight[] => {
+  const ca = profile?.annualRevenueHt || 0;
+  const charges = (profile?.socialChargesPaid || 0) + (profile?.officeRent || 0);
+  const tresorerieEstimee = Math.max((ca - charges) * 0.3, 20000);
+  const insights: ActionableInsight[] = [];
+
+  // Trésorerie dormante
+  if (tresorerieEstimee > 15000) {
+    insights.push({
+      id: 'tresorerie',
+      signal: 'Trésorerie sous-utilisée',
+      gain: Math.round(tresorerieEstimee * 0.035),
+      action: 'Déployer la trésorerie',
+      guide: 'tresorerie',
+      priority: 'opportunite'
+    });
+  }
+
+  // Rémunération non optimisée
+  if (ca > 40000) {
+    insights.push({
+      id: 'remuneration',
+      signal: 'Rémunération non optimisée',
+      gain: Math.round(ca * 0.08),
+      action: 'Optimiser ma rémunération',
+      guide: 'remuneration',
+      priority: 'important'
+    });
+  }
+
+  return insights;
+};
+
 const statusColors = {
   success: 'bg-success/10 text-success border-success/20',
   warning: 'bg-warning/10 text-warning border-warning/20',
   critical: 'bg-destructive/10 text-destructive border-destructive/20',
 };
 
+const priorityColors = {
+  urgent: 'bg-destructive/10 text-destructive',
+  important: 'bg-warning/10 text-warning',
+  opportunite: 'bg-success/10 text-success'
+};
+
 export const FinancialHealthCard = ({ profile, hasRealData }: FinancialHealthCardProps) => {
   const navigate = useNavigate();
+  const { openGuide } = useActionGuide();
 
   const caAnnuel = profile?.annualRevenueHt || 0;
   const caMensuel = caAnnuel / 12;
@@ -53,10 +105,18 @@ export const FinancialHealthCard = ({ profile, hasRealData }: FinancialHealthCar
   
   const beneficeNet = caAnnuel - chargesAnnuelles;
   const tresorerieEstimee = beneficeNet * 0.3;
-  const urssafTrimestriel = caAnnuel * 0.22 / 4;
-  const capaciteOptimisation = Math.max(0, beneficeNet * 0.1);
 
   const healthStatus = calculateHealthStatus(profile);
+  const insights = getActionableInsights(profile);
+  const totalGain = insights.reduce((sum, i) => sum + i.gain, 0);
+
+  const handleInsightClick = (insight: ActionableInsight) => {
+    if (insight.guide === 'tresorerie') {
+      openGuide(createTresorerieGuide(profile), profile);
+    } else if (insight.guide === 'remuneration') {
+      openGuide(createRemunerationGuide(profile), profile);
+    }
+  };
 
   if (!hasRealData || !profile?.isSelfEmployed) {
     return (
@@ -107,7 +167,7 @@ export const FinancialHealthCard = ({ profile, hasRealData }: FinancialHealthCar
       </CardHeader>
 
       <CardContent className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-4">
-        {/* Health score - prominent metric */}
+        {/* Health score */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Score de santé</span>
@@ -116,50 +176,65 @@ export const FinancialHealthCard = ({ profile, hasRealData }: FinancialHealthCar
           <Progress value={healthStatus.score} className="h-2.5" />
         </div>
 
-        {/* Primary metric */}
-        <div className="p-4 rounded-xl bg-gradient-to-br from-accent/5 to-transparent border border-accent/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">CA mensuel</p>
-              <p className="text-2xl sm:text-3xl font-bold">{formatCurrency(caMensuel)}</p>
-            </div>
-            <div className="p-3 rounded-xl bg-success/10">
-              <TrendingUp className="h-6 w-6 text-success" />
-            </div>
-          </div>
-        </div>
-
-        {/* Secondary metrics */}
+        {/* Primary metrics */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="p-3.5 rounded-xl bg-secondary/40 border border-border/20">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-accent/5 to-transparent border border-accent/10">
+            <div className="flex items-center gap-2 mb-1.5">
+              <TrendingUp className="h-4 w-4 text-accent" />
+              <span className="text-xs text-muted-foreground">CA mensuel</span>
+            </div>
+            <p className="text-xl font-bold">{formatCurrency(caMensuel)}</p>
+          </div>
+          
+          <div className="p-4 rounded-xl bg-secondary/40 border border-border/20">
             <div className="flex items-center gap-2 mb-1.5">
               <Wallet className="h-4 w-4 text-info" />
               <span className="text-xs text-muted-foreground">Trésorerie</span>
             </div>
-            <p className="text-lg font-semibold">{formatCurrency(tresorerieEstimee)}</p>
-          </div>
-          
-          <div className="p-3.5 rounded-xl bg-warning/5 border border-warning/15">
-            <div className="flex items-center gap-2 mb-1.5">
-              <AlertTriangle className="h-4 w-4 text-warning" />
-              <span className="text-xs text-muted-foreground">URSSAF T.</span>
-            </div>
-            <p className="text-lg font-semibold text-warning">{formatCurrency(urssafTrimestriel)}</p>
+            <p className="text-xl font-bold">{formatCurrency(tresorerieEstimee)}</p>
           </div>
         </div>
 
-        {/* Optimization potential */}
-        <div className="p-4 rounded-xl bg-success/5 border border-success/15">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <Target className="h-5 w-5 text-success" />
-              <span className="text-sm font-medium">Potentiel économie</span>
+        {/* Actionable insights */}
+        {insights.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Actions recommandées
+              </span>
+              {totalGain > 0 && (
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/10">
+                  <Sparkles className="h-3 w-3 text-success" />
+                  <span className="text-xs font-semibold text-success">+{formatCurrency(totalGain)}</span>
+                </div>
+              )}
             </div>
-            <span className="text-xl font-bold text-success">
-              +{formatCurrency(capaciteOptimisation)}
-            </span>
+            
+            {insights.slice(0, 2).map((insight) => (
+              <button
+                key={insight.id}
+                onClick={() => handleInsightClick(insight)}
+                className="w-full p-3 rounded-xl bg-secondary/30 border border-border/50 hover:border-primary/30 transition-all group text-left"
+              >
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5 text-warning" />
+                    <span className="text-xs text-muted-foreground">{insight.signal}</span>
+                  </div>
+                  <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${priorityColors[insight.priority]}`}>
+                    +{formatCurrency(insight.gain)}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium group-hover:text-primary transition-colors">
+                    {insight.action}
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+              </button>
+            ))}
           </div>
-        </div>
+        )}
 
         {/* CTA */}
         <Button 
