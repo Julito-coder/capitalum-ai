@@ -231,7 +231,8 @@ const Dashboard = () => {
               <AnimatedCard index={2} className="lg:col-span-1">
                 <PriorityActionsCard 
                   recommendations={metrics?.recommendations || []} 
-                  hasRealData={!!hasRealData} 
+                  hasRealData={!!hasRealData}
+                  profile={profile}
                 />
               </AnimatedCard>
               <AnimatedCard index={3}>
