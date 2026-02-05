@@ -4,18 +4,19 @@ import { UserProfile } from '@/lib/dashboardService';
 export interface GuideStep {
   id: string;
   title: string;
-  description: string;
-  type: 'education' | 'simulation' | 'action' | 'confirmation';
+  description?: string;
+  type?: 'education' | 'simulation' | 'action' | 'confirmation';
   component?: React.ComponentType<{ onNext: () => void; onBack?: () => void; profile?: UserProfile | null }>;
+  content?: React.ReactNode;
 }
 
 export interface ActionGuide {
   id: string;
   title: string;
-  subtitle: string;
-  category: 'savings' | 'tax' | 'investment' | 'deduction' | 'status';
+  subtitle?: string;
+  category: 'savings' | 'tax' | 'investment' | 'deduction' | 'status' | 'pro';
   estimatedGain: number;
-  effort: string;
+  effort?: string;
   deadline?: string;
   steps: GuideStep[];
 }

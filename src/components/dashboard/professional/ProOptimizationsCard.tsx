@@ -1,9 +1,15 @@
-import { Rocket, TrendingUp, Wallet, Clock, ChevronRight, Sparkles, Zap } from 'lucide-react';
+import { Rocket, TrendingUp, Wallet, ChevronRight, Sparkles, Zap, Play } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { UserProfile, formatCurrency } from '@/lib/dashboardService';
+import { useActionGuide } from '@/components/guides/ActionGuideContext';
+import { 
+  createRemunerationGuide, 
+  createTresorerieGuide, 
+  createFiscaliteISGuide 
+} from '@/components/guides';
 
 interface ProOptimizationsCardProps {
   profile: UserProfile | null;
@@ -13,107 +19,117 @@ interface ProOptimizationsCardProps {
 interface ProOptimization {
   id: string;
   title: string;
-  description: string;
-  impactTresorerie: number;
-  impactFiscal: number;
+  signal: string;
+  impactAnnuel: number;
   effortAdmin: 'faible' | 'moyen' | 'élevé';
-  roi: number; // Return on effort
-  category: 'charges' | 'structure' | 'investissement' | 'social';
+  category: 'remuneration' | 'tresorerie' | 'fiscalite' | 'structure';
+  guideType: 'remuneration' | 'tresorerie' | 'fiscalite';
 }
 
 const getProOptimizations = (profile: UserProfile | null): ProOptimization[] => {
   const ca = profile?.annualRevenueHt || 0;
+  const charges = (profile?.officeRent || 0) + (profile?.vehicleExpenses || 0) + (profile?.professionalSupplies || 0);
+  const benefice = ca - charges;
+  const tresorerie = benefice * 0.3;
   const optimizations: ProOptimization[] = [];
 
-  // Passage au réel si micro avec charges élevées
-  const charges = (profile?.officeRent || 0) + (profile?.vehicleExpenses || 0) + (profile?.professionalSupplies || 0);
-  const microAbattement = ca * 0.34; // Abattement BNC
-  
-  if (profile?.fiscalStatus === 'micro' && charges > microAbattement * 0.6 && ca > 30000) {
-    const gain = Math.round((charges - microAbattement) * 0.3);
-    if (gain > 0) {
-      optimizations.push({
-        id: 'passage-reel',
-        title: 'Passage au régime réel',
-        description: 'Vos charges dépassent l\'abattement micro. Le réel serait plus avantageux.',
-        impactTresorerie: gain,
-        impactFiscal: gain,
-        effortAdmin: 'élevé',
-        roi: gain / 500, // Cost of accounting
-        category: 'structure'
-      });
-    }
-  }
-
-  // PER professionnel
-  if (ca > 40000 && (profile?.percoAmount || 0) === 0) {
-    const versementSuggere = Math.min(ca * 0.1, 32000);
-    const gainFiscal = Math.round(versementSuggere * 0.30);
+  // Optimisation rémunération
+  if (ca > 40000 && profile?.fiscalStatus !== 'micro') {
     optimizations.push({
-      id: 'per-pro',
-      title: 'Ouvrir un PER professionnel',
-      description: 'Déduisez jusqu\'à 10% de votre bénéfice de votre revenu imposable.',
-      impactTresorerie: -versementSuggere,
-      impactFiscal: gainFiscal,
-      effortAdmin: 'faible',
-      roi: gainFiscal / versementSuggere,
-      category: 'investissement'
-    });
-  }
-
-  // Frais kilométriques optimisés
-  if ((profile?.vehicleExpenses || 0) < ca * 0.05 && ca > 30000) {
-    const potentiel = Math.round(ca * 0.03);
-    optimizations.push({
-      id: 'frais-km',
-      title: 'Optimiser les frais kilométriques',
-      description: 'Déclarez tous vos déplacements professionnels pour réduire votre base imposable.',
-      impactTresorerie: 0,
-      impactFiscal: Math.round(potentiel * 0.3),
+      id: 'remuneration',
+      title: 'Optimiser ma rémunération',
+      signal: 'Mix salaire/dividendes non optimisé',
+      impactAnnuel: Math.round(ca * 0.08),
       effortAdmin: 'moyen',
-      roi: 2,
-      category: 'charges'
+      category: 'remuneration',
+      guideType: 'remuneration'
     });
   }
 
-  // Madelin / contrats pro
+  // Trésorerie dormante
+  if (tresorerie > 20000) {
+    optimizations.push({
+      id: 'tresorerie',
+      title: 'Déployer ma trésorerie',
+      signal: 'Trésorerie inactive depuis 6+ mois',
+      impactAnnuel: Math.round(tresorerie * 0.035),
+      effortAdmin: 'faible',
+      category: 'tresorerie',
+      guideType: 'tresorerie'
+    });
+  }
+
+  // Réduction IS
+  if (benefice > 30000 && profile?.fiscalStatus !== 'micro') {
+    optimizations.push({
+      id: 'fiscalite',
+      title: 'Réduire mon IS',
+      signal: 'Leviers fiscaux non exploités',
+      impactAnnuel: Math.round(benefice * 0.25 * 0.15),
+      effortAdmin: 'moyen',
+      category: 'fiscalite',
+      guideType: 'fiscalite'
+    });
+  }
+
+  // Charges déductibles oubliées (toujours pertinent)
   optimizations.push({
-    id: 'madelin',
-    title: 'Contrats Madelin',
-    description: 'Prévoyance et mutuelle déductibles pour les TNS.',
-    impactTresorerie: -1500,
-    impactFiscal: Math.round(1500 * 0.3),
+    id: 'charges',
+    title: 'Recenser mes charges déductibles',
+    signal: 'Frais pro potentiellement oubliés',
+    impactAnnuel: Math.min(2500, benefice * 0.04),
     effortAdmin: 'faible',
-    roi: 1.3,
-    category: 'social'
+    category: 'fiscalite',
+    guideType: 'fiscalite'
   });
 
-  // Sort by ROI
-  return optimizations.sort((a, b) => b.roi - a.roi).slice(0, 4);
+  // Sort by impact
+  return optimizations.sort((a, b) => b.impactAnnuel - a.impactAnnuel).slice(0, 4);
 };
 
 const getEffortBadge = (effort: string) => {
   switch (effort) {
     case 'faible': return { label: 'Facile', color: 'bg-success/10 text-success border-success/30' };
     case 'moyen': return { label: 'Modéré', color: 'bg-warning/10 text-warning border-warning/30' };
-    default: return { label: 'Complexe', color: 'bg-info/10 text-info border-info/30' };
+    default: return { label: 'Avancé', color: 'bg-info/10 text-info border-info/30' };
   }
 };
 
 const getCategoryIcon = (category: string) => {
   switch (category) {
-    case 'charges': return <Wallet className="h-4 w-4" />;
-    case 'structure': return <Rocket className="h-4 w-4" />;
-    case 'investissement': return <TrendingUp className="h-4 w-4" />;
-    default: return <Zap className="h-4 w-4" />;
+    case 'remuneration': return <Wallet className="h-4 w-4" />;
+    case 'tresorerie': return <TrendingUp className="h-4 w-4" />;
+    case 'fiscalite': return <Zap className="h-4 w-4" />;
+    default: return <Rocket className="h-4 w-4" />;
   }
 };
 
 export const ProOptimizationsCard = ({ profile, hasRealData }: ProOptimizationsCardProps) => {
   const navigate = useNavigate();
+  const { openGuide, isActionCompleted, isActionPending } = useActionGuide();
   const optimizations = getProOptimizations(profile);
   
-  const totalFiscalGain = optimizations.reduce((sum, o) => sum + Math.max(0, o.impactFiscal), 0);
+  const totalGain = optimizations.reduce((sum, o) => sum + o.impactAnnuel, 0);
+
+  const handleOptimizationClick = (opt: ProOptimization) => {
+    switch (opt.guideType) {
+      case 'remuneration':
+        openGuide(createRemunerationGuide(profile), profile);
+        break;
+      case 'tresorerie':
+        openGuide(createTresorerieGuide(profile), profile);
+        break;
+      case 'fiscalite':
+        openGuide(createFiscaliteISGuide(profile), profile);
+        break;
+    }
+  };
+
+  const getActionStatus = (optId: string) => {
+    if (isActionCompleted(`${optId}-optimisation`)) return 'completed';
+    if (isActionPending(`${optId}-optimisation`)) return 'pending';
+    return 'available';
+  };
 
   return (
     <Card className="border border-border/30 bg-card/80 backdrop-blur-sm">
@@ -125,25 +141,27 @@ export const ProOptimizationsCard = ({ profile, hasRealData }: ProOptimizationsC
             </div>
             Optimisations prioritaires
           </CardTitle>
-          {totalFiscalGain > 0 && (
+          {totalGain > 0 && (
             <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-success/10 border border-success/30">
               <Sparkles className="h-3.5 w-3.5 text-success" />
               <span className="text-sm font-semibold text-success">
-                +{formatCurrency(totalFiscalGain)}
+                +{formatCurrency(totalGain)}/an
               </span>
             </div>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">Classées par ROI (retour sur effort)</p>
+        <p className="text-sm text-muted-foreground">Cliquez pour démarrer un parcours guidé</p>
       </CardHeader>
       <CardContent className="space-y-3">
         {optimizations.map((opt) => {
           const effort = getEffortBadge(opt.effortAdmin);
+          const status = getActionStatus(opt.id);
           
           return (
-            <div 
+            <button 
               key={opt.id}
-              className="p-4 rounded-xl bg-secondary/30 border border-border/50 hover:border-primary/30 transition-all cursor-pointer group"
+              onClick={() => handleOptimizationClick(opt)}
+              className="w-full p-4 rounded-xl bg-secondary/30 border border-border/50 hover:border-primary/30 transition-all cursor-pointer group text-left"
             >
               <div className="flex items-start gap-3">
                 <div className="p-2 rounded-lg bg-primary/10 text-primary">
@@ -155,34 +173,38 @@ export const ProOptimizationsCard = ({ profile, hasRealData }: ProOptimizationsC
                     <h4 className="text-sm font-semibold group-hover:text-primary transition-colors">
                       {opt.title}
                     </h4>
-                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${effort.color}`}>
-                      {effort.label}
-                    </Badge>
+                    {status === 'completed' && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-success/10 text-success border-success/30">
+                        ✓ Réalisé
+                      </Badge>
+                    )}
+                    {status === 'pending' && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-warning/10 text-warning border-warning/30">
+                        En cours
+                      </Badge>
+                    )}
+                    {status === 'available' && (
+                      <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${effort.color}`}>
+                        {effort.label}
+                      </Badge>
+                    )}
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {opt.description}
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {opt.signal}
                   </p>
                 </div>
-              </div>
-              
-              {/* Impact indicators */}
-              <div className="mt-3 pt-3 border-t border-border/30 grid grid-cols-3 gap-2 text-xs">
-                <div>
-                  <span className="text-muted-foreground">Trésorerie</span>
-                  <p className={`font-semibold ${opt.impactTresorerie >= 0 ? 'text-success' : 'text-muted-foreground'}`}>
-                    {opt.impactTresorerie >= 0 ? '+' : ''}{formatCurrency(opt.impactTresorerie)}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Gain fiscal</span>
-                  <p className="font-semibold text-success">+{formatCurrency(opt.impactFiscal)}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">ROI</span>
-                  <p className="font-semibold text-primary">{opt.roi.toFixed(1)}x</p>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-success">+{formatCurrency(opt.impactAnnuel)}</p>
+                    <p className="text-[10px] text-muted-foreground">par an</p>
+                  </div>
+                  <div className="p-1.5 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <Play className="h-3.5 w-3.5 text-primary" />
+                  </div>
                 </div>
               </div>
-            </div>
+            </button>
           );
         })}
 
