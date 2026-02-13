@@ -1,121 +1,152 @@
 
-
-# Systeme de Routing Intelligent vers Partenaires Financiers
+# Plan : Onboarding automatique + Section "Mon profil fiscal" + Pop-up de rappel
 
 ## Contexte
-Les guides interactifs du dashboard accompagnent l'utilisateur jusqu'a la decision, mais s'arretent avant l'execution concrete. L'utilisateur doit ensuite chercher seul ou ouvrir un PER, quel courtier choisir, etc. Ce systeme comble ce vide en integrant des recommandations de partenaires contextualises directement dans les guides existants.
 
-## Architecture
+Actuellement, le wizard d'onboarding moderne (7 etapes) existe deja dans `src/components/onboarding/modern/`, mais :
+- Il n'est pas obligatoire (le dashboard s'affiche meme sans onboarding)
+- La section "Mon profil fiscal" detaillee (ancien wizard complet avec identite, famille, salaire, investissements...) a ete remplacee par le wizard simplifie
+- La pop-up de rappel ne cible que l'onboarding simplifie, pas le profil fiscal complet
 
-### 1. Donnees partenaires centralisees
-Creation d'un fichier `src/data/partnersData.ts` contenant la base de donnees complete des partenaires, organisee par categorie :
-- **PER** : Carac (4% fonds euros), Suravenir/Fortuneo (10.95%), Nalo (gestion pilotee)
-- **PEA/Bourse** : Trade Republic, Boursorama, Fortuneo
-- **Assurance Vie** : Linxea, Boursorama Vie, Yomoni
-- **Neobanques** : N26, Revolut, Bunq
-- **Credit/Financement** : Fortuneo, Boursorama
-- **Optimisation Fiscale** : liens vers simulateurs
+## Ce qui va changer
 
-Chaque partenaire aura : nom, URL, CTA, performance/avantage cle, audience cible, frais, investissement minimum.
+### 1. Onboarding obligatoire avant le dashboard
 
-### 2. Hook de routage intelligent `usePartnerRouter`
-Creation de `src/hooks/usePartnerRouter.ts` :
-- Entree : type de recommandation + profil utilisateur
-- Logique conditionnelle basee sur : age, revenu, statut professionnel, patrimoine, preferences
-- Sortie : partenaire principal + alternatives (max 3) + suggestion neobanque si pertinent
-- Les URLs incluent automatiquement les UTM params `?utm_source=capitalum&utm_medium=recommendation`
+**Fichier modifie : `src/components/auth/ProtectedRoute.tsx`**
+- Ajouter une verification du statut `onboarding_completed` depuis la table `profiles`
+- Si `onboarding_completed === false`, rediriger automatiquement vers `/onboarding` (sauf si on est deja sur `/onboarding`)
+- Cela garantit qu'aucun utilisateur ne voit le dashboard sans avoir complete le wizard
 
-### 3. Composant `PartnerRecommendations`
-Creation de `src/components/guides/PartnerRecommendations.tsx` :
-- Affiche la meilleure option avec badge "Recommande"
-- Liste 2-3 alternatives avec raison de recommandation
-- Suggestion neobanque complementaire si applicable
-- Score de pertinence visuel (barre de progression)
-- Tous les liens s'ouvrent dans un nouvel onglet (`target="_blank"`)
-- Tracking des clics (event custom + UTM)
+**Fichier modifie : `src/components/onboarding/modern/ModernOnboardingWizard.tsx`**
+- Retirer le bouton "Passer" sur les etapes essentielles (profil, objectifs, patrimoine)
+- Garder le bouton "Passer" uniquement sur l'ecran fiscal (etape 6) et le summary
+- S'assurer que `onboarding_completed = true` est bien enregistre a la fin
 
-### 4. Integration dans les guides existants
-Modification de l'etape "Action" de chaque guide pour integrer le composant `PartnerRecommendations` :
-- **PERGuideSteps** : dans la section "Ou ouvrir un PER" (etape 3), remplacer la liste statique par le composant dynamique
-- **PEAGuideSteps** : ajouter recommendations courtiers dans l'etape action
-- **EpargneSalarialeGuideSteps** : ajouter liens vers plateformes d'epargne salariale
-- **Guides Pro** (Remuneration, Tresorerie, Fiscalite IS) : ajouter partenaires pertinents (experts-comptables en ligne, plateformes de placement tresorerie)
+### 2. Nouvelle page "Mon profil fiscal" (version complete et detaillee)
 
-### 5. Tracking analytique
-Creation de `src/lib/partnerTracking.ts` :
-- Fonction `trackPartnerClick(recommendationType, partnerName, position, userSegment)`
-- Ajout UTM params aux URLs
-- Stockage local des clics pour analytics dashboard
+**Nouveau fichier : `src/pages/FiscalProfile.tsx`**
+- Page accessible depuis le menu lateral, avec le Layout standard
+- Formulaire avance multi-sections, pre-rempli avec les donnees existantes du profil
+- Indicateur de completion en pourcentage (jauge visuelle)
+- Sauvegarde partielle possible (pas tout obligatoire d'un coup)
 
-## Fichiers concernes
+**Sections du profil fiscal (reprenant l'ancien `OnboardingWizard` en version formulaire) :**
 
-| Fichier | Action |
+| Section | Champs |
 |---------|--------|
-| `src/data/partnersData.ts` | **Creer** - Base de donnees partenaires |
-| `src/hooks/usePartnerRouter.ts` | **Creer** - Logique de routage intelligent |
-| `src/components/guides/PartnerRecommendations.tsx` | **Creer** - Composant UI partenaires |
-| `src/lib/partnerTracking.ts` | **Creer** - Tracking clics |
-| `src/components/guides/steps/PERGuideSteps.tsx` | **Modifier** - Integrer partenaires dans etape 3 |
-| `src/components/guides/steps/PEAGuideSteps.tsx` | **Modifier** - Integrer courtiers recommandes |
-| `src/components/guides/steps/EpargneSalarialeGuideSteps.tsx` | **Modifier** - Integrer plateformes |
-| `src/components/guides/steps/FraisReelsGuideSteps.tsx` | **Modifier** - Liens simulateurs |
-| `src/components/guides/steps/RemunerationGuideSteps.tsx` | **Modifier** - Experts-comptables en ligne |
-| `src/components/guides/steps/TresorerieGuideSteps.tsx` | **Modifier** - Plateformes placement |
-| `src/components/guides/steps/FiscaliteISGuideSteps.tsx` | **Modifier** - Outils fiscaux |
+| Identite | Nom, NIF, annee de naissance, telephone, adresse |
+| Situation familiale | Statut, nombre d'enfants, details enfants, revenu conjoint |
+| Situation professionnelle | Type(s) de profil (salarie/independant/retraite/investisseur) |
+| Revenus salaries | Employeur, contrat, salaire brut/net, primes, 13e mois, heures sup, frais reels, mutuelle, tickets resto, PEE/PERCO, stock-options |
+| Activite independante | SIRET, date creation, code APE, statut fiscal, CA HT, charges sociales, loyer bureau, frais vehicule, fournitures, clients principaux |
+| Retraite | Pension principale, complementaires, date liquidation, revenus complementaires, plus-values, donations |
+| Investissements immobiliers | Biens locatifs, regime, travaux, credit restant, IFI |
+| Investissements financiers | PEA, CTO, assurance vie, crypto, SCPI, crowdfunding |
+| Consentements | RGPD, analyse IA |
+
+**Nouveau fichier : `src/lib/fiscalProfileService.ts`**
+- Fonction `loadFiscalProfile(userId)` : charge toutes les donnees detaillees depuis `profiles`
+- Fonction `saveFiscalProfile(userId, data)` : sauvegarde partielle des donnees
+- Fonction `calculateProfileCompletion(data)` : calcule le % de completion (nombre de champs remplis / total de champs pertinents selon le type de profil)
+
+**Nouveau fichier : `src/components/fiscal-profile/FiscalProfileForm.tsx`**
+- Composant principal avec accordeons/tabs pour chaque section
+- Chaque section est un sous-composant reutilisable
+- Barre de progression de completion en haut
+- Bouton "Enregistrer" par section + bouton global
+
+**Nouveaux sous-composants dans `src/components/fiscal-profile/` :**
+- `IdentitySection.tsx`
+- `FamilySection.tsx`
+- `ProfessionalSection.tsx`
+- `EmployeeSection.tsx`
+- `SelfEmployedSection.tsx`
+- `RetiredSection.tsx`
+- `InvestmentRealEstateSection.tsx`
+- `InvestmentFinancialSection.tsx`
+- `ConsentsSection.tsx`
+- `CompletionIndicator.tsx`
+
+### 3. Pop-up de rappel pour le profil fiscal
+
+**Fichier modifie : `src/components/onboarding/modern/ProfileCompletionPopup.tsx`**
+- Changer la logique : au lieu de verifier `onboarding_completed`, verifier le % de completion du profil fiscal complet
+- Afficher la pop-up si `fiscalProfileCompletion < 100%`
+- Afficher uniquement sur le dashboard (pas sur chaque page)
+- Rediriger vers `/fiscal-profile` au lieu de `/onboarding`
+- Frequence : a chaque visite sur le dashboard si < 100%, mais dismissable pour 7 jours
+
+### 4. Routing et navigation
+
+**Fichier modifie : `src/App.tsx`**
+- Ajouter la route `/fiscal-profile` vers la nouvelle page
+
+**Fichier modifie : `src/components/layout/Sidebar.tsx`**
+- Remplacer le lien "Mon profil fiscal" qui pointe vers `/onboarding` par un lien vers `/fiscal-profile`
+- Garder `/onboarding` reserve au wizard de premiere connexion
+
+**Fichier modifie : `src/components/layout/MobileNav.tsx`**
+- Meme mise a jour pour la navigation mobile
+
+### 5. Integration dashboard
+
+**Fichier modifie : `src/pages/Dashboard.tsx`**
+- Mettre a jour le bouton "Completer mon profil" pour pointer vers `/fiscal-profile`
+- Garder la `ProfileCompletionPopup` qui pointe desormais vers le profil fiscal
+
+## Schema de flux utilisateur
+
+```text
+Inscription/Connexion
+        |
+        v
+  onboarding_completed ?
+   /              \
+  Non              Oui
+   |                |
+   v                v
+ Wizard          Dashboard
+ Onboarding        |
+ (obligatoire)     |
+   |               v
+   v          Pop-up rappel
+ Dashboard    profil fiscal
+   |          (si < 100%)
+   v               |
+ Menu lateral      v
+ "Mon profil   /fiscal-profile
+  fiscal"      (formulaire complet)
+```
 
 ## Details techniques
 
-### Structure de donnees partenaire
-```text
-Partner {
-  id: string
-  name: string
-  url: string
-  cta: string              // "Ouvrir un PER Carac"
-  performance?: string     // "4.0%"
-  description: string      // Raison courte de recommendation
-  features: string[]
-  audience: string[]       // ["Salaries", "Freelances"]
-  fees?: string
-  minInvestment?: number
-  monthlyFee?: string
-  category: PartnerCategory
-}
-```
+- **Pas de migration DB necessaire** : tous les champs existent deja dans la table `profiles` (identite, famille, salaire, investissements, etc.)
+- **Reutilisation** : les types `OnboardingData` de `src/data/onboardingTypes.ts` et le service `onboardingService.ts` seront reutilises pour le chargement/sauvegarde du profil fiscal complet
+- **Calcul de completion** : base sur le nombre de champs significatifs remplis par rapport au type de profil selectionne (un salarie n'a pas besoin de remplir les champs retraite)
+- **UX** : le profil fiscal utilise des accordeons Radix UI avec sauvegarde par section, style coherent avec le reste de l'app (cartes arrondies, ombres douces)
+- **Pas de duplication de donnees** : le wizard d'onboarding et le profil fiscal ecrivent tous les deux dans la meme table `profiles`, le profil fiscal pre-remplit les valeurs deja saisies lors de l'onboarding
 
-### Logique de routage (exemples)
-- PER + age < 30 + revenu < 30k --> Nalo (gestion pilotee, frais bas)
-- PER + patrimoine > 500k --> Carac/BNP Cardif (premium)
-- PER + independant --> Carac (adapte aux TNS)
-- PER + defaut --> Carac (meilleur rendement global)
-- PEA + debutant --> Trade Republic (interface simple)
-- PEA + avance --> Boursorama (gamme large)
-- Neobanque + voyageur --> Revolut (multi-devises)
-- Neobanque + eco-responsable --> Bunq/Green-Got
+## Fichiers concernes (resume)
 
-### Composant visuel
-```text
-+------------------------------------------+
-| Recommande pour vous                     |
-| [Logo] Carac - PER                       |
-| Rendement fonds euros : 4.0%             |
-| Frais : 0.60%                            |
-| [====Ouvrir un PER Carac ====>]          |
-| Pourquoi : Meilleur rendement 2025       |
-+------------------------------------------+
-| Alternatives                             |
-| > Suravenir (Fortuneo) - 10.95%          |
-| > Nalo - Gestion pilotee automatisee     |
-+------------------------------------------+
-| Compte complementaire                    |
-| > N26 - Remuneration 4%, zero frais      |
-+------------------------------------------+
-```
-
-## Ordre d'implementation
-1. `partnersData.ts` - base de donnees
-2. `partnerTracking.ts` - tracking
-3. `usePartnerRouter.ts` - logique routage
-4. `PartnerRecommendations.tsx` - composant UI
-5. Modification des 7 fichiers de guides existants
-
+| Action | Fichier |
+|--------|---------|
+| Modifier | `src/components/auth/ProtectedRoute.tsx` |
+| Modifier | `src/components/onboarding/modern/ModernOnboardingWizard.tsx` |
+| Modifier | `src/components/onboarding/modern/ProfileCompletionPopup.tsx` |
+| Modifier | `src/App.tsx` |
+| Modifier | `src/components/layout/Sidebar.tsx` |
+| Modifier | `src/components/layout/MobileNav.tsx` |
+| Modifier | `src/pages/Dashboard.tsx` |
+| Creer | `src/pages/FiscalProfile.tsx` |
+| Creer | `src/lib/fiscalProfileService.ts` |
+| Creer | `src/components/fiscal-profile/FiscalProfileForm.tsx` |
+| Creer | `src/components/fiscal-profile/IdentitySection.tsx` |
+| Creer | `src/components/fiscal-profile/FamilySection.tsx` |
+| Creer | `src/components/fiscal-profile/ProfessionalSection.tsx` |
+| Creer | `src/components/fiscal-profile/EmployeeSection.tsx` |
+| Creer | `src/components/fiscal-profile/SelfEmployedSection.tsx` |
+| Creer | `src/components/fiscal-profile/RetiredSection.tsx` |
+| Creer | `src/components/fiscal-profile/InvestmentRealEstateSection.tsx` |
+| Creer | `src/components/fiscal-profile/InvestmentFinancialSection.tsx` |
+| Creer | `src/components/fiscal-profile/ConsentsSection.tsx` |
+| Creer | `src/components/fiscal-profile/CompletionIndicator.tsx` |
