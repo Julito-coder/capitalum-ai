@@ -24,7 +24,7 @@ import logo from '@/assets/logo.png';
 // Navigation items for Personal space (Particuliers)
 const personalNavItems = [
   { path: '/', icon: LayoutDashboard, label: 'Tableau de bord' },
-  { path: '/onboarding', icon: UserCircle, label: 'Mon profil fiscal' },
+  { path: '/fiscal-profile', icon: UserCircle, label: 'Mon profil fiscal' },
   { path: '/audit', icon: FileSearch, label: 'Audit fiscal' },
   { path: '/scanner', icon: ScanSearch, label: 'Scanner fiscal' },
   { path: '/calendar', icon: Calendar, label: 'Calendrier' },

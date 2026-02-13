@@ -179,7 +179,7 @@ const Dashboard = () => {
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => navigate(isProfessionalSpace ? '/pro/onboarding' : '/onboarding')}
+                onClick={() => navigate(isProfessionalSpace ? '/pro/onboarding' : '/fiscal-profile')}
                 className="btn-primary px-4 py-2.5"
               >
                 <UserCircle className="h-4 w-4" />
@@ -325,10 +325,10 @@ const Dashboard = () => {
             <strong>Capitalum</strong> analyse votre situation pour vous aider à décider sereinement.
             {!hasRealData && (
               <span className="block mt-2">
-                <button 
-                  onClick={() => navigate(isProfessionalSpace ? '/pro/onboarding' : '/onboarding')}
-                  className="text-primary hover:underline font-medium"
-                >
+                  <button 
+                    onClick={() => navigate(isProfessionalSpace ? '/pro/onboarding' : '/fiscal-profile')}
+                    className="text-primary hover:underline font-medium"
+                  >
                   Complétez votre profil
                 </button>
                 {' '}pour des recommandations personnalisées.
