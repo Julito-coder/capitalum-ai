@@ -11,6 +11,7 @@ import { z } from 'zod';
 import logo from '@/assets/logo.png';
 import { lovable } from '@/integrations/lovable';
 import { Separator } from '@/components/ui/separator';
+import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 
 const emailSchema = z.string().email('Adresse email invalide');
 const passwordSchema = z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères');
@@ -21,6 +22,7 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -177,6 +179,9 @@ const Auth = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {showForgotPassword ? (
+            <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />
+          ) : (
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Connexion</TabsTrigger>
@@ -218,6 +223,13 @@ const Auth = () => {
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Connexion...' : 'Se connecter'}
                 </Button>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="w-full text-sm text-primary hover:underline"
+                >
+                  Mot de passe oublié ?
+                </button>
                 
                 <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center">
@@ -346,6 +358,7 @@ const Auth = () => {
               </form>
             </TabsContent>
           </Tabs>
+          )}
         </CardContent>
       </Card>
     </div>
