@@ -100,13 +100,16 @@ export const ModernOnboardingWizard = () => {
               <span className="text-sm font-medium text-muted-foreground">
                 Étape {displayStep} sur {totalSteps}
               </span>
-              <button
-                onClick={handleSkip}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-              >
-                Passer
-                <X className="h-3.5 w-3.5" />
-              </button>
+              {/* Only show skip on fiscal and summary steps */}
+              {(currentStep === 'fiscal' || currentStep === 'summary') && (
+                <button
+                  onClick={handleSkip}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                >
+                  Passer
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
             {/* Progress bar */}
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">

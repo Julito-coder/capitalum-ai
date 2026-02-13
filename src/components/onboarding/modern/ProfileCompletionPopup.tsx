@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { loadOnboardingStatus } from '@/lib/modernOnboardingService';
+import { loadFiscalProfile, calculateProfileCompletion } from '@/lib/fiscalProfileService';
 
 /**
- * Non-intrusive popup that suggests completing the profile.
- * Shows after 3rd visit if onboarding is only partial.
+ * Non-intrusive popup that suggests completing the fiscal profile.
+ * Shows on dashboard if fiscal profile completion < 100%, dismissable for 7 days.
  */
 export const ProfileCompletionPopup = () => {
   const { user } = useAuth();
@@ -18,38 +18,29 @@ export const ProfileCompletionPopup = () => {
     if (!user) return;
 
     const checkAndShow = async () => {
-      // Check visit count
-      const storageKey = `capitalum_visits_${user.id}`;
-      const visits = parseInt(localStorage.getItem(storageKey) || '0', 10) + 1;
-      localStorage.setItem(storageKey, String(visits));
-
-      // Only show after 3+ visits
-      if (visits < 3) return;
-
       // Check if dismissed recently
-      const dismissedKey = `capitalum_popup_dismissed_${user.id}`;
+      const dismissedKey = `capitalum_fiscal_popup_dismissed_${user.id}`;
       const dismissed = localStorage.getItem(dismissedKey);
       if (dismissed) {
-        const dismissedAt = new Date(dismissed);
-        const daysSince = (Date.now() - dismissedAt.getTime()) / (1000 * 60 * 60 * 24);
+        const daysSince = (Date.now() - new Date(dismissed).getTime()) / (1000 * 60 * 60 * 24);
         if (daysSince < 7) return;
       }
 
-      // Check onboarding status
-      const status = await loadOnboardingStatus(user.id);
-      if (!status.completed) {
+      // Check fiscal profile completion
+      const profile = await loadFiscalProfile(user.id);
+      const completion = calculateProfileCompletion(profile);
+      if (completion < 100) {
         setVisible(true);
       }
     };
 
-    // Delay to not interrupt initial load
     const timer = setTimeout(checkAndShow, 3000);
     return () => clearTimeout(timer);
   }, [user]);
 
   const dismiss = () => {
     if (user) {
-      localStorage.setItem(`capitalum_popup_dismissed_${user.id}`, new Date().toISOString());
+      localStorage.setItem(`capitalum_fiscal_popup_dismissed_${user.id}`, new Date().toISOString());
     }
     setVisible(false);
   };
@@ -77,15 +68,15 @@ export const ProfileCompletionPopup = () => {
                 <Sparkles className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="font-semibold text-sm mb-1">Recommandations plus fines ?</p>
+                <p className="font-semibold text-sm mb-1">Complète ton profil fiscal</p>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Complète ton profil en 2 questions de plus pour des conseils encore plus personnalisés.
+                  En 2 minutes, renseigne quelques infos en plus pour booster la pertinence de tes recommandations.
                 </p>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => {
                       dismiss();
-                      navigate('/onboarding');
+                      navigate('/fiscal-profile');
                     }}
                     className="btn-primary text-xs px-4 py-2 rounded-xl"
                   >
