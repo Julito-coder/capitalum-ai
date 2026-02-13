@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { UserProfile, formatCurrency } from '@/lib/dashboardService';
 import { ActionGuide, GuideStep } from '../ActionGuideContext';
+import { PartnerRecommendations } from '../PartnerRecommendations';
 
 // Step 1: Education
 const PEREducationStep = ({ onNext }: { onNext: () => void }) => (
@@ -170,7 +171,7 @@ const PERSimulationStep = ({ onNext, profile }: { onNext: () => void; profile?: 
 };
 
 // Step 3: Action Choice
-const PERActionStep = ({ onNext }: { onNext: () => void }) => {
+const PERActionStep = ({ onNext, profile }: { onNext: () => void; profile?: UserProfile | null }) => {
   const [hasPerAlready, setHasPerAlready] = useState<string | null>(null);
 
   return (
@@ -238,35 +239,11 @@ const PERActionStep = ({ onNext }: { onNext: () => void }) => {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-3"
         >
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
-            <h4 className="font-semibold mb-3 flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-info" />
-              Où ouvrir un PER ?
-            </h4>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-start gap-3 p-2 rounded-lg bg-background/50">
-                <div className="flex-1">
-                  <p className="font-medium">Banque en ligne</p>
-                  <p className="text-xs text-muted-foreground">Boursorama, Fortuneo, Linxea</p>
-                </div>
-                <span className="text-xs px-2 py-1 rounded-full bg-success/10 text-success">Frais bas</span>
-              </li>
-              <li className="flex items-start gap-3 p-2 rounded-lg bg-background/50">
-                <div className="flex-1">
-                  <p className="font-medium">Assureur</p>
-                  <p className="text-xs text-muted-foreground">Axa, Generali, Swiss Life</p>
-                </div>
-                <span className="text-xs px-2 py-1 rounded-full bg-info/10 text-info">Accompagnement</span>
-              </li>
-              <li className="flex items-start gap-3 p-2 rounded-lg bg-background/50">
-                <div className="flex-1">
-                  <p className="font-medium">Votre banque</p>
-                  <p className="text-xs text-muted-foreground">Simple et rapide</p>
-                </div>
-                <span className="text-xs px-2 py-1 rounded-full bg-warning/10 text-warning">Vérifier frais</span>
-              </li>
-            </ul>
-          </div>
+          <h4 className="font-semibold flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-info" />
+            Où ouvrir un PER ?
+          </h4>
+          <PartnerRecommendations type="per" profile={profile || null} campaign="per_guide" />
 
           <div className="flex items-start gap-2 p-3 rounded-lg bg-info/10 border border-info/20">
             <FileText className="h-4 w-4 text-info mt-0.5 shrink-0" />

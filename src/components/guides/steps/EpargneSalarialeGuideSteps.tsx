@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { UserProfile, formatCurrency } from '@/lib/dashboardService';
 import { ActionGuide } from '../ActionGuideContext';
+import { PartnerRecommendations } from '../PartnerRecommendations';
 
 // Step 1: Education
 const EpargneSalarialeEducationStep = ({ onNext }: { onNext: () => void }) => (
@@ -235,30 +236,34 @@ const EpargneSalarialeActionStep = ({ onNext }: { onNext: () => void }) => {
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-xl bg-muted/30 border border-border/30"
+          className="space-y-3"
         >
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-success" />
-            Actions à réaliser
-          </h4>
-          <ul className="space-y-2 text-sm">
-            <li className="flex items-start gap-2">
-              <span className="font-bold text-primary">1.</span>
-              <span>Connectez-vous à votre espace épargne salariale (Natixis, Amundi, Eres...)</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="font-bold text-primary">2.</span>
-              <span>Vérifiez votre plafond d'abondement et le taux applicable</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="font-bold text-primary">3.</span>
-              <span>Mettez en place un versement mensuel automatique</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="font-bold text-primary">4.</span>
-              <span>Affectez votre participation/intéressement pour maximiser</span>
-            </li>
-          </ul>
+          <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
+            <h4 className="font-semibold mb-3 flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+              Actions à réaliser
+            </h4>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start gap-2">
+                <span className="font-bold text-primary">1.</span>
+                <span>Connectez-vous à votre espace épargne salariale</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-bold text-primary">2.</span>
+                <span>Vérifiez votre plafond d'abondement et le taux applicable</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-bold text-primary">3.</span>
+                <span>Mettez en place un versement mensuel automatique</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-bold text-primary">4.</span>
+                <span>Affectez votre participation/intéressement pour maximiser</span>
+              </li>
+            </ul>
+          </div>
+          <h4 className="font-semibold text-sm mt-2">Plateformes d'épargne salariale</h4>
+          <PartnerRecommendations type="epargne_salariale" profile={null} campaign="epargne_salariale_guide" />
         </motion.div>
       )}
 
