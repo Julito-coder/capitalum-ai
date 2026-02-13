@@ -27,7 +27,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         .maybeSingle();
 
       if (error || !data) {
-        // Profile may not exist yet (trigger not fired), treat as not completed
         setOnboardingCompleted(false);
       } else {
         setOnboardingCompleted((data as any).onboarding_completed || false);
@@ -36,7 +35,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     };
 
     checkOnboarding();
-  }, [user]);
+  }, [user, location.pathname]);
 
   if (loading || !onboardingChecked) {
     return (
