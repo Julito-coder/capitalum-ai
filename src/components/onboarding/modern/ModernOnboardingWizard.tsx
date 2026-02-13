@@ -69,7 +69,7 @@ export const ModernOnboardingWizard = () => {
 
     if (result.success) {
       toast({ title: '✅ Profil configuré !', description: 'Ton tableau de bord est personnalisé.' });
-      navigate('/');
+      navigate('/', { state: { onboardingJustCompleted: true } });
     } else {
       toast({ title: 'Erreur', description: result.error || 'Une erreur est survenue', variant: 'destructive' });
     }
@@ -80,7 +80,7 @@ export const ModernOnboardingWizard = () => {
     setIsSubmitting(true);
     await saveModernOnboarding(user.id, data, true);
     setIsSubmitting(false);
-    navigate('/');
+    navigate('/', { state: { onboardingJustCompleted: true } });
   };
 
   return (
