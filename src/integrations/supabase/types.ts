@@ -430,6 +430,7 @@ export type Database = {
           address_city: string | null
           address_postal_code: string | null
           address_street: string | null
+          age_range: string | null
           ai_analysis_consent: boolean | null
           annual_bonus: number | null
           annual_rental_works: number | null
@@ -451,9 +452,11 @@ export type Database = {
           crypto_wallet_address: string | null
           cto_capital_gains: number | null
           cto_dividends: number | null
+          declares_in_france: boolean | null
           employer_name: string | null
           employer_siret: string | null
           family_status: string | null
+          financial_objectives: string[] | null
           fiscal_status: string | null
           full_name: string | null
           gdpr_consent: boolean | null
@@ -466,6 +469,7 @@ export type Database = {
           has_rental_income: boolean | null
           id: string
           ifi_liable: boolean | null
+          income_range: string | null
           is_employee: boolean | null
           is_homeowner: boolean | null
           is_investor: boolean | null
@@ -483,7 +487,9 @@ export type Database = {
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
           onboarding_current_step: number | null
+          onboarding_partial: boolean | null
           overtime_annual: number | null
+          patrimony_range: string | null
           pea_balance: number | null
           pea_contributions_2025: number | null
           pee_amount: number | null
@@ -497,12 +503,14 @@ export type Database = {
           rental_properties: Json | null
           rental_scheme: string | null
           residence_duration_years: number | null
+          risk_tolerance: string | null
           scpi_investments: number | null
           siret: string | null
           social_charges_paid: number | null
           spouse_income: number | null
           stock_options_value: number | null
           supplementary_income: number | null
+          tax_bracket: string | null
           tax_profile_updated_at: string | null
           thirteenth_month: number | null
           top_clients: Json | null
@@ -515,6 +523,7 @@ export type Database = {
           address_city?: string | null
           address_postal_code?: string | null
           address_street?: string | null
+          age_range?: string | null
           ai_analysis_consent?: boolean | null
           annual_bonus?: number | null
           annual_rental_works?: number | null
@@ -536,9 +545,11 @@ export type Database = {
           crypto_wallet_address?: string | null
           cto_capital_gains?: number | null
           cto_dividends?: number | null
+          declares_in_france?: boolean | null
           employer_name?: string | null
           employer_siret?: string | null
           family_status?: string | null
+          financial_objectives?: string[] | null
           fiscal_status?: string | null
           full_name?: string | null
           gdpr_consent?: boolean | null
@@ -551,6 +562,7 @@ export type Database = {
           has_rental_income?: boolean | null
           id?: string
           ifi_liable?: boolean | null
+          income_range?: string | null
           is_employee?: boolean | null
           is_homeowner?: boolean | null
           is_investor?: boolean | null
@@ -568,7 +580,9 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           onboarding_current_step?: number | null
+          onboarding_partial?: boolean | null
           overtime_annual?: number | null
+          patrimony_range?: string | null
           pea_balance?: number | null
           pea_contributions_2025?: number | null
           pee_amount?: number | null
@@ -582,12 +596,14 @@ export type Database = {
           rental_properties?: Json | null
           rental_scheme?: string | null
           residence_duration_years?: number | null
+          risk_tolerance?: string | null
           scpi_investments?: number | null
           siret?: string | null
           social_charges_paid?: number | null
           spouse_income?: number | null
           stock_options_value?: number | null
           supplementary_income?: number | null
+          tax_bracket?: string | null
           tax_profile_updated_at?: string | null
           thirteenth_month?: number | null
           top_clients?: Json | null
@@ -600,6 +616,7 @@ export type Database = {
           address_city?: string | null
           address_postal_code?: string | null
           address_street?: string | null
+          age_range?: string | null
           ai_analysis_consent?: boolean | null
           annual_bonus?: number | null
           annual_rental_works?: number | null
@@ -621,9 +638,11 @@ export type Database = {
           crypto_wallet_address?: string | null
           cto_capital_gains?: number | null
           cto_dividends?: number | null
+          declares_in_france?: boolean | null
           employer_name?: string | null
           employer_siret?: string | null
           family_status?: string | null
+          financial_objectives?: string[] | null
           fiscal_status?: string | null
           full_name?: string | null
           gdpr_consent?: boolean | null
@@ -636,6 +655,7 @@ export type Database = {
           has_rental_income?: boolean | null
           id?: string
           ifi_liable?: boolean | null
+          income_range?: string | null
           is_employee?: boolean | null
           is_homeowner?: boolean | null
           is_investor?: boolean | null
@@ -653,7 +673,9 @@ export type Database = {
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           onboarding_current_step?: number | null
+          onboarding_partial?: boolean | null
           overtime_annual?: number | null
+          patrimony_range?: string | null
           pea_balance?: number | null
           pea_contributions_2025?: number | null
           pee_amount?: number | null
@@ -667,12 +689,14 @@ export type Database = {
           rental_properties?: Json | null
           rental_scheme?: string | null
           residence_duration_years?: number | null
+          risk_tolerance?: string | null
           scpi_investments?: number | null
           siret?: string | null
           social_charges_paid?: number | null
           spouse_income?: number | null
           stock_options_value?: number | null
           supplementary_income?: number | null
+          tax_bracket?: string | null
           tax_profile_updated_at?: string | null
           thirteenth_month?: number | null
           top_clients?: Json | null
