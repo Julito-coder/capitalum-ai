@@ -19,6 +19,9 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       return;
     }
 
+    // Reset to loading state before re-checking to avoid stale redirects
+    setOnboardingChecked(false);
+
     const checkOnboarding = async () => {
       const { data, error } = await supabase
         .from('profiles')
