@@ -33,9 +33,9 @@ export const saveModernOnboarding = async (
       financial_objectives: data.financialObjectives,
       declares_in_france: data.declaresInFrance,
       primary_objective: data.financialObjectives[0] === 'impots' ? 'reduce_ir' : 'treasury',
-      onboarding_completed: !isPartial,
+      onboarding_completed: true,
       onboarding_partial: isPartial,
-      onboarding_completed_at: !isPartial ? new Date().toISOString() : null,
+      onboarding_completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
