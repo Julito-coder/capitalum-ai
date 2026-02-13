@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { UserProfile, formatCurrency } from '@/lib/dashboardService';
 import { ActionGuide } from '../ActionGuideContext';
+import { PartnerRecommendations } from '../PartnerRecommendations';
 
 // Step 1: Education
 const FraisReelsEducationStep = ({ onNext }: { onNext: () => void }) => (
@@ -261,6 +262,9 @@ const FraisReelsActionStep = ({ onNext }: { onNext: () => void }) => {
               Conservez vos justificatifs 3 ans en cas de contrôle fiscal.
             </p>
           </div>
+
+          <h4 className="font-semibold text-sm mt-2">Simulateurs officiels</h4>
+          <PartnerRecommendations type="optimisation_fiscale" profile={null} campaign="frais_reels_guide" />
         </motion.div>
       )}
     </div>

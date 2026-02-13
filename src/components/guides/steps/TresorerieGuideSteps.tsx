@@ -1,6 +1,7 @@
 import { UserProfile, formatCurrency } from '@/lib/dashboardService';
 import { ActionGuide, GuideStep } from '../ActionGuideContext';
 import { Wallet, TrendingUp, CheckCircle2, AlertTriangle, PiggyBank, Building2 } from 'lucide-react';
+import { PartnerRecommendations } from '../PartnerRecommendations';
 
 interface TresorerieOption {
   id: string;
@@ -228,6 +229,9 @@ export const createTresorerieGuide = (profile: UserProfile | null): ActionGuide 
               </p>
             </div>
           </div>
+
+          <h4 className="font-medium mt-2">Plateformes de placement trésorerie</h4>
+          <PartnerRecommendations type="tresorerie" profile={profile} campaign="tresorerie_guide" />
         </div>
       )
     },

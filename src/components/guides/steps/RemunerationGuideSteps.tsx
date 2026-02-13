@@ -1,6 +1,7 @@
 import { UserProfile, formatCurrency } from '@/lib/dashboardService';
 import { ActionGuide, GuideStep } from '../ActionGuideContext';
 import { DollarSign, Calculator, CheckCircle2, TrendingUp, AlertTriangle, Wallet } from 'lucide-react';
+import { PartnerRecommendations } from '../PartnerRecommendations';
 
 interface RemunerationScenario {
   id: string;
@@ -292,6 +293,9 @@ export const createRemunerationGuide = (profile: UserProfile | null): ActionGuid
               </p>
             </div>
           </div>
+
+          <h4 className="font-medium mt-2">Experts-comptables en ligne</h4>
+          <PartnerRecommendations type="comptabilite" profile={profile} campaign="remuneration_guide" />
         </div>
       )
     },

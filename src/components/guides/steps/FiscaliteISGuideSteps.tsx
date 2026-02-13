@@ -1,6 +1,7 @@
 import { UserProfile, formatCurrency } from '@/lib/dashboardService';
 import { ActionGuide, GuideStep } from '../ActionGuideContext';
 import { Receipt, Calculator, CheckCircle2, AlertTriangle, TrendingDown, FileText } from 'lucide-react';
+import { PartnerRecommendations } from '../PartnerRecommendations';
 
 interface OptimisationIS {
   id: string;
@@ -231,6 +232,9 @@ export const createFiscaliteISGuide = (profile: UserProfile | null): ActionGuide
               </p>
             </div>
           </div>
+
+          <h4 className="font-medium mt-2">Outils et experts recommandés</h4>
+          <PartnerRecommendations type="comptabilite" profile={profile} campaign="fiscalite_is_guide" />
         </div>
       )
     },

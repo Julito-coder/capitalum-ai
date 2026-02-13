@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { UserProfile, formatCurrency } from '@/lib/dashboardService';
 import { ActionGuide } from '../ActionGuideContext';
+import { PartnerRecommendations } from '../PartnerRecommendations';
 
 // Step 1: Education
 const PEAEducationStep = ({ onNext }: { onNext: () => void }) => (
@@ -178,7 +179,7 @@ const PEASimulationStep = ({ onNext, profile }: { onNext: () => void; profile?: 
 };
 
 // Step 3: Action
-const PEAActionStep = ({ onNext }: { onNext: () => void }) => {
+const PEAActionStep = ({ onNext, profile }: { onNext: () => void; profile?: UserProfile | null }) => {
   const [hasPea, setHasPea] = useState<string | null>(null);
 
   return (
@@ -246,35 +247,11 @@ const PEAActionStep = ({ onNext }: { onNext: () => void }) => {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-3"
         >
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
-            <h4 className="font-semibold mb-3 flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-info" />
-              Meilleurs PEA 2025
-            </h4>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-start gap-3 p-2 rounded-lg bg-background/50">
-                <div className="flex-1">
-                  <p className="font-medium">Boursorama</p>
-                  <p className="text-xs text-muted-foreground">0€ de frais de garde</p>
-                </div>
-                <span className="text-xs px-2 py-1 rounded-full bg-success/10 text-success">Recommandé</span>
-              </li>
-              <li className="flex items-start gap-3 p-2 rounded-lg bg-background/50">
-                <div className="flex-1">
-                  <p className="font-medium">Bourse Direct</p>
-                  <p className="text-xs text-muted-foreground">Frais d'ordre bas</p>
-                </div>
-                <span className="text-xs px-2 py-1 rounded-full bg-success/10 text-success">Low cost</span>
-              </li>
-              <li className="flex items-start gap-3 p-2 rounded-lg bg-background/50">
-                <div className="flex-1">
-                  <p className="font-medium">Fortuneo</p>
-                  <p className="text-xs text-muted-foreground">Interface moderne</p>
-                </div>
-                <span className="text-xs px-2 py-1 rounded-full bg-info/10 text-info">Équilibré</span>
-              </li>
-            </ul>
-          </div>
+          <h4 className="font-semibold flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-info" />
+            Meilleurs PEA 2025
+          </h4>
+          <PartnerRecommendations type="pea" profile={profile || null} campaign="pea_guide" />
 
           <div className="p-3 rounded-lg bg-info/10 border border-info/20">
             <p className="text-xs text-muted-foreground">
