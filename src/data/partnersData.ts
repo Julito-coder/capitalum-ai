@@ -21,6 +21,7 @@ export interface Partner {
   fees?: string;
   minInvestment?: number;
   monthlyFee?: string;
+  logoUrl?: string;
   category: PartnerCategory;
 }
 
@@ -37,6 +38,7 @@ export const PARTNERS: Record<PartnerCategory, Partner[]> = {
       audience: ['Salariés', 'Indépendants', 'Professions libérales'],
       fees: '0.60%',
       minInvestment: 0,
+      logoUrl: 'https://www.carac.fr/sites/carac-prod/files/2024-10/logo-carac-couleur.svg',
       category: 'per',
     },
     {
@@ -50,6 +52,7 @@ export const PARTNERS: Record<PartnerCategory, Partner[]> = {
       audience: ['Tous profils'],
       fees: '0.75%',
       minInvestment: 500,
+      logoUrl: 'https://www.fortuneo.fr/favicon/fortuneo-logo.svg',
       category: 'per',
     },
     {
@@ -63,6 +66,7 @@ export const PARTNERS: Record<PartnerCategory, Partner[]> = {
       audience: ['Débutants', 'Jeunes actifs'],
       fees: '1.60% tout compris',
       minInvestment: 1000,
+      logoUrl: 'https://www.nalo.fr/assets/images/nalo-logo.svg',
       category: 'per',
     },
   ],
@@ -79,6 +83,7 @@ export const PARTNERS: Record<PartnerCategory, Partner[]> = {
       audience: ['Débutants', 'Jeunes actifs'],
       fees: '1€/ordre',
       minInvestment: 0,
+      logoUrl: 'https://uploads-ssl.webflow.com/5f1ef45341e5366d4cd87eab/5f9c4b1a1e1e7c1e1e1e7c1e_TR_logo.png',
       category: 'pea',
     },
     {
@@ -92,6 +97,7 @@ export const PARTNERS: Record<PartnerCategory, Partner[]> = {
       audience: ['Investisseurs actifs', 'Patrimoine moyen-élevé'],
       fees: '0€ garde, 1.99€/ordre',
       minInvestment: 0,
+      logoUrl: 'https://www.boursorama.com/images/boursorama-logo.png',
       category: 'pea',
     },
     {
@@ -105,6 +111,7 @@ export const PARTNERS: Record<PartnerCategory, Partner[]> = {
       audience: ['Tous profils'],
       fees: '0€ garde, 1.95€/ordre',
       minInvestment: 0,
+      logoUrl: 'https://www.fortuneo.fr/favicon/fortuneo-logo.svg',
       category: 'pea',
     },
   ],
@@ -121,6 +128,7 @@ export const PARTNERS: Record<PartnerCategory, Partner[]> = {
       audience: ['Épargnants avertis', 'Patrimoine moyen'],
       fees: '0.50%',
       minInvestment: 1000,
+      logoUrl: 'https://www.linxea.com/img/linxea-logo.svg',
       category: 'assurance_vie',
     },
     {
@@ -134,6 +142,7 @@ export const PARTNERS: Record<PartnerCategory, Partner[]> = {
       audience: ['Tous profils'],
       fees: '0.75%',
       minInvestment: 300,
+      logoUrl: 'https://www.boursorama.com/images/boursorama-logo.png',
       category: 'assurance_vie',
     },
     {
@@ -147,6 +156,7 @@ export const PARTNERS: Record<PartnerCategory, Partner[]> = {
       audience: ['Débutants', 'Investisseurs passifs'],
       fees: '1.60% tout compris',
       minInvestment: 1000,
+      logoUrl: 'https://www.yomoni.fr/static/yomoni-logo.svg',
       category: 'assurance_vie',
     },
   ],
@@ -164,6 +174,7 @@ export const PARTNERS: Record<PartnerCategory, Partner[]> = {
       fees: undefined,
       monthlyFee: '0€-16.90€',
       minInvestment: 0,
+      logoUrl: 'https://www.n26.com/images/logo-n26.svg',
       category: 'neobanque',
     },
     {
@@ -178,6 +189,7 @@ export const PARTNERS: Record<PartnerCategory, Partner[]> = {
       fees: undefined,
       monthlyFee: '0€-13.99€',
       minInvestment: 0,
+      logoUrl: 'https://www.revolut.com/static/revolut-logo.svg',
       category: 'neobanque',
     },
     {
@@ -192,6 +204,7 @@ export const PARTNERS: Record<PartnerCategory, Partner[]> = {
       fees: undefined,
       monthlyFee: '0€-17.99€',
       minInvestment: 0,
+      logoUrl: 'https://www.bunq.com/static/bunq-logo.svg',
       category: 'neobanque',
     },
   ],
