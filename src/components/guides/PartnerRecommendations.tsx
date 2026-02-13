@@ -1,10 +1,67 @@
-import { ExternalLink, Star, ArrowRight, Wallet, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { ExternalLink, Star, ArrowRight, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Partner } from '@/data/partnersData';
 import { usePartnerRouter, RecommendationType, getUserSegment } from '@/hooks/usePartnerRouter';
 import { buildTrackedUrl, trackPartnerClick, PartnerPosition } from '@/lib/partnerTracking';
 import { UserProfile } from '@/lib/dashboardService';
+
+// Couleurs stables par partenaire
+const PARTNER_COLORS: Record<string, string> = {
+  'Carac': 'bg-blue-600',
+  'Suravenir (Fortuneo)': 'bg-orange-500',
+  'Nalo': 'bg-violet-600',
+  'Trade Republic': 'bg-stone-800',
+  'Boursorama': 'bg-red-600',
+  'Fortuneo': 'bg-orange-600',
+  'Linxea': 'bg-teal-600',
+  'Boursorama Vie': 'bg-red-500',
+  'Yomoni': 'bg-emerald-600',
+  'N26': 'bg-cyan-600',
+  'Revolut': 'bg-indigo-600',
+  'Bunq': 'bg-green-500',
+  'Qonto': 'bg-fuchsia-600',
+  'Shine': 'bg-yellow-500',
+  'Indy': 'bg-sky-600',
+  'Pennylane': 'bg-pink-600',
+  'Amundi Épargne Entreprise': 'bg-blue-700',
+  'Natixis Interépargne': 'bg-rose-600',
+  'Impots.gouv.fr': 'bg-blue-800',
+};
+
+const getPartnerInitials = (name: string): string => {
+  const words = name.replace(/[()]/g, '').split(/\s+/).filter(Boolean);
+  if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+};
+
+const getPartnerColor = (name: string): string => {
+  return PARTNER_COLORS[name] || 'bg-primary';
+};
+
+const PartnerAvatar = ({ partner }: { partner: Partner }) => {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  if (partner.logoUrl && !imgFailed) {
+    return (
+      <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-white overflow-hidden flex items-center justify-center p-1">
+        <img
+          src={partner.logoUrl}
+          alt={`${partner.name} logo`}
+          className="h-full w-full object-contain"
+          onError={() => setImgFailed(true)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex-shrink-0 h-10 w-10 rounded-lg ${getPartnerColor(partner.name)} flex items-center justify-center`}>
+      <span className="text-white text-xs font-bold">{getPartnerInitials(partner.name)}</span>
+    </div>
+  );
+};
 
 interface PartnerRecommendationsProps {
   type: RecommendationType;
@@ -41,21 +98,8 @@ const PartnerCard = ({
           : 'bg-secondary/30 border-border/30 hover:border-primary/20'
       }`}
     >
-      {/* Logo and header */}
       <div className="flex items-start gap-3 mb-3">
-        {partner.logoUrl && (
-          <div className="flex-shrink-0">
-            <img
-              src={partner.logoUrl}
-              alt={`${partner.name} logo`}
-              className="h-10 w-10 object-contain bg-white rounded-lg p-1"
-              onError={(e) => {
-                // Fallback si le logo ne charge pas
-                (e.currentTarget as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          </div>
-        )}
+        <PartnerAvatar partner={partner} />
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
