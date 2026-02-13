@@ -1,4 +1,4 @@
-import { ExternalLink, Star, ArrowRight, Wallet } from 'lucide-react';
+import { ExternalLink, Star, ArrowRight, Wallet, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Partner } from '@/data/partnersData';
@@ -41,21 +41,39 @@ const PartnerCard = ({
           : 'bg-secondary/30 border-border/30 hover:border-primary/20'
       }`}
     >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          {isBest && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
-              <Star className="h-3 w-3" />
-              Recommandé
-            </span>
-          )}
-          <span className="font-medium">{partner.name}</span>
-        </div>
-        {partner.performance && (
-          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-success/10 text-success">
-            {partner.performance}
-          </span>
+      {/* Logo and header */}
+      <div className="flex items-start gap-3 mb-3">
+        {partner.logoUrl && (
+          <div className="flex-shrink-0">
+            <img
+              src={partner.logoUrl}
+              alt={`${partner.name} logo`}
+              className="h-10 w-10 object-contain bg-white rounded-lg p-1"
+              onError={(e) => {
+                // Fallback si le logo ne charge pas
+                (e.currentTarget as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
         )}
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              {isBest && (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+                  <Star className="h-3 w-3" />
+                  Recommandé
+                </span>
+              )}
+            </div>
+            {partner.performance && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-success/10 text-success">
+                {partner.performance}
+              </span>
+            )}
+          </div>
+          <h3 className="font-medium text-sm">{partner.name}</h3>
+        </div>
       </div>
 
       <p className="text-xs text-muted-foreground mb-3">{partner.description}</p>
