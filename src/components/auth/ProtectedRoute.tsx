@@ -10,8 +10,11 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const navState = location.state as { onboardingJustCompleted?: boolean } | null;
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+
+  const justCompleted = navState?.onboardingJustCompleted === true;
 
   useEffect(() => {
     if (!user) {
@@ -19,7 +22,12 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       return;
     }
 
-    // Reset to loading state before re-checking to avoid stale redirects
+    if (justCompleted) {
+      setOnboardingCompleted(true);
+      setOnboardingChecked(true);
+      return;
+    }
+
     setOnboardingChecked(false);
 
     const checkOnboarding = async () => {
@@ -38,7 +46,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     };
 
     checkOnboarding();
-  }, [user, location.pathname]);
+  }, [user, location.pathname, justCompleted]);
 
   if (loading || !onboardingChecked) {
     return (
@@ -52,7 +60,10 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  // Redirect to onboarding if not completed (unless already on /onboarding)
+  if (onboardingCompleted && location.pathname === '/onboarding') {
+    return <Navigate to="/" replace />;
+  }
+
   if (!onboardingCompleted && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
