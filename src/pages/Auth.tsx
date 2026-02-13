@@ -28,12 +28,14 @@ const Auth = () => {
   const { toast } = useToast();
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+  const [justSignedUp, setJustSignedUp] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
-      navigate(from, { replace: true });
+      // Redirect to onboarding for new users, otherwise to the intended page
+      navigate(justSignedUp ? '/onboarding' : from, { replace: true });
     }
-  }, [user, loading, navigate, from]);
+  }, [user, loading, navigate, from, justSignedUp]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -96,6 +98,7 @@ const Auth = () => {
         description: message,
       });
     } else {
+      setJustSignedUp(true);
       toast({
         title: 'Compte créé',
         description: 'Bienvenue sur Capitalum !',

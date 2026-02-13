@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ProfileCompletionPopup } from '@/components/onboarding/modern/ProfileCompletionPopup';
 import { motion } from 'framer-motion';
 import { 
   RefreshCw,
@@ -336,6 +337,7 @@ const Dashboard = () => {
           </p>
         </motion.div>
       </motion.div>
+      <ProfileCompletionPopup />
     </Layout>
   );
 };
