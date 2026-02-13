@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ExternalLink, Star, ArrowRight, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -6,7 +7,7 @@ import { usePartnerRouter, RecommendationType, getUserSegment } from '@/hooks/us
 import { buildTrackedUrl, trackPartnerClick, PartnerPosition } from '@/lib/partnerTracking';
 import { UserProfile } from '@/lib/dashboardService';
 
-// Couleurs stables par partenaire
+// Couleurs stables par partenaire (fallback si logo ne charge pas)
 const PARTNER_COLORS: Record<string, string> = {
   'Carac': 'bg-blue-600',
   'Suravenir (Fortuneo)': 'bg-orange-500',
@@ -40,6 +41,21 @@ const getPartnerColor = (name: string): string => {
 };
 
 const PartnerAvatar = ({ partner }: { partner: Partner }) => {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  if (partner.logoUrl && !imgFailed) {
+    return (
+      <div className="flex-shrink-0 h-10 w-10 rounded-lg bg-white overflow-hidden flex items-center justify-center p-1">
+        <img
+          src={partner.logoUrl}
+          alt={`${partner.name} logo`}
+          className="h-full w-full object-contain"
+          onError={() => setImgFailed(true)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={`flex-shrink-0 h-10 w-10 rounded-lg ${getPartnerColor(partner.name)} flex items-center justify-center`}>
       <span className="text-white text-xs font-bold">{getPartnerInitials(partner.name)}</span>
