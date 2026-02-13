@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html class="js svg supports video audio no-touchevents csstransforms csstransforms3d csstransitions" lang="fr-FR">
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" id="viewport-meta">
+        <meta name="description">
+                    <meta name="google-site-verification" content="HlPwvXhl1vTccBlNao0PtvgUXej_qXfa6t7Xy2Y2KKQ" />
+        
+        
+        
+        
+            
+                            
+        <title>Accueil Amundi-EE - Amundi EE</title>
+            
+     
+    
+    <link rel="apple-touch-icon" sizes="57x57" href="/extension/aits_ine_ext_amundi_ee/design/amundi_ee_front_design/images/apple-touch-icon-57.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/extension/aits_ine_ext_amundi_ee/design/amundi_ee_front_design/images/apple-touch-icon-72.png">    
+    <link rel="apple-touch-icon" sizes="114x114" href="/extension/aits_ine_ext_amundi_ee/design/amundi_ee_front_design/images/apple-touch-icon-114.png"> 
+    <link rel="apple-touch-icon" sizes="144x144" href="/extension/aits_ine_ext_amundi_ee/design/amundi_ee_front_design/images/apple-touch-icon-144.png"> 
+    <link rel="shortcut icon" href="/extension/aits_ine_ext_amundi_ee/design/amundi_touch_eclat_design/images/favicon.gif">
+
+    
+            <link rel="stylesheet" type="text/css" href="/var/amundi_ee/cache/public/stylesheets/690eff28088d9928b9283d2052d5e846_1764857602_all.css" />
+
+        <link rel="stylesheet" type="text/css" href="/extension/aits_ine_ext_amundi_ee/design/amundi_touch_eclat_design/stylesheets/print.css" media="print"/>
+       
+    
+    <script type="text/javascript" src="/var/amundi_ee/cache/public/javascript/c9c153b952ac13c345b1f79582486189_1764857602.js" charset="utf-8"></script>
+
+
+            <script type="text/javascript" src="/var/amundi_ee/cache/public/javascript/3bff112b0c1fc79db91a09cf33bf1c6d_1764857602.js" charset="utf-8"></script>
+
+    
+    
+        <script type="text/javascript">
+            // Duration in milliseconds to wait while the Kameleoon application file is loaded
+            var kameleoonLoadingTimeout = 1000;
+    
+            window.kameleoonQueue = window.kameleoonQueue || [];
+            window.kameleoonStartLoadTime = new Date().getTime();
+            if (! document.getElementById("kameleoonLoadingStyleSheet") && ! window.kameleoonDisplayPageTimeOut)
+            {
+                var kameleoonS = document.getElementsByTagName("script")[0];
+                var kameleoonCc = "* { visibility: hidden !important; background-image: none !important; }";
+                var kameleoonStn = document.createElement("style");
+                kameleoonStn.type = "text/css";
+                kameleoonStn.id = "kameleoonLoadingStyleSheet";
+                if (kameleoonStn.styleSheet)
+                {
+                    kameleoonStn.styleSheet.cssText = kameleoonCc;
+                }
+                else
+                {
+                    kameleoonStn.appendChild(document.createTextNode(kameleoonCc));
+                }
+                kameleoonS.parentNode.insertBefore(kameleoonStn, kameleoonS);
+                window.kameleoonDisplayPage = function(fromEngine)
+                {
+                    if (!fromEngine)
+                    {
+                        window.kameleoonTimeout = true;
+                    }
+                    if (kameleoonStn.parentNode)
+                    {
+                        kameleoonStn.parentNode.removeChild(kameleoonStn);
+                    }
+                };
+                window.kameleoonDisplayPageTimeOut = window.setTimeout(window.kameleoonDisplayPage, kameleoonLoadingTimeout);
+            }
+        </script>
+    
+    <script type="text/javascript" src="//uzk98vl32n.kameleoon.eu/kameleoon.js" async="true"></script>
+
+
+    </head>
+    <body class="has-navbar  homepage">
+        <div class="global-wrapper">
+                        <!--[if lte IE 10]>
+            <div class="browsehappy">
+                <div class="site-content">
+                    <p>Vous utilisez un <strong>ancien</strong> navigateur. Ce site risque de ne pas s'afficher correctement. <a href="http://browsehappy.com/">Mettez à jour votre navigateur</a> pour améliorer votre expérience.</p>
+                </div>
+            </div>
+            <![endif]-->
+            <ul class="skip-links">
+                <li><a href="#anchor-content">Aller au contenu</a></li>
+            </ul>
+            
+                                                            
+
+<header id="header" role="navigation">
+    <div id="header-links">
+        <div id="metanav">
+            <div class="full-width">
+                <nav class="nav-satelite">
+                    <ul class="nav-header">
+                        <li><a class="active " href="https://www.amundi-ee.com/entr/" data-event-zone="click"
+                               data-event="C" data-event-label="interest::entreprise"
+                               data-event-type="S">Entreprise</a></li>
+                        <li><a class="" target="_blank" href="https://www.amundi-ee.com/account/"
+                               data-event-zone="click" data-event="C" data-event-label="interest::employee"
+                               data-event-type="S">Employee shareholding</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        
+        
+<div class="full-width">
+    <nav id="header-main" class="main navbar">
+        <div id="logo" class="pull-left">
+            <a data-event-zone="click" data-event="C" data-event-label="interest::logo" data-event-type="N"
+               href="/epargnant" >
+                <img src="/var/amundi_ee/storage/images/accueil-amundi-ee/header/207849-24-fre-FR/header.png" loading="lazy" width="1291" height="536"  style="border: 0px  ;" alt="header"  class="  " />            </a>
+        </div>
+
+        <div class="navbar-header pull-right">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#menu">
+                <span class="sr-only">Menu</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+
+        <div class="collapse navbar-collapse" role="navigation" id="menu">
+
+            <ul class="nav menu-nav">
+                                                                                                                                                                                            <li><a   href="/epargnant/Actualites-et-Dossiers">Actualités et Dossiers </a></li>
+                                                                                                                                                                                                                                        <li><a   href="/epargnant/Dernieres-videos">Dernières vidéos</a></li>
+                                                                                                                                                                                                                                        <li data-id="Informations-financieres" class="has-submenu">
+                                <a  
+                                        data-event-zone="page" data-event="F"
+                                        data-event-label="::Informations-financieres" href="javascript:void(0);"
+                                        data-rel="Informations-financieres" aria-controls="menu2" 
+                                        aria-expanded="false">Informations financières</a></li>
+                                                                                                                                                                                                                                        <li data-id="Donner-du-sens-a-votre-epargne" class="has-submenu">
+                                <a  
+                                        data-event-zone="page" data-event="F"
+                                        data-event-label="::Donner-du-sens-a-votre-epargne" href="javascript:void(0);"
+                                        data-rel="Donner-du-sens-a-votre-epargne" aria-controls="menu3" 
+                                        aria-expanded="false">Donner du sens à votre épargne</a></li>
+                                                                        </ul>
+        </div>
+
+        <div class="tools nav-header">
+            <a href="https://epargnant.amundi-ee.com/#/connexion"
+               data-event-zone="page" data-event="F" data-event-label="::account"
+               class="link-account btn -primary -il">
+                <span class="icon-persone"></span><span>J'accède à mon compte épargnant</span>
+            </a>
+        </div>
+
+    </nav>
+</div>
+
+<div class="menu-content">
+
+                                                                        <div id="menu2" class="full-width menu-content-pane regular-menu-content dark-bg-1" data-rel="Informations-financieres" aria-hidden="true">
+                <div class="grid">                    <div class="grid__cell 1/2 1/1--standard">
+                        <ul class="text-item-wrapper">
+                                                            <li class="text-item back"><a href="#"><span class="icon-chevron-l"></span>Retour</a></li>
+                            
+                                                                                                                                                                
+                                <li class="text-item">
+                                    <a class="" href="/epargnant/Informations-financieres/Notre-gamme-de-FCPE-multi-entreprises" 
+                                            
+                                        data-event-zone="click" data-event="C"
+                                       data-event-label="Informations-financieres"
+                                       data-event-type="N"
+                                    >
+                                        Notre gamme de FCPE multi-entreprises
+                                    </a>
+                                </li>
+                                                                                                                                                                
+                                <li class="text-item">
+                                    <a class="" href="/epargnant/Informations-financieres/L-hebdo-des-marches" 
+                                            
+                                        data-event-zone="click" data-event="C"
+                                       data-event-label="Informations-financieres"
+                                       data-event-type="N"
+                                    >
+                                        L'hebdo des marchés
+                                    </a>
+                                </li>
+                                                                                                                                                                
+                                <li class="text-item">
+                                    <a class="" href="/epargnant/Informations-financieres/Le-point-marches-en-video" 
+                                            
+                                        data-event-zone="click" data-event="C"
+                                       data-event-label="Informations-financieres"
+                                       data-event-type="N"
+                                    >
+                                        Le point marchés en vidéo
+                                    </a>
+                                </li>
+                                                                                                                                                                
+                                <li class="text-item">
+                                    <a class="" href="/epargnant/Informations-financieres/Le-point-sur-les-marches-financiers" 
+                                            
+                                        data-event-zone="click" data-event="C"
+                                       data-event-label="Informations-financieres"
+                                       data-event-type="N"
+                                    >
+                                        Le point sur les marchés financiers
+                                    </a>
+                                </li>
+                                                    </ul>
+                        </div><div class="grid__cell 1/2 1/1--standard">
+                        <ul class="text-item-wrapper">
+                            
+                                                                                                                                                                
+                                <li class="text-item">
+                                    <a class="" href="/epargnant/Informations-financieres/Nos-perspectives" 
+                                            
+                                        data-event-zone="click" data-event="C"
+                                       data-event-label="Informations-financieres"
+                                       data-event-type="N"
+                                    >
+                                        Nos perspectives 
+                                    </a>
+                                </li>
+                                                    </ul>
+                        </div></div>
+            </div>
+                                        <div id="menu3" class="full-width menu-content-pane regular-menu-content dark-bg-1" data-rel="Donner-du-sens-a-votre-epargne" aria-hidden="true">
+                <div class="grid">                    <div class="grid__cell 1/2 1/1--standard">
+                        <ul class="text-item-wrapper">
+                                                            <li class="text-item back"><a href="#"><span class="icon-chevron-l"></span>Retour</a></li>
+                            
+                                                                                                                                                                
+                                <li class="text-item">
+                                    <a class="" href="/epargnant/Donner-du-sens-a-votre-epargne/Donner-du-sens-a-votre-epargne" 
+                                            
+                                        data-event-zone="click" data-event="C"
+                                       data-event-label="Donner-du-sens-a-votre-epargne"
+                                       data-event-type="N"
+                                    >
+                                        Donner du sens à votre épargne
+                                    </a>
+                                </li>
+                                                                                                                                                                
+                                <li class="text-item">
+                                    <a class="" href="/epargnant/Donner-du-sens-a-votre-epargne/Investir-de-facon-responsable" 
+                                            
+                                        data-event-zone="click" data-event="C"
+                                       data-event-label="Donner-du-sens-a-votre-epargne"
+                                       data-event-type="N"
+                                    >
+                                        Investir de façon responsable
+                                    </a>
+                                </li>
+                                                                                                                                                                
+                                <li class="text-item">
+                                    <a class="" href="/epargnant/Donner-du-sens-a-votre-epargne/Financer-des-entreprises-solidaires" 
+                                            
+                                        data-event-zone="click" data-event="C"
+                                       data-event-label="Donner-du-sens-a-votre-epargne"
+                                       data-event-type="N"
+                                    >
+                                        Financer des entreprises solidaires
+                                    </a>
+                                </li>
+                                                                                                                                                                
+                                <li class="text-item">
+                                    <a class="" href="/epargnant/Donner-du-sens-a-votre-epargne/Amundi-gestionnaire-engage" 
+                                            
+                                        data-event-zone="click" data-event="C"
+                                       data-event-label="Donner-du-sens-a-votre-epargne"
+                                       data-event-type="N"
+                                    >
+                                        Amundi, gestionnaire engagé
+                                    </a>
+                                </li>
+                                                    </ul>
+                        </div><div class="grid__cell 1/2 1/1--standard">
+                        <ul class="text-item-wrapper">
+                            
+                                                                                                                                                                
+                                <li class="text-item">
+                                    <a class="" href="/epargnant/Donner-du-sens-a-votre-epargne/S-informer-pour-aller-plus-loin" 
+                                            
+                                        data-event-zone="click" data-event="C"
+                                       data-event-label="Donner-du-sens-a-votre-epargne"
+                                       data-event-type="N"
+                                    >
+                                        S'informer pour aller plus loin
+                                    </a>
+                                </li>
+                                                    </ul>
+                        </div></div>
+            </div>
+            
+</div>
+        
+    </div>
+</header>
+                                        <div id="anchor-content"></div>
+    
+            <main class="page-content-wrapper" role="main">
+                <div class="site-content site-content--main">
+                    
+                                            <div class="mob-visible mb-20">
+                            <a data-event-zone="page" data-event="F" data-event-label="::account" class="link-account btn -primary -il"
+                               href="https://epargnant.amundi-ee.com/#/connexion" >
+                                <span class="icon-persone"></span><span>J'accède à mon compte épargnant</span>
+                            </a>
+                        </div>
+                                        
+                        
+        
+
+            <div class="grid">
+    <div class="grid__cell 3/3 1/1--tablet">
+                            
+            <h1 class="homepage-title">Bienvenue sur votre site d’Épargne Salariale &amp; Retraite </h1>
+    
+    
+    <div class="rich_text bk-homepage-texte-image">
+        <div class="bk-homepage-texte-image__wrapper">
+                                                                
+                                        
+
+                    <div class="bk-actual-list__item">
+                                                                                    <div class="bk-actual-list__item--img">
+                                    <a class="more" href="/epargnant/Actualites-et-Dossiers/Actualites/Informations-generales/Meilleurs-voeux-2026">
+                                        <img src="/var/amundi_ee/storage/images/media/rubrique-actualites-dossiers/2026/meilleurs-voeux/318143-4-fre-FR/Meilleurs-voeux.png" loading="lazy" width="1300" height="775"  style="border: 0px  ;" alt="Meilleurs voeux"  class="  " />                                    </a>
+                                </div>
+                                                    
+                        <div class="bk-actual-list__item--wrapper">
+                            <div class="bk-actual-list__item--wrapper--info">
+                                <h2 class="like-h5">Meilleurs voeux 2026</h2>
+                                                                    
+<p>Les équipes Épargne Salariale &amp; Retraite vous adressent leurs meilleurs vœux pour 2026.</p>                                                            </div>
+                            <a class="btn -bordered" href="/epargnant/Actualites-et-Dossiers/Actualites/Informations-generales/Meilleurs-voeux-2026"><span>En savoir plus</span></a>
+                        </div>
+                        
+                    </div>
+                   
+                                                                
+                                    
+                                            <div class="bk-texte-image__content--wrapper">   
+                                                
+
+                        <div class="bk-texte-image__content">
+                                                                                                <div class="bk-texte-image__col bk-texte-image__col--img">
+                                        <img src="/var/amundi_ee/storage/images/media/rubrique-actualites-dossiers/2025/securite-informatique/317761-2-fre-FR/Securite-informatique.png" loading="lazy" width="505" height="320"  style="border: 0px  ;" alt="Sécurité informatique"  class="  " />                                    </div>
+                                                            
+                            <div class="bk-texte-image__col bk-texte-image__col--text">
+                                <ul class="no-styled-list">
+                                    <li>
+                                        <h2 class="like-h5">
+                                            Attention aux tentatives de fraude
+                                        </h2>
+                                    </li>
+                                                                            <li>
+                                            
+<p>Soyez vigilant : des fraudeurs peuvent usurper l’identité d’Amundi Épargne Salariale et Retraite afin de récupérer vos coordonnées personnelles, et tenter d’accéder à votre compte.</p>                                        </li>
+                                        
+                                </ul>
+
+                                <a class="btn -bordered" href="/epargnant/Actualites-et-Dossiers/Actualites/Informations-generales/Attention-aux-tentatives-de-fraude"><span>En savoir plus</span></a>
+                            </div>
+                        </div>
+    
+                                       
+                                                                
+                                    
+                                                
+
+                        <div class="bk-texte-image__content">
+                                                                                                <div class="bk-texte-image__col bk-texte-image__col--img">
+                                        <img src="/var/amundi_ee/storage/images/media/rubrique-actualites-dossiers/2025/hebdo-des-marches-2/317741-1-fre-FR/Hebdo-des-marches-2.png" loading="lazy" width="505" height="320"  style="border: 0px  ;" alt="Hebdo des marchés 2"  class="  " />                                    </div>
+                                                            
+                            <div class="bk-texte-image__col bk-texte-image__col--text">
+                                <ul class="no-styled-list">
+                                    <li>
+                                        <h2 class="like-h5">
+                                            L'hebdo des marchés
+                                        </h2>
+                                    </li>
+                                                                            <li>
+                                            
+<p>Consultez les dernières actualités des marchés financiers rédigées par les équipes de Recherche, Stratégie et Analyse d'Amundi.</p>                                        </li>
+                                        
+                                </ul>
+
+                                <a class="btn -bordered" href="/epargnant/Informations-financieres/L-hebdo-des-marches"><span>Lire le dossier</span></a>
+                            </div>
+                        </div>
+    
+                                       
+                                                                
+                                    
+                                                
+
+                        <div class="bk-texte-image__content">
+                                                                                                <div class="bk-texte-image__col bk-texte-image__col--img">
+                                        <img src="/var/amundi_ee/storage/images/media/rubrique-actualites-dossiers/2025/perspectives/317746-1-fre-FR/Perspectives.png" loading="lazy" width="505" height="320"  style="border: 0px  ;" alt="Perspectives"  class="  " />                                    </div>
+                                                            
+                            <div class="bk-texte-image__col bk-texte-image__col--text">
+                                <ul class="no-styled-list">
+                                    <li>
+                                        <h2 class="like-h5">
+                                            Nos perspectives 
+                                        </h2>
+                                    </li>
+                                                                            <li>
+                                            
+<p>Chaque mois, les équipe d’Amundi décryptent les thèmes liés à l'actualité et vous présentent ses perspectives</p>                                        </li>
+                                        
+                                </ul>
+
+                                <a class="btn -bordered" href="/epargnant/Informations-financieres/Nos-perspectives"><span>Lire le dossier</span></a>
+                            </div>
+                        </div>
+    
+                                            </div>
+                                       
+                    </div>
+    </div>
+
+    
+    
+    
+                                    <div class="bk-texte-texte">    
+
+
+<h2  class="bk-counter__title">Amundi Épargne Salariale et Retraite en quelques chiffres</h2><div class="bk-counter__wrapper"><div class="bk-counter__wrapper--item"><p class="typo-huge text-left">100</p><p>milliards d'euros d'encours gérés<i style="font-style: italic;">*&nbsp;</i></p></div><div class="bk-counter__wrapper--item"><p class="typo-huge text-center text-center"><b>1<sup>er</sup></b></p><p>en Épargne Salariale et Retraite et en actionnariat salarié<i style="font-style: italic;">*&nbsp;</i></p></div><div class="bk-counter__wrapper--item"><p class="typo-huge"><b>4</b></p><p>millions d'épargnants*&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</p></div></div><p class="typo-small text-center"><i style="font-style: italic;">* Chiffres clés au 30/06/2025 (Source AFG)</i></p>
+
+</div>
+                </div>
+</div>
+
+                </div>
+            </main>
+            
+                                                <footer role="contentinfo" class="page-footer-wrapper">
+    <div class="site-content">
+        <div class="page-footer-wrapper__list">
+                                                                        <ul class="page-footer-wrapper__list--item no-styled-list">
+                            <li><b>QUI SOMMES NOUS ?</b></li>
+                                                                                                                                                                                                                                                                                                                                                                
+                                                                                
+                                                                                                                                                                                                    <li>
+                                        <a                                                href="/epargnant/Footer/QUI-SOMMES-NOUS/Qui-sommes-nous2"
+                                                                                      target="_self"
+                                           >
+                                            Le groupe Amundi
+                                        </a>
+                                    </li>
+                                                                                                                                                                                                                                                                                                                                                                        
+                                                                                
+                                                                                                                                                                                                    <li>
+                                        <a                                                href="/epargnant/Footer/QUI-SOMMES-NOUS/Nos-partenaires2"
+                                                                                      target="_self"
+                                           >
+                                            Nos partenaires
+                                        </a>
+                                    </li>
+                                                                                                                                                                                                                                                
+                                                                                
+                                                                                                                                                                                                    <li>
+                                        <a                                                href="/epargnant/Footer/QUI-SOMMES-NOUS/Les-Mentions-legales"
+                                                                                      target="_self"
+                                           >
+                                            Mentions légales
+                                        </a>
+                                    </li>
+                                                                                                                                                                                                                                                                                                            
+                                                                                
+                                                                                                                                                                                                                                                                                                                                        <li>
+                                        <a                                                href="#"
+                                                                                      target="_self"
+                                                                                          onclick="tC.privacy.showPrivacyCenter();return false;"
+                                           >
+                                            Gestion des cookies
+                                        </a>
+                                    </li>
+                                                                                                                </ul>
+                                                                                <ul class="page-footer-wrapper__list--item no-styled-list">
+                            <li><b>NOUS SOMMES LÀ POUR VOUS</b></li>
+                                                                                                                                                                                                                                                                                                                                                                
+                                                                                
+                                                                                                                                                                                                    <li>
+                                        <a                                                href="/epargnant/Actualites-et-Dossiers/Dossiers/Votre-appli-mobile"
+                                                                                      target="_self"
+                                           >
+                                            Application mobile
+                                        </a>
+                                    </li>
+                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                                                                                
+                                                                                                                                                                                                    <li>
+                                        <a                                                href="/epargnant/Footer/NOUS-SOMMES-LA-POUR-VOUS/Accessibilite"
+                                                                                      target="_self"
+                                                                                          
+                                           >
+                                            Accessibilité
+                                        </a>
+                                    </li>
+                                                                                                                                                                                                                                                
+                                                                                
+                                                                                                                                                                                                    <li>
+                                        <a                                                href="/epargnant/Footer/NOUS-SOMMES-LA-POUR-VOUS/Informations-securite"
+                                                                                      target="_self"
+                                           >
+                                            Informations sécurité
+                                        </a>
+                                    </li>
+                                                                                                                                                                                                                                                
+                                                                                
+                                                                                                                                                                                                    <li>
+                                        <a                                                href="/epargnant/Footer/NOUS-SOMMES-LA-POUR-VOUS/Protection-des-donnees-personnelles"
+                                                                                      target="_self"
+                                                                                          
+                                           >
+                                            Protection des données personnelles 
+                                        </a>
+                                    </li>
+                                                                                                                                                                                                                                                
+                                                                                
+                                                                                                                                                                                                    <li>
+                                        <a                                                href="/epargnant/Footer/NOUS-SOMMES-LA-POUR-VOUS/Politique-de-Gestion-des-reclamations/Epargne-Salariale-et-Retraite"
+                                                                                      target="_self"
+                                           >
+                                            Gestion des réclamations
+                                        </a>
+                                    </li>
+                                                                                                                                                                                                                                                
+                                                                                
+                                                                                                                                                                                                    <li>
+                                        <a                                                href="/epargnant/Footer/NOUS-SOMMES-LA-POUR-VOUS/Les-Cas-de-deblocage"
+                                                                                      target="_self"
+                                           >
+                                            Cas de déblocage
+                                        </a>
+                                    </li>
+                                                                                                                                                                                                                                                                                                            
+                                                                                
+                                                                                                                                                                                                    <li>
+                                        <a                                                href="/epargnant/Footer/NOUS-SOMMES-LA-POUR-VOUS/Nous-contacter"
+                                                                                      target="_self"
+                                                                                          
+                                           >
+                                            Contactez nous
+                                        </a>
+                                    </li>
+                                                                                                                                                                            </ul>
+                                                                                <ul class="page-footer-wrapper__list--item no-styled-list">
+                            <li><b>VOUS ÊTES UNE ENTREPRISE ?</b></li>
+                                                                                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                    <li>
+                                        <a                                                href="https://www.amundi-ee.com/entr/"
+                                                                                      target="_blank"
+                                           >
+                                            Site Entreprise
+                                        </a>
+                                    </li>
+                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                    <li>
+                                        <a                                                href="https://entreprise.amundi-ee.com/#/connexion "
+                                                                                      target="_blank"
+                                           >
+                                            Espace correspondant
+                                        </a>
+                                    </li>
+                                                                                                                </ul>
+                                                        </div>
+    </div>
+</footer>                                                    
+                    <script type="text/javascript" src="/var/amundi_ee/cache/public/javascript/582dd9618055c28ce7f904f60d5b2d56_1764857602.js" charset="utf-8"></script>
+
+<script type="text/javascript" src="/var/amundi_ee/cache/public/javascript/018a32102a358ab3e45e06a5df4f6eb3_1764857602.js" charset="utf-8"></script>
+
+
+<script type="text/javascript">
+    
+        $(document).ready(function() {
+            Amundi.init("https://www.amundi-ee.com/epargnant");
+            var cookieInfo = null;
+            
+            AmundiEE.init("https://www.amundi-ee.com/epargnant", cookieInfo);            
+            
+                    });
+    
+</script>
+
+            <div class="modal fade" id="modal-item" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Veuillez patienter</h4>
+            </div>
+            <div class="modal-body">
+                <div class="progress progress-striped active">
+                    <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                        <span class="sr-only">Veuillez patienter</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>            
+
+                                                                                            
+                            
+                    
+             
+                    
+                    
+                    
+                
+    <!--Xiti-->
+    <script type="text/javascript">
+        <!--
+        var tc_vars = {        
+            environment: "prod",             
+            id_site_at:  "566107",             
+            id_site2_at: "1",                                   
+            country:     "FRA",  
+            language:    "FR",                       
+            page_name:   "Home Amundi-ee Epargnants",
+            env_type:    "public",                                   
+            collect_at:  "http://logc407",
+            s_collect_at:"https://logs1407",
+            usercat_id:  "1",
+            site_tree_lvl1:"PART_PUB", 
+            site_tree_lvl2:"Homepage",
+            site_tree_lvl3:"",
+        }        //-->
+    </script>
+            
+    
+        <script type="text/javascript">
+    <!--
+        
+        Amundi.TagCommander.init("https://cdn.tagcommander.com/2205/tc_AmundiEpargneSalariale_1.js");
+    //-->
+    </script>
+    
+    <noscript>
+        <iframe src="//redirect1707.tagcommander.com/utils/noscript.php?id=1&amp;mode=iframe" width="1" height="1" rel="noindex,nofollow"></iframe>
+    </noscript>
+            </div>
+    </body>
+</html>
