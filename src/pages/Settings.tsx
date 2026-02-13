@@ -113,21 +113,34 @@ const Settings = () => {
 
     setDeleteLoading(true);
 
-    // Delete profile data first, then sign out
-    // Full account deletion requires a backend function for security
-    if (user) {
-      await supabase.from('profiles').delete().eq('user_id', user.id);
-      await supabase.from('notifications').delete().eq('user_id', user.id);
-      await supabase.from('tax_scan_history').delete().eq('user_id', user.id);
-      await supabase.from('monthly_revenue').delete().eq('user_id', user.id);
-      await supabase.from('invoices').delete().eq('user_id', user.id);
-      await supabase.from('urssaf_contributions').delete().eq('user_id', user.id);
-    }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Session expirée.' });
+        setDeleteLoading(false);
+        return;
+      }
 
-    await signOut();
-    setDeleteLoading(false);
-    navigate('/auth', { replace: true });
-    toast({ title: 'Compte supprimé', description: 'Vos données ont été supprimées.' });
+      const response = await supabase.functions.invoke('delete-user-account', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (response.error || response.data?.error) {
+        toast({ variant: 'destructive', title: 'Erreur', description: response.data?.error || 'Impossible de supprimer le compte.' });
+        setDeleteLoading(false);
+        return;
+      }
+
+      // Clear local session
+      await supabase.auth.signOut();
+      setDeleteLoading(false);
+      navigate('/auth', { replace: true });
+      toast({ title: 'Compte supprimé', description: 'Votre compte et toutes vos données ont été définitivement supprimés.' });
+    } catch (err) {
+      console.error('Delete account error:', err);
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Une erreur est survenue.' });
+      setDeleteLoading(false);
+    }
   };
 
   const handleSignOutAll = async () => {
