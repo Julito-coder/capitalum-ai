@@ -1,152 +1,57 @@
 
-# Plan : Onboarding automatique + Section "Mon profil fiscal" + Pop-up de rappel
+# Fix: Boucle infinie de l'onboarding
 
-## Contexte
+## Probleme identifie
 
-Actuellement, le wizard d'onboarding moderne (7 etapes) existe deja dans `src/components/onboarding/modern/`, mais :
-- Il n'est pas obligatoire (le dashboard s'affiche meme sans onboarding)
-- La section "Mon profil fiscal" detaillee (ancien wizard complet avec identite, famille, salaire, investissements...) a ete remplacee par le wizard simplifie
-- La pop-up de rappel ne cible que l'onboarding simplifie, pas le profil fiscal complet
+L'analyse des logs reseau montre que :
+1. La sauvegarde fonctionne (HTTP 204 a 14:06:59)
+2. Les requetes suivantes retournent bien `onboarding_completed: true`
+3. **Mais** le `ProtectedRoute` ne redirige jamais DEPUIS `/onboarding` vers `/` quand l'onboarding est deja termine
+4. Une condition de course fait que le nouveau composant `ProtectedRoute` sur `/` peut brievement voir un etat `null` avant la requete DB, causant un rebond vers `/onboarding`
 
-## Ce qui va changer
+## Solution (2 fichiers)
 
-### 1. Onboarding obligatoire avant le dashboard
+### 1. ProtectedRoute - Redirection bidirectionnelle + support du state de navigation
 
-**Fichier modifie : `src/components/auth/ProtectedRoute.tsx`**
-- Ajouter une verification du statut `onboarding_completed` depuis la table `profiles`
-- Si `onboarding_completed === false`, rediriger automatiquement vers `/onboarding` (sauf si on est deja sur `/onboarding`)
-- Cela garantit qu'aucun utilisateur ne voit le dashboard sans avoir complete le wizard
+**Fichier** : `src/components/auth/ProtectedRoute.tsx`
 
-**Fichier modifie : `src/components/onboarding/modern/ModernOnboardingWizard.tsx`**
-- Retirer le bouton "Passer" sur les etapes essentielles (profil, objectifs, patrimoine)
-- Garder le bouton "Passer" uniquement sur l'ecran fiscal (etape 6) et le summary
-- S'assurer que `onboarding_completed = true` est bien enregistre a la fin
-
-### 2. Nouvelle page "Mon profil fiscal" (version complete et detaillee)
-
-**Nouveau fichier : `src/pages/FiscalProfile.tsx`**
-- Page accessible depuis le menu lateral, avec le Layout standard
-- Formulaire avance multi-sections, pre-rempli avec les donnees existantes du profil
-- Indicateur de completion en pourcentage (jauge visuelle)
-- Sauvegarde partielle possible (pas tout obligatoire d'un coup)
-
-**Sections du profil fiscal (reprenant l'ancien `OnboardingWizard` en version formulaire) :**
-
-| Section | Champs |
-|---------|--------|
-| Identite | Nom, NIF, annee de naissance, telephone, adresse |
-| Situation familiale | Statut, nombre d'enfants, details enfants, revenu conjoint |
-| Situation professionnelle | Type(s) de profil (salarie/independant/retraite/investisseur) |
-| Revenus salaries | Employeur, contrat, salaire brut/net, primes, 13e mois, heures sup, frais reels, mutuelle, tickets resto, PEE/PERCO, stock-options |
-| Activite independante | SIRET, date creation, code APE, statut fiscal, CA HT, charges sociales, loyer bureau, frais vehicule, fournitures, clients principaux |
-| Retraite | Pension principale, complementaires, date liquidation, revenus complementaires, plus-values, donations |
-| Investissements immobiliers | Biens locatifs, regime, travaux, credit restant, IFI |
-| Investissements financiers | PEA, CTO, assurance vie, crypto, SCPI, crowdfunding |
-| Consentements | RGPD, analyse IA |
-
-**Nouveau fichier : `src/lib/fiscalProfileService.ts`**
-- Fonction `loadFiscalProfile(userId)` : charge toutes les donnees detaillees depuis `profiles`
-- Fonction `saveFiscalProfile(userId, data)` : sauvegarde partielle des donnees
-- Fonction `calculateProfileCompletion(data)` : calcule le % de completion (nombre de champs remplis / total de champs pertinents selon le type de profil)
-
-**Nouveau fichier : `src/components/fiscal-profile/FiscalProfileForm.tsx`**
-- Composant principal avec accordeons/tabs pour chaque section
-- Chaque section est un sous-composant reutilisable
-- Barre de progression de completion en haut
-- Bouton "Enregistrer" par section + bouton global
-
-**Nouveaux sous-composants dans `src/components/fiscal-profile/` :**
-- `IdentitySection.tsx`
-- `FamilySection.tsx`
-- `ProfessionalSection.tsx`
-- `EmployeeSection.tsx`
-- `SelfEmployedSection.tsx`
-- `RetiredSection.tsx`
-- `InvestmentRealEstateSection.tsx`
-- `InvestmentFinancialSection.tsx`
-- `ConsentsSection.tsx`
-- `CompletionIndicator.tsx`
-
-### 3. Pop-up de rappel pour le profil fiscal
-
-**Fichier modifie : `src/components/onboarding/modern/ProfileCompletionPopup.tsx`**
-- Changer la logique : au lieu de verifier `onboarding_completed`, verifier le % de completion du profil fiscal complet
-- Afficher la pop-up si `fiscalProfileCompletion < 100%`
-- Afficher uniquement sur le dashboard (pas sur chaque page)
-- Rediriger vers `/fiscal-profile` au lieu de `/onboarding`
-- Frequence : a chaque visite sur le dashboard si < 100%, mais dismissable pour 7 jours
-
-### 4. Routing et navigation
-
-**Fichier modifie : `src/App.tsx`**
-- Ajouter la route `/fiscal-profile` vers la nouvelle page
-
-**Fichier modifie : `src/components/layout/Sidebar.tsx`**
-- Remplacer le lien "Mon profil fiscal" qui pointe vers `/onboarding` par un lien vers `/fiscal-profile`
-- Garder `/onboarding` reserve au wizard de premiere connexion
-
-**Fichier modifie : `src/components/layout/MobileNav.tsx`**
-- Meme mise a jour pour la navigation mobile
-
-### 5. Integration dashboard
-
-**Fichier modifie : `src/pages/Dashboard.tsx`**
-- Mettre a jour le bouton "Completer mon profil" pour pointer vers `/fiscal-profile`
-- Garder la `ProfileCompletionPopup` qui pointe desormais vers le profil fiscal
-
-## Schema de flux utilisateur
+Modifications :
+- Ajouter une redirection DEPUIS `/onboarding` vers `/` quand `onboarding_completed === true` (redirection inverse manquante)
+- Accepter un flag `onboardingJustCompleted` dans le state de navigation pour court-circuiter la verification DB (evite la condition de course)
+- Si le state de navigation indique "onboarding just completed", considerer l'onboarding comme termine immediatement sans attendre la requete DB
 
 ```text
-Inscription/Connexion
-        |
-        v
-  onboarding_completed ?
-   /              \
-  Non              Oui
-   |                |
-   v                v
- Wizard          Dashboard
- Onboarding        |
- (obligatoire)     |
-   |               v
-   v          Pop-up rappel
- Dashboard    profil fiscal
-   |          (si < 100%)
-   v               |
- Menu lateral      v
- "Mon profil   /fiscal-profile
-  fiscal"      (formulaire complet)
+Logique actuelle :
+  Si !onboardingCompleted ET pathname !== '/onboarding' → rediriger vers /onboarding
+
+Logique corrigee :
+  Si onboardingCompleted ET pathname === '/onboarding' → rediriger vers /
+  Si navigation state contient onboardingJustCompleted → ne pas verifier la DB
+  Si !onboardingCompleted ET pathname !== '/onboarding' → rediriger vers /onboarding
 ```
+
+### 2. ModernOnboardingWizard - Passer le flag via navigation state
+
+**Fichier** : `src/components/onboarding/modern/ModernOnboardingWizard.tsx`
+
+Modifications :
+- Dans `handleComplete` : `navigate('/', { state: { onboardingJustCompleted: true } })`
+- Dans `handleSkip` : meme chose
+- Cela permet au ProtectedRoute de savoir immediatement que l'onboarding vient d'etre termine, sans attendre la requete DB
 
 ## Details techniques
 
-- **Pas de migration DB necessaire** : tous les champs existent deja dans la table `profiles` (identite, famille, salaire, investissements, etc.)
-- **Reutilisation** : les types `OnboardingData` de `src/data/onboardingTypes.ts` et le service `onboardingService.ts` seront reutilises pour le chargement/sauvegarde du profil fiscal complet
-- **Calcul de completion** : base sur le nombre de champs significatifs remplis par rapport au type de profil selectionne (un salarie n'a pas besoin de remplir les champs retraite)
-- **UX** : le profil fiscal utilise des accordeons Radix UI avec sauvegarde par section, style coherent avec le reste de l'app (cartes arrondies, ombres douces)
-- **Pas de duplication de donnees** : le wizard d'onboarding et le profil fiscal ecrivent tous les deux dans la meme table `profiles`, le profil fiscal pre-remplit les valeurs deja saisies lors de l'onboarding
+Le flux apres correction :
 
-## Fichiers concernes (resume)
+1. L'utilisateur clique sur "Acceder a mon tableau de bord personnalise"
+2. `saveModernOnboarding` sauvegarde avec `onboarding_completed: true` (attend la reponse 204)
+3. `navigate('/', { state: { onboardingJustCompleted: true } })` est appele
+4. Le `ProtectedRoute` sur `/` detecte le flag dans le state -> affiche le Dashboard immediatement
+5. Le useEffect en arriere-plan confirme avec la DB (securite supplementaire)
+6. Si un utilisateur arrive sur `/onboarding` avec `onboarding_completed: true` (via URL directe), il est redirige vers `/`
 
-| Action | Fichier |
-|--------|---------|
-| Modifier | `src/components/auth/ProtectedRoute.tsx` |
-| Modifier | `src/components/onboarding/modern/ModernOnboardingWizard.tsx` |
-| Modifier | `src/components/onboarding/modern/ProfileCompletionPopup.tsx` |
-| Modifier | `src/App.tsx` |
-| Modifier | `src/components/layout/Sidebar.tsx` |
-| Modifier | `src/components/layout/MobileNav.tsx` |
-| Modifier | `src/pages/Dashboard.tsx` |
-| Creer | `src/pages/FiscalProfile.tsx` |
-| Creer | `src/lib/fiscalProfileService.ts` |
-| Creer | `src/components/fiscal-profile/FiscalProfileForm.tsx` |
-| Creer | `src/components/fiscal-profile/IdentitySection.tsx` |
-| Creer | `src/components/fiscal-profile/FamilySection.tsx` |
-| Creer | `src/components/fiscal-profile/ProfessionalSection.tsx` |
-| Creer | `src/components/fiscal-profile/EmployeeSection.tsx` |
-| Creer | `src/components/fiscal-profile/SelfEmployedSection.tsx` |
-| Creer | `src/components/fiscal-profile/RetiredSection.tsx` |
-| Creer | `src/components/fiscal-profile/InvestmentRealEstateSection.tsx` |
-| Creer | `src/components/fiscal-profile/InvestmentFinancialSection.tsx` |
-| Creer | `src/components/fiscal-profile/ConsentsSection.tsx` |
-| Creer | `src/components/fiscal-profile/CompletionIndicator.tsx` |
+## Impact
+- Zero risque de boucle infinie
+- Le bouton "Passer" continue de fonctionner (utilise le meme mecanisme)
+- Performance : le dashboard s'affiche immediatement sans attente de requete DB
+- Retrocompatibilite : les anciens liens fonctionnent toujours
