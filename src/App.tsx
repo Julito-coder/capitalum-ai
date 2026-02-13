@@ -15,6 +15,8 @@ import Glossary from "./pages/Glossary";
 import Scanner from "./pages/Scanner";
 import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 // Real Estate Simulator pages
 import RealEstateSimulator from "./pages/RealEstateSimulator";
@@ -47,6 +49,7 @@ const App = () => (
             <ActionGuideProvider>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/reset-password" element={<ResetPassword />} />
                 <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
                 <Route path="/audit" element={<ProtectedRoute><Audit /></ProtectedRoute>} />
@@ -71,6 +74,7 @@ const App = () => (
                 <Route path="/pro/hiring" element={<ProtectedRoute><HiringSimulator /></ProtectedRoute>} />
                 <Route path="/pro/status" element={<ProtectedRoute><StatusComparator /></ProtectedRoute>} />
                 <Route path="/pro/cashflow" element={<ProtectedRoute><CashFlowForecast /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <ActionGuideModal />
