@@ -41,13 +41,17 @@ export interface FiscalDeadline {
   actions: DeadlineAction[];
   /** Tags for filtering */
   tags: string[];
+  /** Tax form type for in-app form viewer */
+  formType?: string;
+  /** Whether an in-app form is available */
+  hasInAppForm?: boolean;
 }
 
 export interface DeadlineAction {
   id: string;
   label: string;
   icon: string;
-  type: 'guide' | 'simulation' | 'document' | 'external' | 'checklist';
+  type: 'guide' | 'simulation' | 'document' | 'external' | 'checklist' | 'inapp-form';
   /** Route to navigate or guide ID to open */
   target?: string;
 }

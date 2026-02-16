@@ -1,16 +1,43 @@
 import { Progress } from '@/components/ui/progress';
-import { OptimizationScore } from '@/lib/deadlinesTypes';
-import { Trophy, TrendingUp, AlertCircle, Target } from 'lucide-react';
+import { OptimizationScore, DeadlineStatus } from '@/lib/deadlinesTypes';
+import { Trophy, TrendingUp, AlertCircle } from 'lucide-react';
 
 interface ScoreBarProps {
   score: OptimizationScore;
+  activeFilter: DeadlineStatus | null;
+  onFilterByStatus: (status: DeadlineStatus | null) => void;
 }
 
 function formatCurrency(n: number): string {
   return n.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 }
 
-export const OptimizationScoreBar = ({ score }: ScoreBarProps) => {
+const STATUS_BUTTONS: { status: DeadlineStatus; label: string; colorClasses: string; activeClasses: string }[] = [
+  { status: 'optimized', label: 'Optimisées', colorClasses: 'bg-success/10 border-success/20', activeClasses: 'ring-2 ring-success ring-offset-2 ring-offset-card scale-105' },
+  { status: 'in_progress', label: 'En cours', colorClasses: 'bg-warning/10 border-warning/20', activeClasses: 'ring-2 ring-warning ring-offset-2 ring-offset-card scale-105' },
+  { status: 'pending', label: 'À faire', colorClasses: 'bg-muted border-border/20', activeClasses: 'ring-2 ring-primary ring-offset-2 ring-offset-card scale-105' },
+  { status: 'ignored', label: 'Ignorées', colorClasses: 'bg-destructive/10 border-destructive/20', activeClasses: 'ring-2 ring-destructive ring-offset-2 ring-offset-card scale-105' },
+];
+
+function getCount(score: OptimizationScore, status: DeadlineStatus): number {
+  switch (status) {
+    case 'optimized': return score.optimizedCount;
+    case 'in_progress': return score.inProgressCount;
+    case 'pending': return score.pendingCount;
+    case 'ignored': return score.ignoredCount;
+  }
+}
+
+function getCountColor(status: DeadlineStatus): string {
+  switch (status) {
+    case 'optimized': return 'text-success';
+    case 'in_progress': return 'text-warning';
+    case 'pending': return 'text-foreground';
+    case 'ignored': return 'text-destructive';
+  }
+}
+
+export const OptimizationScoreBar = ({ score, activeFilter, onFilterByStatus }: ScoreBarProps) => {
   return (
     <div className="p-5 rounded-2xl border-2 border-border/30 bg-card/80 backdrop-blur-sm space-y-4">
       {/* Main progress */}
@@ -27,24 +54,21 @@ export const OptimizationScoreBar = ({ score }: ScoreBarProps) => {
         </div>
       </div>
 
-      {/* Stats grid */}
+      {/* Stats grid — clickable buttons */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="text-center p-3 rounded-xl bg-success/10 border border-success/20">
-          <p className="text-lg font-bold text-success">{score.optimizedCount}</p>
-          <p className="text-xs text-muted-foreground">Optimisées</p>
-        </div>
-        <div className="text-center p-3 rounded-xl bg-warning/10 border border-warning/20">
-          <p className="text-lg font-bold text-warning">{score.inProgressCount}</p>
-          <p className="text-xs text-muted-foreground">En cours</p>
-        </div>
-        <div className="text-center p-3 rounded-xl bg-muted border border-border/20">
-          <p className="text-lg font-bold">{score.pendingCount}</p>
-          <p className="text-xs text-muted-foreground">À faire</p>
-        </div>
-        <div className="text-center p-3 rounded-xl bg-destructive/10 border border-destructive/20">
-          <p className="text-lg font-bold text-destructive">{score.ignoredCount}</p>
-          <p className="text-xs text-muted-foreground">Ignorées</p>
-        </div>
+        {STATUS_BUTTONS.map(({ status, label, colorClasses, activeClasses }) => {
+          const isActive = activeFilter === status;
+          return (
+            <button
+              key={status}
+              onClick={() => onFilterByStatus(isActive ? null : status)}
+              className={`text-center p-3 rounded-xl border transition-all cursor-pointer hover:scale-[1.02] ${colorClasses} ${isActive ? activeClasses : ''}`}
+            >
+              <p className={`text-lg font-bold ${getCountColor(status)}`}>{getCount(score, status)}</p>
+              <p className="text-xs text-muted-foreground">{label}</p>
+            </button>
+          );
+        })}
       </div>
 
       {/* Gains summary */}
