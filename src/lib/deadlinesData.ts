@@ -210,7 +210,7 @@ export const FISCAL_DEADLINES: FiscalDeadline[] = [
           : `Même sans cession, les comptes sur plateformes étrangères doivent être déclarés (formulaire 3916-bis).`,
       };
     },
-    externalUrl: 'https://www.impots.gouv.fr/formulaire/2086/declaration-des-plus-ou-moins-values-de-cessions-dactifs-numeriques',
+    externalUrl: 'https://www.impots.gouv.fr/sites/default/files/formulaires/2086/2024/2086_4442.pdf',
     externalUrlLabel: 'Formulaire 2086 officiel',
     formType: '2086',
     hasInAppForm: true,
@@ -238,7 +238,7 @@ export const FISCAL_DEADLINES: FiscalDeadline[] = [
       patrimonialEffect10y: 0,
       explanation: `Chaque compte crypto étranger non déclaré expose à 750 € d'amende minimum. Simple formulaire à remplir.`,
     }),
-    externalUrl: 'https://www.impots.gouv.fr/formulaire/3916/declaration-par-un-resident-dun-compte-ouvert-hors-de-france',
+    externalUrl: 'https://www.impots.gouv.fr/sites/default/files/formulaires/3916/2024/3916_4738.pdf',
     externalUrlLabel: 'Formulaire 3916-bis officiel',
     formType: '3916-bis',
     hasInAppForm: true,
