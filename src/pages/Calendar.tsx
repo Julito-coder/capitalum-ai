@@ -25,6 +25,7 @@ const CalendarPage = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [deadlines, setDeadlines] = useState<EnrichedDeadline[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<DeadlineStatus | null>(null);
 
   const loadData = useCallback(async () => {
     if (!user) return;
@@ -69,23 +70,33 @@ const CalendarPage = () => {
     }
   };
 
-  // Apply view filter & sort
+  // Apply view filter & status filter
   const filteredDeadlines = useMemo(() => {
     let result = [...deadlines];
+
+    // Apply status filter from score bar clicks
+    if (statusFilter) {
+      result = result.filter((d) => {
+        const trackingStatus = d.tracking?.status ?? 'pending';
+        return trackingStatus === statusFilter;
+      });
+    }
+
     switch (view) {
       case 'urgent':
-        result = result.filter((d) => d.daysLeft <= 90 && d.tracking?.status !== 'optimized');
+        if (!statusFilter) {
+          result = result.filter((d) => d.daysLeft <= 90 && d.tracking?.status !== 'optimized');
+        }
         break;
       case 'strategic':
         result.sort((a, b) => b.personalImpact.estimatedGain - a.personalImpact.estimatedGain);
         break;
       case 'chronological':
       default:
-        // already sorted by date
         break;
     }
     return result;
-  }, [deadlines, view]);
+  }, [deadlines, view, statusFilter]);
 
   // Group by month for chronological view
   const groupedByMonth = useMemo(() => {
@@ -131,7 +142,7 @@ const CalendarPage = () => {
 
         {/* Gamification score */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <OptimizationScoreBar score={score} />
+          <OptimizationScoreBar score={score} activeFilter={statusFilter} onFilterByStatus={setStatusFilter} />
         </motion.div>
 
         {/* View selector */}

@@ -212,8 +212,10 @@ export const FISCAL_DEADLINES: FiscalDeadline[] = [
     },
     externalUrl: 'https://www.impots.gouv.fr/formulaire/2086/declaration-des-plus-ou-moins-values-de-cessions-dactifs-numeriques',
     externalUrlLabel: 'Formulaire 2086 officiel',
+    formType: '2086',
+    hasInAppForm: true,
     actions: [
-      { id: 'external', label: 'Remplir le formulaire 2086', icon: 'ExternalLink', type: 'external', target: 'https://www.impots.gouv.fr/formulaire/2086/declaration-des-plus-ou-moins-values-de-cessions-dactifs-numeriques' },
+      { id: 'inapp-form', label: 'Remplir le formulaire 2086', icon: 'FileText', type: 'inapp-form' },
       { id: 'scan', label: 'Vérifier ma déclaration', icon: 'Search', type: 'guide', target: '/scanner' },
       { id: 'checklist', label: 'Checklist crypto', icon: 'CheckSquare', type: 'checklist' },
     ],
@@ -238,8 +240,10 @@ export const FISCAL_DEADLINES: FiscalDeadline[] = [
     }),
     externalUrl: 'https://www.impots.gouv.fr/formulaire/3916/declaration-par-un-resident-dun-compte-ouvert-hors-de-france',
     externalUrlLabel: 'Formulaire 3916-bis officiel',
+    formType: '3916-bis',
+    hasInAppForm: true,
     actions: [
-      { id: 'external', label: 'Remplir le 3916-bis', icon: 'ExternalLink', type: 'external', target: 'https://www.impots.gouv.fr/formulaire/3916/declaration-par-un-resident-dun-compte-ouvert-hors-de-france' },
+      { id: 'inapp-form', label: 'Remplir le 3916-bis', icon: 'FileText', type: 'inapp-form' },
     ],
     tags: ['crypto', 'obligatoire', 'annuel'],
   },

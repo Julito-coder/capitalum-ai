@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { InAppFormViewer } from './InAppFormViewer';
 import {
   X, BookOpen, TrendingUp, Sparkles, CheckSquare, FolderOpen,
   ExternalLink, Calculator, ChevronRight, AlertTriangle,
@@ -37,6 +38,7 @@ export const DeadlineActionPanel = ({ deadline, onClose, onStatusChange, profile
   const [activeTab, setActiveTab] = useState<PanelTab>('understand');
   const [ignoreReason, setIgnoreReason] = useState('');
   const [showIgnoreForm, setShowIgnoreForm] = useState(false);
+  const [showInAppForm, setShowInAppForm] = useState(false);
   const navigate = useNavigate();
   const { openGuide } = useActionGuide();
   const impact = deadline.personalImpact;
@@ -50,6 +52,11 @@ export const DeadlineActionPanel = ({ deadline, onClose, onStatusChange, profile
 
   const handleAction = (action: typeof deadline.actions[0]) => {
     switch (action.type) {
+      case 'inapp-form':
+        if (deadline.hasInAppForm) {
+          setShowInAppForm(true);
+        }
+        break;
       case 'external':
         if (action.target) window.open(action.target, '_blank', 'noopener');
         break;
@@ -58,7 +65,6 @@ export const DeadlineActionPanel = ({ deadline, onClose, onStatusChange, profile
         onClose();
         break;
       case 'guide':
-        // Will be connected to ActionGuide system
         if (action.target?.startsWith('/')) {
           navigate(action.target);
           onClose();
@@ -66,6 +72,17 @@ export const DeadlineActionPanel = ({ deadline, onClose, onStatusChange, profile
         break;
     }
   };
+
+  // Show in-app form viewer
+  if (showInAppForm && deadline.hasInAppForm) {
+    return (
+      <InAppFormViewer
+        deadline={deadline}
+        profile={profile}
+        onClose={() => setShowInAppForm(false)}
+      />
+    );
+  }
 
   return (
     <AnimatePresence>
