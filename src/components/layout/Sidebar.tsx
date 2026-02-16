@@ -14,7 +14,8 @@ import {
   TrendingUp,
   Building2,
   FileText,
-  Wallet
+  Wallet,
+  Coins
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSpace } from '@/contexts/SpaceContext';
@@ -30,6 +31,7 @@ const personalNavItems = [
   { path: '/calendar', icon: Calendar, label: 'Calendrier' },
   { path: '/simulator', icon: Building2, label: 'Simulateur Immo' },
   { path: '/savings', icon: PiggyBank, label: 'Épargne long terme' },
+  { path: '/crypto/2086', icon: Coins, label: 'Crypto 2086' },
   { path: '/glossary', icon: FileText, label: 'Glossaire' },
 ];
 

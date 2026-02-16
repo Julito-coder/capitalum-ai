@@ -79,6 +79,221 @@ export type Database = {
           },
         ]
       }
+      crypto_accounts: {
+        Row: {
+          account_type: string
+          country: string | null
+          created_at: string
+          id: string
+          identifiers: Json | null
+          is_foreign_account: boolean | null
+          name: string
+          notes: string | null
+          tax_year: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_type?: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          identifiers?: Json | null
+          is_foreign_account?: boolean | null
+          name: string
+          notes?: string | null
+          tax_year?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_type?: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          identifiers?: Json | null
+          is_foreign_account?: boolean | null
+          name?: string
+          notes?: string | null
+          tax_year?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      crypto_checklist_items: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          evidence_doc_url: string | null
+          id: string
+          label: string
+          module: string | null
+          status: string | null
+          tax_year: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          evidence_doc_url?: string | null
+          id?: string
+          label: string
+          module?: string | null
+          status?: string | null
+          tax_year?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          evidence_doc_url?: string | null
+          id?: string
+          label?: string
+          module?: string | null
+          status?: string | null
+          tax_year?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      crypto_tax_computations: {
+        Row: {
+          audit_trail: Json | null
+          computed_lines: Json | null
+          created_at: string
+          gains_eur: number | null
+          id: string
+          losses_eur: number | null
+          method: string | null
+          net_gain_eur: number | null
+          portfolio_value_eur: number | null
+          status: string | null
+          tax_year: number
+          total_acquisitions_eur: number | null
+          total_cessions_eur: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audit_trail?: Json | null
+          computed_lines?: Json | null
+          created_at?: string
+          gains_eur?: number | null
+          id?: string
+          losses_eur?: number | null
+          method?: string | null
+          net_gain_eur?: number | null
+          portfolio_value_eur?: number | null
+          status?: string | null
+          tax_year?: number
+          total_acquisitions_eur?: number | null
+          total_cessions_eur?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audit_trail?: Json | null
+          computed_lines?: Json | null
+          created_at?: string
+          gains_eur?: number | null
+          id?: string
+          losses_eur?: number | null
+          method?: string | null
+          net_gain_eur?: number | null
+          portfolio_value_eur?: number | null
+          status?: string | null
+          tax_year?: number
+          total_acquisitions_eur?: number | null
+          total_cessions_eur?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      crypto_transactions: {
+        Row: {
+          account_id: string | null
+          asset_from: string
+          asset_to: string
+          classification: string | null
+          created_at: string
+          fees_asset: string | null
+          fees_eur: number | null
+          fees_qty: number | null
+          fiat_value_eur: number | null
+          flags: string[] | null
+          id: string
+          is_taxable: boolean | null
+          notes: string | null
+          qty_from: number
+          qty_to: number
+          source: string | null
+          source_file_name: string | null
+          tax_year: number
+          tx_timestamp: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          asset_from?: string
+          asset_to?: string
+          classification?: string | null
+          created_at?: string
+          fees_asset?: string | null
+          fees_eur?: number | null
+          fees_qty?: number | null
+          fiat_value_eur?: number | null
+          flags?: string[] | null
+          id?: string
+          is_taxable?: boolean | null
+          notes?: string | null
+          qty_from?: number
+          qty_to?: number
+          source?: string | null
+          source_file_name?: string | null
+          tax_year?: number
+          tx_timestamp: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          asset_from?: string
+          asset_to?: string
+          classification?: string | null
+          created_at?: string
+          fees_asset?: string | null
+          fees_eur?: number | null
+          fees_qty?: number | null
+          fiat_value_eur?: number | null
+          flags?: string[] | null
+          id?: string
+          is_taxable?: boolean | null
+          notes?: string | null
+          qty_from?: number
+          qty_to?: number
+          source?: string | null
+          source_file_name?: string | null
+          tax_year?: number
+          tx_timestamp?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crypto_transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "crypto_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       financing_data: {
         Row: {
           amortization_table: Json | null
@@ -1022,6 +1237,71 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "real_estate_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_form_2086_drafts: {
+        Row: {
+          assumptions: string | null
+          computation_id: string | null
+          created_at: string
+          field_mapping: Json | null
+          foreign_accounts_summary: Json | null
+          id: string
+          identity_snapshot: Json | null
+          notes: string | null
+          ready_for_report: boolean | null
+          regime: string | null
+          reported_at: string | null
+          status: string | null
+          tax_year: number
+          taxable_events_summary: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assumptions?: string | null
+          computation_id?: string | null
+          created_at?: string
+          field_mapping?: Json | null
+          foreign_accounts_summary?: Json | null
+          id?: string
+          identity_snapshot?: Json | null
+          notes?: string | null
+          ready_for_report?: boolean | null
+          regime?: string | null
+          reported_at?: string | null
+          status?: string | null
+          tax_year?: number
+          taxable_events_summary?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assumptions?: string | null
+          computation_id?: string | null
+          created_at?: string
+          field_mapping?: Json | null
+          foreign_accounts_summary?: Json | null
+          id?: string
+          identity_snapshot?: Json | null
+          notes?: string | null
+          ready_for_report?: boolean | null
+          regime?: string | null
+          reported_at?: string | null
+          status?: string | null
+          tax_year?: number
+          taxable_events_summary?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_form_2086_drafts_computation_id_fkey"
+            columns: ["computation_id"]
+            isOneToOne: false
+            referencedRelation: "crypto_tax_computations"
             referencedColumns: ["id"]
           },
         ]

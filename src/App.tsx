@@ -35,6 +35,12 @@ import HiringSimulator from "./pages/pro/HiringSimulator";
 import StatusComparator from "./pages/pro/StatusComparator";
 import CashFlowForecast from "./pages/pro/CashFlowForecast";
 import ProOnboarding from "./pages/pro/ProOnboarding";
+// Crypto 2086
+import CryptoDashboard from "./pages/crypto/CryptoDashboard";
+import CryptoWizard from "./pages/crypto/CryptoWizard";
+import CryptoControls from "./pages/crypto/CryptoControls";
+import CryptoReportPack from "./pages/crypto/CryptoReportPack";
+import CryptoExports from "./pages/crypto/CryptoExports";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +80,12 @@ const App = () => (
                 <Route path="/pro/hiring" element={<ProtectedRoute><HiringSimulator /></ProtectedRoute>} />
                 <Route path="/pro/status" element={<ProtectedRoute><StatusComparator /></ProtectedRoute>} />
                 <Route path="/pro/cashflow" element={<ProtectedRoute><CashFlowForecast /></ProtectedRoute>} />
+                {/* Crypto 2086 */}
+                <Route path="/crypto/2086" element={<ProtectedRoute><CryptoDashboard /></ProtectedRoute>} />
+                <Route path="/crypto/2086/wizard" element={<ProtectedRoute><CryptoWizard /></ProtectedRoute>} />
+                <Route path="/crypto/2086/controls" element={<ProtectedRoute><CryptoControls /></ProtectedRoute>} />
+                <Route path="/crypto/2086/report" element={<ProtectedRoute><CryptoReportPack /></ProtectedRoute>} />
+                <Route path="/crypto/2086/exports" element={<ProtectedRoute><CryptoExports /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
