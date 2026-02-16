@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ExternalLink, MessageSquare, FileText } from 'lucide-react';
+import { X, ExternalLink, MessageSquare, FileText, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { EnrichedDeadline } from '@/lib/deadlinesTypes';
@@ -23,18 +23,59 @@ const LOCAL_PDF_PATHS: Record<string, string> = {
   '3916-bis': '/forms/3916-bis.pdf',
 };
 
-const OfficialPdfViewer = ({ pdfUrl, formType }: { pdfUrl: string; formType: string }) => {
-  // Use local PDF if available, otherwise fall back to external URL
+/** Official external URLs for "open in new tab" fallback */
+const OFFICIAL_URLS: Record<string, string> = {
+  '2086': 'https://www.impots.gouv.fr/formulaire/2086/declaration-des-plus-ou-moins-values-de-cessions-dactifs-numeriques',
+  '3916-bis': 'https://www.impots.gouv.fr/formulaire/3916/declaration-par-un-resident-dun-compte-letranger-ou-dun-contrat-de-capitalisation-o',
+};
+
+const OfficialPdfViewer = ({ formType }: { formType: string }) => {
   const localPath = LOCAL_PDF_PATHS[formType];
-  const iframeSrc = localPath ?? pdfUrl;
+  const officialUrl = OFFICIAL_URLS[formType];
+
+  if (!localPath) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4 p-8 text-center">
+        <FileText className="h-12 w-12 text-muted-foreground" />
+        <p className="text-muted-foreground">Aucun formulaire disponible.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative w-full h-full">
-      <iframe
-        src={iframeSrc}
-        className="w-full h-full border-0"
-        title="Formulaire officiel PDF"
-      />
+    <div className="relative w-full h-full flex flex-col">
+      {/* Toolbar */}
+      <div className="shrink-0 flex items-center justify-center gap-3 p-2 bg-muted/30 border-b border-border/20">
+        <a
+          href={localPath}
+          download
+          className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Télécharger le PDF
+        </a>
+        {officialUrl && (
+          <a
+            href={officialUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Page officielle
+          </a>
+        )}
+      </div>
+      {/* PDF viewer using object + embed fallback */}
+      <div className="flex-1 overflow-hidden">
+        <object
+          data={localPath}
+          type="application/pdf"
+          className="w-full h-full"
+        >
+          <embed src={localPath} type="application/pdf" className="w-full h-full" />
+        </object>
+      </div>
     </div>
   );
 };
@@ -102,8 +143,8 @@ export const InAppFormViewer = ({ deadline, profile, onClose }: InAppFormViewerP
         <div className="flex-1 flex overflow-hidden">
           {/* PDF column */}
           <div className={`flex-1 overflow-hidden ${showAssistant && !isMobile ? 'w-[65%]' : 'w-full'}`}>
-            {pdfUrl || LOCAL_PDF_PATHS[formType] ? (
-              <OfficialPdfViewer pdfUrl={pdfUrl} formType={formType} />
+            {LOCAL_PDF_PATHS[formType] ? (
+              <OfficialPdfViewer formType={formType} />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
                 <p>Aucun PDF officiel disponible pour ce formulaire.</p>
