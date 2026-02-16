@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ExternalLink, MessageSquare, Loader2, FileText, AlertTriangle } from 'lucide-react';
+import { X, ExternalLink, MessageSquare, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { EnrichedDeadline } from '@/lib/deadlinesTypes';
@@ -17,52 +17,23 @@ const FORM_TITLES: Record<string, string> = {
   '3916-bis': 'Formulaire 3916-bis — Comptes crypto étrangers',
 };
 
-const OfficialPdfViewer = ({ pdfUrl }: { pdfUrl: string }) => {
-  const [state, setState] = useState<'loading' | 'loaded' | 'error'>('loading');
+/** Local PDF paths served from /public/forms/ */
+const LOCAL_PDF_PATHS: Record<string, string> = {
+  '2086': '/forms/2086.pdf',
+  '3916-bis': '/forms/3916-bis.pdf',
+};
 
-  // Google Docs Viewer as primary viewer since impots.gouv.fr blocks direct iframes
-  const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
-
-  // Timeout: if viewer hasn't loaded after 15s, show error with direct link
-  useEffect(() => {
-    if (state !== 'loading') return;
-    const timer = setTimeout(() => setState('error'), 15000);
-    return () => clearTimeout(timer);
-  }, [state]);
-
-  if (state === 'error') {
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 p-8 text-center">
-        <AlertTriangle className="h-12 w-12 text-warning" />
-        <h3 className="text-lg font-semibold">Impossible d'afficher le PDF ici</h3>
-        <p className="text-muted-foreground text-sm max-w-md">
-          Le formulaire officiel ne peut pas être affiché directement. Ouvrez-le dans un nouvel onglet pour le consulter et le remplir.
-        </p>
-        <Button onClick={() => window.open(pdfUrl, '_blank', 'noopener')}>
-          <ExternalLink className="h-4 w-4 mr-2" />
-          Ouvrir le PDF officiel
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => setState('loading')}>
-          Réessayer
-        </Button>
-      </div>
-    );
-  }
+const OfficialPdfViewer = ({ pdfUrl, formType }: { pdfUrl: string; formType: string }) => {
+  // Use local PDF if available, otherwise fall back to external URL
+  const localPath = LOCAL_PDF_PATHS[formType];
+  const iframeSrc = localPath ?? pdfUrl;
 
   return (
     <div className="relative w-full h-full">
-      {state === 'loading' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/80 z-10">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Chargement du formulaire officiel…</p>
-        </div>
-      )}
       <iframe
-        src={googleViewerUrl}
+        src={iframeSrc}
         className="w-full h-full border-0"
         title="Formulaire officiel PDF"
-        onLoad={() => setState('loaded')}
-        onError={() => setState('error')}
       />
     </div>
   );
@@ -131,8 +102,8 @@ export const InAppFormViewer = ({ deadline, profile, onClose }: InAppFormViewerP
         <div className="flex-1 flex overflow-hidden">
           {/* PDF column */}
           <div className={`flex-1 overflow-hidden ${showAssistant && !isMobile ? 'w-[65%]' : 'w-full'}`}>
-            {pdfUrl ? (
-              <OfficialPdfViewer pdfUrl={pdfUrl} />
+            {pdfUrl || LOCAL_PDF_PATHS[formType] ? (
+              <OfficialPdfViewer pdfUrl={pdfUrl} formType={formType} />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
                 <p>Aucun PDF officiel disponible pour ce formulaire.</p>
