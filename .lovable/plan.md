@@ -1,132 +1,87 @@
 
 
-# Filtres cliquables + Formulaires fiscaux in-app avec assistant AI
+# Afficher les formulaires officiels PDF in-app avec assistant
 
-## Vue d'ensemble
+## Objectif
 
-Deux ajouts majeurs au Cockpit Patrimonial :
-1. Les compteurs de statut (Optimisees, En cours, A faire, Ignorees) deviennent des filtres cliquables
-2. Les formulaires officiels (2086 crypto, 3916-bis comptes etrangers) s'ouvrent in-app avec un assistant AI contextuel en sidebar
+Remplacer les formulaires Capitalum personnalises (Crypto2086Form, ForeignAccounts3916Form) par l'affichage direct du **PDF officiel** d'impots.gouv.fr dans la colonne gauche du viewer, tout en conservant l'assistant AI contextuel dans la colonne droite.
 
----
+## Approche technique
 
-## Partie 1 : Filtres cliquables sur les compteurs
+Les PDFs officiels sont publiquement accessibles sur impots.gouv.fr. Le viewer utilisera :
 
-### OptimizationScoreBar.tsx
-- Les 4 blocs de stats deviennent des `<button>` avec effet visuel (ring + scale) quand actifs
-- Nouvelles props : `activeFilter: DeadlineStatus | null` et `onFilterByStatus: (status: DeadlineStatus | null) => void`
-- Un clic sur un statut deja actif desactive le filtre (toggle)
+1. **Priorite 1** : `<iframe>` natif du navigateur (tous les navigateurs modernes ont un lecteur PDF integre)
+2. **Fallback** : Google Docs Viewer (`https://docs.google.com/gview?url=...&embedded=true`) si le site bloque l'iframe direct
+3. **Fallback ultime** : lien d'ouverture dans un nouvel onglet + message explicatif
 
-### Calendar.tsx
-- Ajout d'un state `statusFilter: DeadlineStatus | null`
-- Passage des props au `OptimizationScoreBar`
-- Integration dans le `useMemo` de `filteredDeadlines` : si `statusFilter` est actif, filtrer par `tracking?.status`
+L'assistant AI, le `FormAssistantPanel`, reste identique et fonctionnel a cote du PDF.
 
----
+## Fichiers impactes
 
-## Partie 2 : Formulaires fiscaux in-app
+### `src/components/calendar/InAppFormViewer.tsx` (modifier)
 
-### Concept
-Les formulaires officiels publies en PDF (2086, 3916-bis) ne peuvent pas etre affiches en iframe (impots.gouv.fr bloque). A la place, l'application propose des formulaires internes reproduisant les champs officiels, pre-remplis avec les donnees du profil utilisateur, avec un assistant AI contextuel en sidebar.
+- Supprimer les imports de `Crypto2086Form` et `ForeignAccounts3916Form`
+- Remplacer `renderForm()` par un composant `OfficialPdfViewer` qui affiche l'iframe du PDF officiel
+- Ajouter un state pour gerer le chargement et les erreurs d'iframe
+- Conserver le layout split (PDF 65% / Assistant 35%)
+- Conserver le bouton "PDF officiel" dans le header comme lien de secours
 
-### Architecture des composants
+Structure du nouveau rendu :
 
 ```text
-Calendar.tsx
-  +-- DeadlineActionPanel
-        +-- InAppFormViewer (plein ecran, z-50)
-              +-- [Colonne gauche] Crypto2086Form / ForeignAccounts3916Form
-              +-- [Colonne droite / drawer mobile] FormAssistantPanel
+InAppFormViewer
+  +-- Header (titre + lien externe secours + bouton assistant mobile + fermer)
+  +-- [Colonne gauche 65%] iframe vers le PDF officiel
+  |     +-- Loading spinner pendant le chargement
+  |     +-- Message fallback si iframe bloque (avec lien direct)
+  +-- [Colonne droite 35%] FormAssistantPanel (inchange)
 ```
 
-### Nouveaux fichiers
+### `src/lib/deadlinesData.ts` (modifier)
 
-**src/components/calendar/InAppFormViewer.tsx**
-- Layout plein ecran (fixed inset-0 z-50)
-- Desktop : 2 colonnes (formulaire 65% / assistant 35%)
-- Mobile : formulaire plein ecran + drawer pour l'assistant (bouton flottant)
-- En-tete : nom du formulaire + lien vers le PDF officiel + bouton sauvegarder + bouton fermer
-- Selectionne le bon formulaire selon `formType`
+- S'assurer que les `externalUrl` pointent bien vers les PDFs telechargeables (pas les pages HTML)
+  - 2086 : URL directe du PDF officiel
+  - 3916-bis : URL directe du PDF officiel
+- Les champs `formType` et `hasInAppForm` restent en place
 
-**src/components/calendar/FormAssistantPanel.tsx**
-- Reutilise le hook `useGlossaryAI` existant
-- Contexte enrichi envoye au edge function `glossary-ai` :
-  - Type de formulaire (ex: "2086 - Crypto-actifs")
-  - Donnees du profil (TMI, PnL crypto, comptes etrangers...)
-  - Champ en cours de remplissage (optionnel)
-- Message d'accueil contextuel : "Tu remplis le formulaire 2086. D'apres ton profil, ta plus-value crypto est de X EUR..."
-- Suggestions proactives pre-configurees selon le formulaire
-- Meme UX que l'AIHelpWidget (messages, streaming, suggestions cliquables)
+### Fichiers NON supprimes (mais non utilises)
 
-**src/components/calendar/forms/Crypto2086Form.tsx**
-- Reproduit les champs cles du formulaire officiel 2086 :
-  - Liste dynamique de cessions (ajouter/supprimer) : date, actif cede, prix de cession, prix total d'acquisition du portefeuille, fraction de portefeuille cedee
-  - Calcul automatique de la plus/moins-value par cession (methode PMPA)
-  - Total des plus-values (case 3AN) et moins-values (case 3BN) calcule automatiquement
-  - Pre-remplissage du PnL crypto depuis le profil (`crypto_pnl_2025`)
-- Reutilise les types `CryptoTransaction` de `taxFormTypes.ts`
-- Sauvegarde dans `user_deadline_tracking.guide_progress.form_data` (JSONB existant)
-- Bouton "Telecharger le recap PDF" (utilise jsPDF)
-
-**src/components/calendar/forms/ForeignAccounts3916Form.tsx**
-- Reproduit les champs du 3916-bis :
-  - Liste dynamique de comptes : nom de la plateforme, pays, numero de compte, date d'ouverture, date de fermeture (optionnel), usage (trading, staking, epargne)
-  - Pre-remplissage si `crypto_wallet_address` existe dans le profil
-- Sauvegarde identique (guide_progress.form_data)
-- Export PDF du recap
-
-### Fichiers modifies
-
-**src/lib/deadlinesTypes.ts**
-- Ajout de `formType?: TaxFormType` sur l'interface `FiscalDeadline`
-- Ajout de `hasInAppForm?: boolean` pour signaler la disponibilite d'un formulaire interne
-- Ajout du type d'action `'inapp-form'` dans `DeadlineAction.type`
-
-**src/lib/deadlinesData.ts**
-- Echeance `crypto-2086-*` : ajout `formType: '2086'`, `hasInAppForm: true`
-- Echeance `crypto-3916bis-*` : ajout `formType: '3916-bis'`, `hasInAppForm: true`
-- Remplacement de l'action `type: 'external'` par `type: 'inapp-form'` pour ces deux echeances (le lien externe reste accessible dans le header du viewer)
-
-**src/components/calendar/DeadlineActionPanel.tsx**
-- Ajout d'un state `showInAppForm: boolean`
-- Dans `handleAction`, pour les actions de type `'inapp-form'` : afficher `InAppFormViewer` au lieu d'ouvrir un lien externe
-- Le `InAppFormViewer` recoit la deadline, le profil, et un callback `onClose`
-
----
+- `src/components/calendar/forms/Crypto2086Form.tsx` — conserve pour usage futur (mode "saisie assistee")
+- `src/components/calendar/forms/ForeignAccounts3916Form.tsx` — idem
+- `src/components/calendar/FormAssistantPanel.tsx` — **inchange**, continue de fonctionner tel quel
 
 ## Details techniques
 
-### Sauvegarde des donnees de formulaire
-- Stockage dans le champ JSONB existant `user_deadline_tracking.guide_progress` sous la cle `form_data`
-- Structure : `{ form_data: { formType: '2086', entries: [...], totals: {...}, savedAt: '...' } }`
-- Pas de nouvelle table necessaire
+### Gestion de l'iframe PDF
 
-### Contexte AI pour l'assistant
-- Le `FormAssistantPanel` appelle `useGlossaryAI.streamChat()` avec un topic specifique : `"Formulaire 2086 - Declaration crypto-actifs"`
-- Le userContext est enrichi avec les donnees crypto du profil
-- Suggestions contextuelles par formulaire :
-  - 2086 : "Comment calculer le PMPA ?", "Dois-je declarer les echanges crypto-crypto ?", "Qu'est-ce que la case 3AN ?"
-  - 3916-bis : "Quelles plateformes declarer ?", "Binance est-elle etrangere ?", "Wallet MetaMask = compte etranger ?"
+L'iframe pointera directement vers l'URL du PDF officiel. Le navigateur affiche nativement le PDF avec ses outils (zoom, telechargement, impression, remplissage des champs).
 
-### Formulaires supportes en V1
+```text
+<iframe src="https://www.impots.gouv.fr/formulaire/2086/..." />
+```
 
-| Formulaire | In-app | Raison |
-|---|---|---|
-| 2086 (crypto cessions) | Oui | Champs structures, donnees profil dispo |
-| 3916-bis (comptes crypto) | Oui | Simple liste de comptes |
-| Autres (IR, IFI, 2044...) | Non (lien externe) | Trop complexes |
+Si impots.gouv.fr bloque via `X-Frame-Options` ou CSP :
+- Detecter l'echec via `onError` ou un timeout
+- Basculer automatiquement sur Google Docs Viewer
+- Afficher un bouton "Ouvrir dans un nouvel onglet" comme dernier recours
 
-### Fichiers impactes (resume)
+### Mobile
+
+- Le PDF est affiche en plein ecran
+- L'assistant est accessible via un bouton flottant (drawer, comme actuellement)
+- Le PDF reste scrollable et zoomable via les gestes natifs du navigateur
+
+### Pas de nouvelle dependance
+
+Aucune librairie supplementaire (react-pdf, pdf.js) n'est necessaire : l'iframe native du navigateur gere le rendu PDF, y compris les formulaires remplissables.
+
+## Resume des changements
 
 | Fichier | Action |
 |---|---|
-| `src/components/calendar/OptimizationScoreBar.tsx` | Modifier (boutons cliquables) |
-| `src/pages/Calendar.tsx` | Modifier (state filtre) |
-| `src/lib/deadlinesTypes.ts` | Modifier (formType, hasInAppForm, action type) |
-| `src/lib/deadlinesData.ts` | Modifier (formType sur crypto deadlines) |
-| `src/components/calendar/DeadlineActionPanel.tsx` | Modifier (ouverture formulaire in-app) |
-| `src/components/calendar/InAppFormViewer.tsx` | Creer |
-| `src/components/calendar/FormAssistantPanel.tsx` | Creer |
-| `src/components/calendar/forms/Crypto2086Form.tsx` | Creer |
-| `src/components/calendar/forms/ForeignAccounts3916Form.tsx` | Creer |
+| `src/components/calendar/InAppFormViewer.tsx` | Modifier : remplacer formulaires custom par iframe PDF officiel |
+| `src/lib/deadlinesData.ts` | Verifier/corriger les URLs des PDFs officiels |
+| `FormAssistantPanel.tsx` | Aucun changement |
+| `Crypto2086Form.tsx` | Conserve mais plus importe dans le viewer |
+| `ForeignAccounts3916Form.tsx` | Conserve mais plus importe dans le viewer |
 
