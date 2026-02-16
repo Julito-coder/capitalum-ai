@@ -1128,6 +1128,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_deadline_tracking: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          deadline_key: string
+          guide_progress: Json | null
+          id: string
+          ignored_reason: string | null
+          notes: string | null
+          status: string
+          updated_at: string
+          uploaded_proof_url: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          deadline_key: string
+          guide_progress?: Json | null
+          id?: string
+          ignored_reason?: string | null
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_proof_url?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          deadline_key?: string
+          guide_progress?: Json | null
+          id?: string
+          ignored_reason?: string | null
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_proof_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       zone_data: {
         Row: {
           charges_estimate: number | null
