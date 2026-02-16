@@ -17,40 +17,18 @@ const FORM_TITLES: Record<string, string> = {
   '3916-bis': 'Formulaire 3916-bis — Comptes crypto étrangers',
 };
 
-/** Timeout (ms) before assuming the direct iframe is blocked */
-const IFRAME_LOAD_TIMEOUT_MS = 8000;
-
-type PdfLoadState = 'loading' | 'loaded' | 'fallback-loading' | 'fallback-loaded' | 'error';
-
 const OfficialPdfViewer = ({ pdfUrl }: { pdfUrl: string }) => {
-  const [state, setState] = useState<PdfLoadState>('loading');
+  const [state, setState] = useState<'loading' | 'loaded' | 'error'>('loading');
 
+  // Google Docs Viewer as primary viewer since impots.gouv.fr blocks direct iframes
   const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
 
-  // Timeout: if the direct iframe hasn't fired onLoad, switch to fallback
+  // Timeout: if viewer hasn't loaded after 15s, show error with direct link
   useEffect(() => {
     if (state !== 'loading') return;
-    const timer = setTimeout(() => {
-      setState('fallback-loading');
-    }, IFRAME_LOAD_TIMEOUT_MS);
+    const timer = setTimeout(() => setState('error'), 15000);
     return () => clearTimeout(timer);
   }, [state]);
-
-  const handleDirectLoad = () => {
-    if (state === 'loading') setState('loaded');
-  };
-
-  const handleFallbackLoad = () => {
-    if (state === 'fallback-loading') setState('fallback-loaded');
-  };
-
-  const handleFallbackError = () => {
-    setState('error');
-  };
-
-  const isShowingDirect = state === 'loading' || state === 'loaded';
-  const isShowingFallback = state === 'fallback-loading' || state === 'fallback-loaded';
-  const isLoading = state === 'loading' || state === 'fallback-loading';
 
   if (state === 'error') {
     return (
@@ -58,11 +36,14 @@ const OfficialPdfViewer = ({ pdfUrl }: { pdfUrl: string }) => {
         <AlertTriangle className="h-12 w-12 text-warning" />
         <h3 className="text-lg font-semibold">Impossible d'afficher le PDF ici</h3>
         <p className="text-muted-foreground text-sm max-w-md">
-          Le site officiel bloque l'affichage intégré. Vous pouvez ouvrir le formulaire directement dans un nouvel onglet.
+          Le formulaire officiel ne peut pas être affiché directement. Ouvrez-le dans un nouvel onglet pour le consulter et le remplir.
         </p>
         <Button onClick={() => window.open(pdfUrl, '_blank', 'noopener')}>
           <ExternalLink className="h-4 w-4 mr-2" />
           Ouvrir le PDF officiel
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setState('loading')}>
+          Réessayer
         </Button>
       </div>
     );
@@ -70,33 +51,19 @@ const OfficialPdfViewer = ({ pdfUrl }: { pdfUrl: string }) => {
 
   return (
     <div className="relative w-full h-full">
-      {isLoading && (
+      {state === 'loading' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/80 z-10">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">
-            {state === 'loading' ? 'Chargement du PDF officiel…' : 'Tentative via le lecteur alternatif…'}
-          </p>
+          <p className="text-sm text-muted-foreground">Chargement du formulaire officiel…</p>
         </div>
       )}
-
-      {isShowingDirect && (
-        <iframe
-          src={pdfUrl}
-          className="w-full h-full border-0"
-          title="Formulaire officiel PDF"
-          onLoad={handleDirectLoad}
-        />
-      )}
-
-      {isShowingFallback && (
-        <iframe
-          src={googleViewerUrl}
-          className="w-full h-full border-0"
-          title="Formulaire officiel PDF (lecteur alternatif)"
-          onLoad={handleFallbackLoad}
-          onError={handleFallbackError}
-        />
-      )}
+      <iframe
+        src={googleViewerUrl}
+        className="w-full h-full border-0"
+        title="Formulaire officiel PDF"
+        onLoad={() => setState('loaded')}
+        onError={() => setState('error')}
+      />
     </div>
   );
 };
