@@ -128,8 +128,8 @@ export const WizardCalculStep = ({ transactions = [] }: Props) => {
                 type="number"
                 min={0}
                 step="any"
-                placeholder={autoTotalAcquisitions > 0 ? String(autoTotalAcquisitions) : 'Ex : 10000'}
-                value={totalAcquisitionsOverride}
+                placeholder="Ex : 10000"
+                value={totalAcquisitionsOverride !== '' ? totalAcquisitionsOverride : (autoTotalAcquisitions > 0 ? String(autoTotalAcquisitions) : '')}
                 onChange={(e) => setTotalAcquisitionsOverride(e.target.value)}
               />
             </div>
@@ -142,8 +142,8 @@ export const WizardCalculStep = ({ transactions = [] }: Props) => {
                 type="number"
                 min={0}
                 step="any"
-                placeholder={autoPortfolioValue > 0 ? String(autoPortfolioValue) : 'Ex : 15000'}
-                value={portfolioValueOverride}
+                placeholder="Ex : 15000"
+                value={portfolioValueOverride !== '' ? portfolioValueOverride : (autoPortfolioValue > 0 ? String(autoPortfolioValue) : '')}
                 onChange={(e) => setPortfolioValueOverride(e.target.value)}
               />
             </div>
