@@ -152,6 +152,36 @@ export function computeTaxYear(input: TaxYearInput): CryptoTaxComputation {
   };
 }
 
+// ── Simplified global PV for wizard ─────────────
+
+/**
+ * Calcule les PV/MV globales à partir de transactions brutes.
+ * Wrapper simplifié pour le wizard.
+ */
+export function computeGlobalPV(
+  taxableTransactions: CryptoTransaction[],
+  totalAcquisitionsEur: number,
+  portfolioValueEur: number
+): CryptoTaxComputation {
+  const cessions: CessionInput[] = taxableTransactions.map((tx) => ({
+    transactionId: tx.id,
+    date: tx.txTimestamp,
+    assetName: tx.assetFrom,
+    prixCession: tx.fiatValueEur ?? 0,
+    prixTotalAcquisitionPortefeuille: totalAcquisitionsEur,
+    valeurGlobalePortefeuille: portfolioValueEur,
+    frais: tx.feesEur,
+  }));
+
+  return computeTaxYear({
+    userId: '',
+    taxYear: new Date().getFullYear(),
+    cessions,
+    totalAcquisitionsEur,
+    portfolioValueEur,
+  });
+}
+
 // ── Field mapping for 2086 ──────────────────────
 
 export function computeFieldMapping(computation: CryptoTaxComputation): FieldMapping {

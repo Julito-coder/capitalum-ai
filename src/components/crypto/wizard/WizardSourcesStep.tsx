@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,18 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Trash2, Building2, Wallet, Info } from 'lucide-react';
+import type { AccountDraft } from '@/pages/crypto/CryptoWizard';
 
-interface AccountDraft {
-  id: string;
-  name: string;
-  accountType: 'exchange' | 'wallet';
-  country: string;
-  isForeignAccount: boolean;
+interface Props {
+  accounts: AccountDraft[];
+  setAccounts: React.Dispatch<React.SetStateAction<AccountDraft[]>>;
 }
 
-export const WizardSourcesStep = () => {
-  const [accounts, setAccounts] = useState<AccountDraft[]>([]);
-
+export const WizardSourcesStep = ({ accounts, setAccounts }: Props) => {
   const addAccount = () => {
     setAccounts((prev) => [
       ...prev,
@@ -36,7 +31,6 @@ export const WizardSourcesStep = () => {
       prev.map((a) => {
         if (a.id !== id) return a;
         const updated = { ...a, [field]: value };
-        // Auto-detect foreign
         if (field === 'country') {
           updated.isForeignAccount = value !== 'FR';
         }
@@ -60,7 +54,6 @@ export const WizardSourcesStep = () => {
         </p>
       </div>
 
-      {/* Foreign account warning */}
       {hasForeignAccounts && (
         <div className="p-3 rounded-xl bg-warning/10 border border-warning/20">
           <div className="flex items-start gap-2">
@@ -73,7 +66,6 @@ export const WizardSourcesStep = () => {
         </div>
       )}
 
-      {/* Account list */}
       <div className="space-y-3">
         {accounts.map((account) => (
           <Card key={account.id} className="border-border/30">
@@ -89,12 +81,7 @@ export const WizardSourcesStep = () => {
                     {account.name || 'Nouveau compte'}
                   </span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive"
-                  onClick={() => removeAccount(account.id)}
-                >
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeAccount(account.id)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -102,21 +89,12 @@ export const WizardSourcesStep = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs">Nom</Label>
-                  <Input
-                    placeholder="Ex: Binance, Ledger..."
-                    value={account.name}
-                    onChange={(e) => updateAccount(account.id, 'name', e.target.value)}
-                  />
+                  <Input placeholder="Ex: Binance, Ledger..." value={account.name} onChange={(e) => updateAccount(account.id, 'name', e.target.value)} />
                 </div>
                 <div>
                   <Label className="text-xs">Type</Label>
-                  <Select
-                    value={account.accountType}
-                    onValueChange={(v) => updateAccount(account.id, 'accountType', v)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                  <Select value={account.accountType} onValueChange={(v) => updateAccount(account.id, 'accountType', v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="exchange">Exchange</SelectItem>
                       <SelectItem value="wallet">Wallet</SelectItem>
@@ -128,13 +106,8 @@ export const WizardSourcesStep = () => {
               <div className="grid grid-cols-2 gap-3 items-end">
                 <div>
                   <Label className="text-xs">Pays</Label>
-                  <Select
-                    value={account.country}
-                    onValueChange={(v) => updateAccount(account.id, 'country', v)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                  <Select value={account.country} onValueChange={(v) => updateAccount(account.id, 'country', v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="FR">France</SelectItem>
                       <SelectItem value="US">États-Unis</SelectItem>
@@ -146,10 +119,7 @@ export const WizardSourcesStep = () => {
                   </Select>
                 </div>
                 <div className="flex items-center gap-2 pb-2">
-                  <Switch
-                    checked={account.isForeignAccount}
-                    onCheckedChange={(v) => updateAccount(account.id, 'isForeignAccount', v)}
-                  />
+                  <Switch checked={account.isForeignAccount} onCheckedChange={(v) => updateAccount(account.id, 'isForeignAccount', v)} />
                   <Label className="text-xs">Compte étranger</Label>
                 </div>
               </div>

@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, ArrowRight, Coins, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { WizardStep } from '@/domain/crypto/types';
+import type { WizardStep, TransactionClassification } from '@/domain/crypto/types';
 
 import { WizardSourcesStep } from '@/components/crypto/wizard/WizardSourcesStep';
 import { WizardTransactionsStep } from '@/components/crypto/wizard/WizardTransactionsStep';
@@ -14,6 +14,27 @@ import { WizardValorisationStep } from '@/components/crypto/wizard/WizardValoris
 import { WizardQualificationStep } from '@/components/crypto/wizard/WizardQualificationStep';
 import { WizardCalculStep } from '@/components/crypto/wizard/WizardCalculStep';
 import { WizardPreparationStep } from '@/components/crypto/wizard/WizardPreparationStep';
+
+// ── Shared wizard state types ──
+export interface AccountDraft {
+  id: string;
+  name: string;
+  accountType: 'exchange' | 'wallet';
+  country: string;
+  isForeignAccount: boolean;
+}
+
+export interface TxDraft {
+  id: string;
+  date: string;
+  assetFrom: string;
+  assetTo: string;
+  qtyFrom: string;
+  qtyTo: string;
+  fiatValueEur: string;
+  feesEur: string;
+  classification: TransactionClassification;
+}
 
 const STEPS: { key: WizardStep; label: string; shortLabel: string }[] = [
   { key: 'sources', label: 'Sources & comptes', shortLabel: 'Sources' },
@@ -30,6 +51,10 @@ const CryptoWizard = () => {
   const currentStep = STEPS[currentStepIdx];
   const progressPct = Math.round(((currentStepIdx + 1) / STEPS.length) * 100);
 
+  // ── Shared state ──
+  const [accounts, setAccounts] = useState<AccountDraft[]>([]);
+  const [transactions, setTransactions] = useState<TxDraft[]>([]);
+
   const goNext = useCallback(() => {
     if (currentStepIdx < STEPS.length - 1) setCurrentStepIdx((i) => i + 1);
   }, [currentStepIdx]);
@@ -41,17 +66,17 @@ const CryptoWizard = () => {
   const renderStep = () => {
     switch (currentStep.key) {
       case 'sources':
-        return <WizardSourcesStep />;
+        return <WizardSourcesStep accounts={accounts} setAccounts={setAccounts} />;
       case 'transactions':
-        return <WizardTransactionsStep />;
+        return <WizardTransactionsStep transactions={transactions} setTransactions={setTransactions} />;
       case 'valorisation':
-        return <WizardValorisationStep />;
+        return <WizardValorisationStep transactions={transactions} setTransactions={setTransactions} />;
       case 'qualification':
-        return <WizardQualificationStep />;
+        return <WizardQualificationStep transactions={transactions} setTransactions={setTransactions} />;
       case 'calcul':
-        return <WizardCalculStep />;
+        return <WizardCalculStep transactions={transactions} />;
       case 'preparation':
-        return <WizardPreparationStep />;
+        return <WizardPreparationStep transactions={transactions} />;
       default:
         return null;
     }
