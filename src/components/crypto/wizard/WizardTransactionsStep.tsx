@@ -24,7 +24,7 @@ const CLASSIFICATIONS: { value: TransactionClassification; label: string }[] = [
   { value: 'gift', label: 'Don' },
 ];
 
-export const WizardTransactionsStep = ({ transactions, setTransactions }: Props) => {
+export const WizardTransactionsStep = ({ transactions = [], setTransactions }: Props) => {
   const addTransaction = () => {
     setTransactions((prev) => [
       ...prev,
