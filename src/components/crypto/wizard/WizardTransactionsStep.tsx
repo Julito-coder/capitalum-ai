@@ -1,15 +1,17 @@
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Upload, FileSpreadsheet, Info, Lightbulb } from 'lucide-react';
+import { Plus, Trash2, Upload, FileSpreadsheet, Info, Lightbulb, Building2 } from 'lucide-react';
 import type { TransactionClassification } from '@/domain/crypto/types';
-import type { TxDraft } from '@/pages/crypto/CryptoWizard';
+import type { TxDraft, AccountDraft } from '@/pages/crypto/CryptoWizard';
 
 interface Props {
   transactions: TxDraft[];
   setTransactions: React.Dispatch<React.SetStateAction<TxDraft[]>>;
+  accounts: AccountDraft[];
 }
 
 const CLASSIFICATIONS: { value: TransactionClassification; label: string }[] = [
@@ -24,12 +26,13 @@ const CLASSIFICATIONS: { value: TransactionClassification; label: string }[] = [
   { value: 'gift', label: 'Don' },
 ];
 
-export const WizardTransactionsStep = ({ transactions = [], setTransactions }: Props) => {
-  const addTransaction = () => {
+export const WizardTransactionsStep = ({ transactions = [], setTransactions, accounts = [] }: Props) => {
+  const addTransaction = (accountId = '') => {
     setTransactions((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
+        accountId,
         date: '',
         assetFrom: '',
         assetTo: 'EUR',
@@ -37,7 +40,7 @@ export const WizardTransactionsStep = ({ transactions = [], setTransactions }: P
         qtyTo: '',
         fiatValueEur: '',
         feesEur: '',
-        classification: 'crypto_to_fiat',
+        classification: 'crypto_to_fiat' as TransactionClassification,
       },
     ]);
   };
@@ -49,6 +52,97 @@ export const WizardTransactionsStep = ({ transactions = [], setTransactions }: P
   const removeTx = (id: string) => {
     setTransactions((prev) => prev.filter((t) => t.id !== id));
   };
+
+  // Grouper les transactions par compte
+  const grouped = useMemo(() => {
+    const groups: { accountId: string; accountName: string; txs: TxDraft[] }[] = [];
+    
+    if (accounts.length > 0) {
+      for (const acc of accounts) {
+        groups.push({
+          accountId: acc.id,
+          accountName: acc.name,
+          txs: transactions.filter((t) => t.accountId === acc.id),
+        });
+      }
+      const orphans = transactions.filter((t) => !t.accountId || !accounts.find((a) => a.id === t.accountId));
+      if (orphans.length > 0) {
+        groups.push({ accountId: '', accountName: 'Sans compte', txs: orphans });
+      }
+    } else {
+      groups.push({ accountId: '', accountName: '', txs: transactions });
+    }
+    
+    return groups;
+  }, [transactions, accounts]);
+
+  const renderTxCard = (tx: TxDraft, idx: number) => (
+    <Card key={tx.id} className="border-border/30">
+      <CardContent className="py-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold">Transaction n°{idx + 1}</span>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeTx(tx.id)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Compte selector si plusieurs comptes */}
+        {accounts.length > 0 && (
+          <div>
+            <Label className="text-xs">Compte</Label>
+            <Select value={tx.accountId || ''} onValueChange={(v) => updateTx(tx.id, 'accountId', v)}>
+              <SelectTrigger><SelectValue placeholder="Sélectionner un compte" /></SelectTrigger>
+              <SelectContent>
+                {accounts.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>{a.name} ({a.country})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Date</Label>
+            <Input type="date" value={tx.date} onChange={(e) => updateTx(tx.id, 'date', e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">Type</Label>
+            <Select value={tx.classification} onValueChange={(v) => updateTx(tx.id, 'classification', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CLASSIFICATIONS.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Actif vendu</Label>
+            <Input placeholder="BTC" value={tx.assetFrom} onChange={(e) => updateTx(tx.id, 'assetFrom', e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">Quantité</Label>
+            <Input type="number" min={0} step="any" value={tx.qtyFrom} onChange={(e) => updateTx(tx.id, 'qtyFrom', e.target.value)} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Valeur EUR</Label>
+            <Input type="number" min={0} step="any" placeholder="0.00" value={tx.fiatValueEur} onChange={(e) => updateTx(tx.id, 'fiatValueEur', e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">Frais EUR</Label>
+            <Input type="number" min={0} step="any" placeholder="0.00" value={tx.feesEur} onChange={(e) => updateTx(tx.id, 'feesEur', e.target.value)} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-5">
@@ -95,63 +189,37 @@ export const WizardTransactionsStep = ({ transactions = [], setTransactions }: P
         <div className="flex-1 h-px bg-border" />
       </div>
 
-      {/* Manual entry */}
-      <div className="space-y-3">
-        {transactions.map((tx, idx) => (
-          <Card key={tx.id} className="border-border/30">
-            <CardContent className="py-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">Transaction n°{idx + 1}</span>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeTx(tx.id)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+      {/* Transactions groupées par compte */}
+      {accounts.length > 0 ? (
+        <div className="space-y-6">
+          {grouped.map((group) => (
+            <div key={group.accountId || 'orphan'} className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold">{group.accountName}</h3>
+                <span className="text-[10px] text-muted-foreground">
+                  ({group.txs.length} transaction{group.txs.length !== 1 ? 's' : ''})
+                </span>
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Date</Label>
-                  <Input type="date" value={tx.date} onChange={(e) => updateTx(tx.id, 'date', e.target.value)} />
-                </div>
-                <div>
-                  <Label className="text-xs">Type</Label>
-                  <Select value={tx.classification} onValueChange={(v) => updateTx(tx.id, 'classification', v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {CLASSIFICATIONS.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-3 pl-2 border-l-2 border-border/30">
+                {group.txs.map((tx, idx) => renderTxCard(tx, idx))}
+                {group.accountId && (
+                  <Button variant="outline" size="sm" onClick={() => addTransaction(group.accountId)} className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter sur {group.accountName}
+                  </Button>
+                )}
               </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {transactions.map((tx, idx) => renderTxCard(tx, idx))}
+        </div>
+      )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Actif vendu</Label>
-                  <Input placeholder="BTC" value={tx.assetFrom} onChange={(e) => updateTx(tx.id, 'assetFrom', e.target.value)} />
-                </div>
-                <div>
-                  <Label className="text-xs">Quantité</Label>
-                  <Input type="number" min={0} step="any" value={tx.qtyFrom} onChange={(e) => updateTx(tx.id, 'qtyFrom', e.target.value)} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Valeur EUR</Label>
-                  <Input type="number" min={0} step="any" placeholder="0.00" value={tx.fiatValueEur} onChange={(e) => updateTx(tx.id, 'fiatValueEur', e.target.value)} />
-                </div>
-                <div>
-                  <Label className="text-xs">Frais EUR</Label>
-                  <Input type="number" min={0} step="any" placeholder="0.00" value={tx.feesEur} onChange={(e) => updateTx(tx.id, 'feesEur', e.target.value)} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Button variant="outline" onClick={addTransaction} className="w-full">
+      <Button variant="outline" onClick={() => addTransaction(accounts.length === 1 ? accounts[0].id : '')} className="w-full">
         <Plus className="h-4 w-4 mr-2" />
         Ajouter une transaction
       </Button>

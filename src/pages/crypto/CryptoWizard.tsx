@@ -26,6 +26,7 @@ export interface AccountDraft {
 
 export interface TxDraft {
   id: string;
+  accountId: string;
   date: string;
   assetFrom: string;
   assetTo: string;
@@ -68,7 +69,7 @@ const CryptoWizard = () => {
       case 'sources':
         return <WizardSourcesStep accounts={accounts} setAccounts={setAccounts} />;
       case 'transactions':
-        return <WizardTransactionsStep transactions={transactions} setTransactions={setTransactions} />;
+        return <WizardTransactionsStep transactions={transactions} setTransactions={setTransactions} accounts={accounts} />;
       case 'valorisation':
         return <WizardValorisationStep transactions={transactions} setTransactions={setTransactions} />;
       case 'qualification':
