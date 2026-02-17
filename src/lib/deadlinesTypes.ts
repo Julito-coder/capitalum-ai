@@ -51,7 +51,7 @@ export interface DeadlineAction {
   id: string;
   label: string;
   icon: string;
-  type: 'guide' | 'simulation' | 'document' | 'external' | 'checklist' | 'inapp-form';
+  type: 'guide' | 'simulation' | 'document' | 'external' | 'checklist' | 'inapp-form' | 'navigate';
   /** Route to navigate or guide ID to open */
   target?: string;
 }

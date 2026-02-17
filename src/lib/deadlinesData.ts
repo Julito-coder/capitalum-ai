@@ -215,7 +215,7 @@ export const FISCAL_DEADLINES: FiscalDeadline[] = [
     formType: '2086',
     hasInAppForm: true,
     actions: [
-      { id: 'inapp-form', label: 'Remplir le formulaire 2086', icon: 'FileText', type: 'inapp-form' },
+      { id: 'prepare-2086', label: 'Préparer le formulaire 2086', icon: 'FileText', type: 'navigate', target: '/crypto/2086' },
       { id: 'scan', label: 'Vérifier ma déclaration', icon: 'Search', type: 'guide', target: '/scanner' },
       { id: 'checklist', label: 'Checklist crypto', icon: 'CheckSquare', type: 'checklist' },
     ],
