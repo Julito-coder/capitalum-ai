@@ -1,7 +1,10 @@
-import { useMemo } from 'react';
-import { Info, Calculator, TrendingUp, TrendingDown } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Info, Calculator, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { computeGlobalPV } from '@/domain/crypto/calculations';
 import type { CryptoTransaction } from '@/domain/crypto/types';
 import type { TxDraft } from '@/pages/crypto/CryptoWizard';
@@ -10,9 +13,10 @@ interface Props {
   transactions: TxDraft[];
 }
 
-function draftsToTransactions(drafts: TxDraft[]): CryptoTransaction[] {
+function draftsToTaxableTransactions(drafts: TxDraft[]): CryptoTransaction[] {
   return drafts
-    .filter((d) => d.date && d.assetFrom && d.qtyFrom)
+    .filter((d) => d.date && d.assetFrom && d.qtyFrom && ['crypto_to_fiat', 'payment'].includes(d.classification))
+    .filter((d) => d.fiatValueEur && parseFloat(d.fiatValueEur) > 0)
     .map((d) => ({
       id: d.id,
       userId: '',
@@ -22,34 +26,37 @@ function draftsToTransactions(drafts: TxDraft[]): CryptoTransaction[] {
       assetTo: d.assetTo || 'EUR',
       qtyFrom: parseFloat(d.qtyFrom) || 0,
       qtyTo: parseFloat(d.qtyTo) || 0,
-      fiatValueEur: parseFloat(d.fiatValueEur) || undefined,
+      fiatValueEur: parseFloat(d.fiatValueEur) || 0,
       feesEur: parseFloat(d.feesEur) || 0,
       feesQty: 0,
       source: 'manual' as const,
       classification: d.classification,
-      isTaxable: ['crypto_to_fiat', 'payment'].includes(d.classification),
+      isTaxable: true,
       flags: [],
     }));
 }
 
-export const WizardCalculStep = ({ transactions }: Props) => {
-  const domainTxs = useMemo(() => draftsToTransactions(transactions), [transactions]);
+export const WizardCalculStep = ({ transactions = [] }: Props) => {
+  // L'utilisateur doit renseigner ces deux valeurs clés pour le calcul PMPA
+  const [totalAcquisitions, setTotalAcquisitions] = useState('');
+  const [portfolioValue, setPortfolioValue] = useState('');
 
-  const taxableTxs = domainTxs.filter((t) => t.isTaxable && t.fiatValueEur && t.fiatValueEur > 0);
+  const taxableTxs = useMemo(() => draftsToTaxableTransactions(transactions), [transactions]);
 
-  const totalAcquisitions = domainTxs
-    .filter((t) => t.fiatValueEur)
-    .reduce((sum, t) => sum + (t.fiatValueEur || 0), 0);
+  const totalAcqNum = parseFloat(totalAcquisitions) || 0;
+  const portfolioNum = parseFloat(portfolioValue) || 0;
 
-  const portfolioValue = totalAcquisitions * 1.1; // simplified placeholder
+  const canCompute = taxableTxs.length > 0 && totalAcqNum > 0 && portfolioNum > 0;
 
   const computation = useMemo(() => {
-    if (taxableTxs.length === 0) return null;
-    return computeGlobalPV(taxableTxs, totalAcquisitions, portfolioValue);
-  }, [taxableTxs, totalAcquisitions, portfolioValue]);
+    if (!canCompute) return null;
+    return computeGlobalPV(taxableTxs, totalAcqNum, portfolioNum);
+  }, [canCompute, taxableTxs, totalAcqNum, portfolioNum]);
 
   const formatEur = (n: number) =>
     new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
+
+  const totalCessionsFromTxs = taxableTxs.reduce((s, t) => s + (t.fiatValueEur || 0), 0);
 
   return (
     <div className="space-y-5">
@@ -70,18 +77,75 @@ export const WizardCalculStep = ({ transactions }: Props) => {
               &nbsp;&nbsp;&nbsp;− (Prix total acquisition × Prix cession / Valeur globale portefeuille)<br />
               &nbsp;&nbsp;&nbsp;− Frais de cession
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Pour appliquer cette formule, tu dois renseigner le <strong>prix total d&apos;acquisition</strong> (somme
+              de tous tes achats crypto en EUR) et la <strong>valeur globale de ton portefeuille</strong> au moment
+              des cessions.
+            </p>
           </div>
         </div>
       </div>
 
-      {!computation || taxableTxs.length === 0 ? (
+      {/* Paramètres du portefeuille */}
+      <Card>
+        <CardContent className="py-4 space-y-4">
+          <h3 className="text-sm font-semibold">Paramètres du portefeuille</h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs">Prix total d&apos;acquisition (EUR)</Label>
+              <p className="text-[10px] text-muted-foreground mb-1">
+                Somme de tous tes achats crypto convertis en EUR
+              </p>
+              <Input
+                type="number"
+                min={0}
+                step="any"
+                placeholder="Ex : 10000"
+                value={totalAcquisitions}
+                onChange={(e) => setTotalAcquisitions(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Valeur globale du portefeuille (EUR)</Label>
+              <p className="text-[10px] text-muted-foreground mb-1">
+                Valeur totale de tes crypto au moment des cessions
+              </p>
+              <Input
+                type="number"
+                min={0}
+                step="any"
+                placeholder="Ex : 15000"
+                value={portfolioValue}
+                onChange={(e) => setPortfolioValue(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {taxableTxs.length > 0 && (
+            <div className="text-xs text-muted-foreground p-2 rounded-lg bg-muted/20">
+              <span className="font-semibold">{taxableTxs.length}</span> cession{taxableTxs.length > 1 ? 's' : ''} taxable{taxableTxs.length > 1 ? 's' : ''} détectée{taxableTxs.length > 1 ? 's' : ''} pour un total de <span className="font-semibold">{formatEur(totalCessionsFromTxs)}</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Résultats */}
+      {taxableTxs.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-8 text-center">
           <Calculator className="h-10 w-10 text-muted-foreground/30" />
           <p className="text-sm text-muted-foreground">
-            Complète les étapes précédentes (transactions taxables avec valorisation EUR) pour lancer le calcul.
+            Ajoute des transactions taxables (vente → EUR ou paiement) avec une valorisation EUR aux étapes précédentes.
           </p>
         </div>
-      ) : (
+      ) : !canCompute ? (
+        <div className="flex flex-col items-center gap-3 py-6 text-center">
+          <AlertTriangle className="h-8 w-8 text-warning" />
+          <p className="text-sm text-muted-foreground">
+            Renseigne le prix total d&apos;acquisition et la valeur globale du portefeuille ci-dessus pour lancer le calcul.
+          </p>
+        </div>
+      ) : computation ? (
         <>
           {/* Summary KPIs */}
           <div className="grid grid-cols-2 gap-3">
@@ -106,10 +170,25 @@ export const WizardCalculStep = ({ transactions }: Props) => {
             </Card>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <Card>
+              <CardContent className="py-4 text-center">
+                <p className="text-xs text-muted-foreground mb-1">Plus-values</p>
+                <p className="text-sm font-bold text-success">{formatEur(computation.gainsEur)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-4 text-center">
+                <p className="text-xs text-muted-foreground mb-1">Moins-values</p>
+                <p className="text-sm font-bold text-destructive">{formatEur(computation.lossesEur)}</p>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Detail lines */}
           <div className="space-y-2">
             <h3 className="text-sm font-semibold">Détail par cession</h3>
-            {computation.computedLines.map((line, idx) => (
+            {computation.computedLines.map((line) => (
               <Card key={line.transactionId} className="border-border/20">
                 <CardContent className="py-3">
                   <div className="flex items-center justify-between text-xs">
@@ -128,8 +207,24 @@ export const WizardCalculStep = ({ transactions }: Props) => {
               </Card>
             ))}
           </div>
+
+          {/* Audit trail */}
+          <details className="text-xs">
+            <summary className="cursor-pointer text-muted-foreground font-semibold py-2">
+              📋 Journal d&apos;audit (détail des calculs)
+            </summary>
+            <div className="space-y-2 mt-2">
+              {computation.auditTrail.map((entry, idx) => (
+                <div key={idx} className="p-2 rounded-lg bg-muted/10 border border-border/10">
+                  <p className="font-semibold">{entry.step}</p>
+                  <p className="font-mono text-[10px] text-muted-foreground">{entry.formula}</p>
+                  <p className="text-[10px]">Résultat : <span className="font-bold">{formatEur(entry.result)}</span></p>
+                </div>
+              ))}
+            </div>
+          </details>
         </>
-      )}
+      ) : null}
     </div>
   );
 };
