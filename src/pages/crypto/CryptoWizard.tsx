@@ -75,7 +75,7 @@ const CryptoWizard = () => {
       case 'qualification':
         return <WizardQualificationStep transactions={transactions} setTransactions={setTransactions} />;
       case 'calcul':
-        return <WizardCalculStep transactions={transactions} />;
+        return <WizardCalculStep transactions={transactions} accounts={accounts} />;
       case 'preparation':
         return <WizardPreparationStep transactions={transactions} />;
       default:
