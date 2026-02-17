@@ -1,21 +1,35 @@
 import { useState, useMemo } from 'react';
-import { Info, Calculator, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import { Info, Calculator, TrendingUp, TrendingDown, ChevronDown } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { computeGlobalPV } from '@/domain/crypto/calculations';
 import type { CryptoTransaction } from '@/domain/crypto/types';
-import type { TxDraft } from '@/pages/crypto/CryptoWizard';
+import type { TxDraft, AccountDraft } from '@/pages/crypto/CryptoWizard';
 
-interface Props {
-  transactions: TxDraft[];
+// ── Constants ──
+const FIAT_CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF'];
+const ACQUISITION_CLASSIFICATIONS = ['income', 'airdrop', 'mining', 'staking', 'gift'];
+const TAXABLE_CLASSIFICATIONS = ['crypto_to_fiat', 'payment'];
+
+// ── Helpers ──
+const formatEur = (n: number) =>
+  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
+
+function isAcquisitionTx(t: TxDraft): boolean {
+  const isFiatToCrypto = FIAT_CURRENCIES.includes(t.assetFrom?.toUpperCase?.() || '');
+  return isFiatToCrypto || ACQUISITION_CLASSIFICATIONS.includes(t.classification);
+}
+
+function isCessionTx(t: TxDraft): boolean {
+  return TAXABLE_CLASSIFICATIONS.includes(t.classification);
 }
 
 function draftsToTaxableTransactions(drafts: TxDraft[]): CryptoTransaction[] {
   return drafts
-    .filter((d) => d.date && d.assetFrom && d.qtyFrom && ['crypto_to_fiat', 'payment'].includes(d.classification))
+    .filter((d) => d.date && d.assetFrom && d.qtyFrom && isCessionTx(d))
     .filter((d) => d.fiatValueEur && parseFloat(d.fiatValueEur) > 0)
     .map((d) => ({
       id: d.id,
@@ -36,33 +50,56 @@ function draftsToTaxableTransactions(drafts: TxDraft[]): CryptoTransaction[] {
     }));
 }
 
-export const WizardCalculStep = ({ transactions = [] }: Props) => {
-  const taxableTxs = useMemo(() => draftsToTaxableTransactions(transactions), [transactions]);
+// ── Per-account stats ──
+interface AccountStats {
+  accountId: string;
+  accountName: string;
+  acquisitionCount: number;
+  acquisitionTotal: number;
+  cessionCount: number;
+  cessionTotal: number;
+}
 
-  // Auto-calcul du prix total d'acquisition à partir des transactions d'achat
+function computeAccountStats(accounts: AccountDraft[], transactions: TxDraft[]): AccountStats[] {
+  return accounts.map((acc) => {
+    const accTxs = transactions.filter((t) => t.accountId === acc.id);
+    const acqs = accTxs.filter(isAcquisitionTx);
+    const cess = accTxs.filter(isCessionTx);
+    return {
+      accountId: acc.id,
+      accountName: acc.name,
+      acquisitionCount: acqs.length,
+      acquisitionTotal: acqs.reduce((s, t) => s + (parseFloat(t.fiatValueEur) || 0), 0),
+      cessionCount: cess.length,
+      cessionTotal: cess.reduce((s, t) => s + (parseFloat(t.fiatValueEur) || 0), 0),
+    };
+  });
+}
+
+// ── Props ──
+interface Props {
+  transactions: TxDraft[];
+  accounts: AccountDraft[];
+}
+
+// ── Component ──
+export const WizardCalculStep = ({ transactions = [], accounts = [] }: Props) => {
+  const taxableTxs = useMemo(() => draftsToTaxableTransactions(transactions), [transactions]);
+  const accountStats = useMemo(() => computeAccountStats(accounts, transactions), [accounts, transactions]);
+
   const autoTotalAcquisitions = useMemo(() => {
-    const FIAT_CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF'];
-    const ACQUISITION_CLASSIFICATIONS: string[] = [
-      'income', 'airdrop', 'mining', 'staking', 'gift',
-    ];
     return transactions.reduce((sum, t) => {
-      const isFiatToCrypto = FIAT_CURRENCIES.includes(t.assetFrom?.toUpperCase?.() || '');
-      const isAcquisitionType = ACQUISITION_CLASSIFICATIONS.includes(t.classification);
-      if (isFiatToCrypto || isAcquisitionType) {
-        return sum + (parseFloat(t.fiatValueEur) || 0);
-      }
+      if (isAcquisitionTx(t)) return sum + (parseFloat(t.fiatValueEur) || 0);
       return sum;
     }, 0);
   }, [transactions]);
 
-  // Auto-calcul de la valeur globale du portefeuille :
-  // Acquisitions + somme des cessions (approximation conservatrice)
   const autoPortfolioValue = useMemo(() => {
     const totalCessions = taxableTxs.reduce((s, t) => s + (t.fiatValueEur || 0), 0);
     return autoTotalAcquisitions + totalCessions;
   }, [autoTotalAcquisitions, taxableTxs]);
 
-  // L'utilisateur peut ajuster manuellement (override)
+  // Overrides optionnels
   const [totalAcquisitionsOverride, setTotalAcquisitionsOverride] = useState('');
   const [portfolioValueOverride, setPortfolioValueOverride] = useState('');
 
@@ -73,15 +110,13 @@ export const WizardCalculStep = ({ transactions = [] }: Props) => {
     ? (parseFloat(portfolioValueOverride) || 0)
     : autoPortfolioValue;
 
+  // Calcul automatique dès que les données le permettent
   const canCompute = taxableTxs.length > 0 && totalAcqNum > 0 && portfolioNum > 0;
 
   const computation = useMemo(() => {
     if (!canCompute) return null;
     return computeGlobalPV(taxableTxs, totalAcqNum, portfolioNum);
   }, [canCompute, taxableTxs, totalAcqNum, portfolioNum]);
-
-  const formatEur = (n: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
 
   const totalCessionsFromTxs = taxableTxs.reduce((s, t) => s + (t.fiatValueEur || 0), 0);
 
@@ -90,86 +125,107 @@ export const WizardCalculStep = ({ transactions = [] }: Props) => {
       <div>
         <h2 className="font-semibold text-base">Étape 5 — Calcul PV / MV</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Capitalum applique la méthode officielle française (art. 150 VH bis CGI).
+          Le calcul PMPA est lancé automatiquement à partir de vos transactions.
         </p>
       </div>
 
+      {/* Formule info */}
       <div className="p-4 rounded-xl bg-info/5 border border-info/20">
         <div className="flex items-start gap-3">
           <Info className="h-5 w-5 text-info mt-0.5 shrink-0" />
           <div className="text-sm">
-            <p className="font-semibold mb-1">Formule de calcul (PMPA)</p>
+            <p className="font-semibold mb-1">Méthode PMPA (art. 150 VH bis CGI)</p>
             <div className="font-mono text-xs bg-muted/30 p-3 rounded-lg mt-2">
               PV = Prix de cession<br />
               &nbsp;&nbsp;&nbsp;− (Prix total acquisition × Prix cession / Valeur globale portefeuille)<br />
               &nbsp;&nbsp;&nbsp;− Frais de cession
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Pour appliquer cette formule, tu dois renseigner le <strong>prix total d&apos;acquisition</strong> (somme
-              de tous tes achats crypto en EUR) et la <strong>valeur globale de ton portefeuille</strong> au moment
-              des cessions.
-            </p>
           </div>
         </div>
       </div>
 
-      {/* Paramètres du portefeuille */}
-      <Card>
-        <CardContent className="py-4 space-y-4">
-          <h3 className="text-sm font-semibold">Paramètres du portefeuille</h3>
+      {/* Récap par compte */}
+      {accountStats.length > 0 && (
+        <Card>
+          <CardContent className="py-4 space-y-3">
+            <h3 className="text-sm font-semibold">Récapitulatif par compte</h3>
+            {accountStats.map((s) => (
+              <div key={s.accountId} className="flex items-center justify-between text-xs p-2 rounded-lg bg-muted/20">
+                <span className="font-semibold">{s.accountName}</span>
+                <div className="flex gap-4 text-muted-foreground">
+                  <span>{s.acquisitionCount} achat{s.acquisitionCount > 1 ? 's' : ''} = {formatEur(s.acquisitionTotal)}</span>
+                  <span>{s.cessionCount} vente{s.cessionCount > 1 ? 's' : ''} = {formatEur(s.cessionTotal)}</span>
+                </div>
+              </div>
+            ))}
+            <div className="flex items-center justify-between text-xs font-semibold pt-2 border-t border-border/30">
+              <span>Total</span>
+              <div className="flex gap-4">
+                <span className="text-success">Acquisitions : {formatEur(autoTotalAcquisitions)}</span>
+                <span className="text-primary">Cessions : {formatEur(totalCessionsFromTxs)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label className="text-xs">Prix total d&apos;acquisition (EUR)</Label>
-              <p className="text-[10px] text-muted-foreground mb-1">
-                Pré-rempli depuis tes achats ({formatEur(autoTotalAcquisitions)}). Modifie si besoin.
-              </p>
-              <Input
-                type="number"
-                min={0}
-                step="any"
-                placeholder="Ex : 10000"
-                value={totalAcquisitionsOverride !== '' ? totalAcquisitionsOverride : (autoTotalAcquisitions > 0 ? String(autoTotalAcquisitions) : '')}
-                onChange={(e) => setTotalAcquisitionsOverride(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Valeur globale du portefeuille (EUR)</Label>
-              <p className="text-[10px] text-muted-foreground mb-1">
-                Estimée à {formatEur(autoPortfolioValue)}. Ajuste avec la valeur réelle.
-              </p>
-              <Input
-                type="number"
-                min={0}
-                step="any"
-                placeholder="Ex : 15000"
-                value={portfolioValueOverride !== '' ? portfolioValueOverride : (autoPortfolioValue > 0 ? String(autoPortfolioValue) : '')}
-                onChange={(e) => setPortfolioValueOverride(e.target.value)}
-              />
-            </div>
-          </div>
+      {/* Paramètres ajustables (optionnels) */}
+      <Collapsible>
+        <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-2">
+          <ChevronDown className="h-3 w-3" />
+          Ajuster manuellement les paramètres (optionnel)
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <Card className="mt-2">
+            <CardContent className="py-4 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs">Prix total d&apos;acquisition (EUR)</Label>
+                  <p className="text-[10px] text-muted-foreground mb-1">
+                    Auto : {formatEur(autoTotalAcquisitions)}
+                  </p>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="any"
+                    placeholder={String(autoTotalAcquisitions)}
+                    value={totalAcquisitionsOverride}
+                    onChange={(e) => setTotalAcquisitionsOverride(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Valeur globale du portefeuille (EUR)</Label>
+                  <p className="text-[10px] text-muted-foreground mb-1">
+                    Auto : {formatEur(autoPortfolioValue)}
+                  </p>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="any"
+                    placeholder={String(autoPortfolioValue)}
+                    value={portfolioValueOverride}
+                    onChange={(e) => setPortfolioValueOverride(e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </CollapsibleContent>
+      </Collapsible>
 
-          {taxableTxs.length > 0 && (
-            <div className="text-xs text-muted-foreground p-2 rounded-lg bg-muted/20">
-              <span className="font-semibold">{taxableTxs.length}</span> cession{taxableTxs.length > 1 ? 's' : ''} taxable{taxableTxs.length > 1 ? 's' : ''} détectée{taxableTxs.length > 1 ? 's' : ''} pour un total de <span className="font-semibold">{formatEur(totalCessionsFromTxs)}</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Résumé cessions */}
+      {taxableTxs.length > 0 && (
+        <div className="text-xs text-muted-foreground p-2 rounded-lg bg-muted/20">
+          <span className="font-semibold">{taxableTxs.length}</span> cession{taxableTxs.length > 1 ? 's' : ''} taxable{taxableTxs.length > 1 ? 's' : ''} pour un total de <span className="font-semibold">{formatEur(totalCessionsFromTxs)}</span>
+        </div>
+      )}
 
       {/* Résultats */}
       {taxableTxs.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-8 text-center">
           <Calculator className="h-10 w-10 text-muted-foreground/30" />
           <p className="text-sm text-muted-foreground">
-            Ajoute des transactions taxables (vente → EUR ou paiement) avec une valorisation EUR aux étapes précédentes.
-          </p>
-        </div>
-      ) : !canCompute ? (
-        <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <AlertTriangle className="h-8 w-8 text-warning" />
-          <p className="text-sm text-muted-foreground">
-            Renseigne le prix total d&apos;acquisition et la valeur globale du portefeuille ci-dessus pour lancer le calcul.
+            Ajoutez des cessions taxables (vente → EUR ou paiement) avec une valorisation EUR aux étapes précédentes.
           </p>
         </div>
       ) : computation ? (
