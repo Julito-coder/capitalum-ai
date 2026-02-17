@@ -12,7 +12,7 @@ interface Props {
   setAccounts: React.Dispatch<React.SetStateAction<AccountDraft[]>>;
 }
 
-export const WizardSourcesStep = ({ accounts, setAccounts }: Props) => {
+export const WizardSourcesStep = ({ accounts = [], setAccounts }: Props) => {
   const addAccount = () => {
     setAccounts((prev) => [
       ...prev,
