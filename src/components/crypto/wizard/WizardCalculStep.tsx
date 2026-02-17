@@ -37,14 +37,41 @@ function draftsToTaxableTransactions(drafts: TxDraft[]): CryptoTransaction[] {
 }
 
 export const WizardCalculStep = ({ transactions = [] }: Props) => {
-  // L'utilisateur doit renseigner ces deux valeurs clés pour le calcul PMPA
-  const [totalAcquisitions, setTotalAcquisitions] = useState('');
-  const [portfolioValue, setPortfolioValue] = useState('');
-
   const taxableTxs = useMemo(() => draftsToTaxableTransactions(transactions), [transactions]);
 
-  const totalAcqNum = parseFloat(totalAcquisitions) || 0;
-  const portfolioNum = parseFloat(portfolioValue) || 0;
+  // Auto-calcul du prix total d'acquisition à partir des transactions d'achat
+  const autoTotalAcquisitions = useMemo(() => {
+    const FIAT_CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF'];
+    const ACQUISITION_CLASSIFICATIONS: string[] = [
+      'income', 'airdrop', 'mining', 'staking', 'gift',
+    ];
+    return transactions.reduce((sum, t) => {
+      const isFiatToCrypto = FIAT_CURRENCIES.includes(t.assetFrom?.toUpperCase?.() || '');
+      const isAcquisitionType = ACQUISITION_CLASSIFICATIONS.includes(t.classification);
+      if (isFiatToCrypto || isAcquisitionType) {
+        return sum + (parseFloat(t.fiatValueEur) || 0);
+      }
+      return sum;
+    }, 0);
+  }, [transactions]);
+
+  // Auto-calcul de la valeur globale du portefeuille :
+  // Acquisitions + somme des cessions (approximation conservatrice)
+  const autoPortfolioValue = useMemo(() => {
+    const totalCessions = taxableTxs.reduce((s, t) => s + (t.fiatValueEur || 0), 0);
+    return autoTotalAcquisitions + totalCessions;
+  }, [autoTotalAcquisitions, taxableTxs]);
+
+  // L'utilisateur peut ajuster manuellement (override)
+  const [totalAcquisitionsOverride, setTotalAcquisitionsOverride] = useState('');
+  const [portfolioValueOverride, setPortfolioValueOverride] = useState('');
+
+  const totalAcqNum = totalAcquisitionsOverride !== ''
+    ? (parseFloat(totalAcquisitionsOverride) || 0)
+    : autoTotalAcquisitions;
+  const portfolioNum = portfolioValueOverride !== ''
+    ? (parseFloat(portfolioValueOverride) || 0)
+    : autoPortfolioValue;
 
   const canCompute = taxableTxs.length > 0 && totalAcqNum > 0 && portfolioNum > 0;
 
@@ -95,29 +122,29 @@ export const WizardCalculStep = ({ transactions = [] }: Props) => {
             <div>
               <Label className="text-xs">Prix total d&apos;acquisition (EUR)</Label>
               <p className="text-[10px] text-muted-foreground mb-1">
-                Somme de tous tes achats crypto convertis en EUR
+                Pré-rempli depuis tes achats ({formatEur(autoTotalAcquisitions)}). Modifie si besoin.
               </p>
               <Input
                 type="number"
                 min={0}
                 step="any"
-                placeholder="Ex : 10000"
-                value={totalAcquisitions}
-                onChange={(e) => setTotalAcquisitions(e.target.value)}
+                placeholder={autoTotalAcquisitions > 0 ? String(autoTotalAcquisitions) : 'Ex : 10000'}
+                value={totalAcquisitionsOverride}
+                onChange={(e) => setTotalAcquisitionsOverride(e.target.value)}
               />
             </div>
             <div>
               <Label className="text-xs">Valeur globale du portefeuille (EUR)</Label>
               <p className="text-[10px] text-muted-foreground mb-1">
-                Valeur totale de tes crypto au moment des cessions
+                Estimée à {formatEur(autoPortfolioValue)}. Ajuste avec la valeur réelle.
               </p>
               <Input
                 type="number"
                 min={0}
                 step="any"
-                placeholder="Ex : 15000"
-                value={portfolioValue}
-                onChange={(e) => setPortfolioValue(e.target.value)}
+                placeholder={autoPortfolioValue > 0 ? String(autoPortfolioValue) : 'Ex : 15000'}
+                value={portfolioValueOverride}
+                onChange={(e) => setPortfolioValueOverride(e.target.value)}
               />
             </div>
           </div>
