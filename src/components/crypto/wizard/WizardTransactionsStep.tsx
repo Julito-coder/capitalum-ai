@@ -1,22 +1,15 @@
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Upload, FileSpreadsheet, Info } from 'lucide-react';
+import { Plus, Trash2, Upload, FileSpreadsheet, Info, Lightbulb } from 'lucide-react';
 import type { TransactionClassification } from '@/domain/crypto/types';
+import type { TxDraft } from '@/pages/crypto/CryptoWizard';
 
-interface TxDraft {
-  id: string;
-  date: string;
-  assetFrom: string;
-  assetTo: string;
-  qtyFrom: string;
-  qtyTo: string;
-  fiatValueEur: string;
-  feesEur: string;
-  classification: TransactionClassification;
+interface Props {
+  transactions: TxDraft[];
+  setTransactions: React.Dispatch<React.SetStateAction<TxDraft[]>>;
 }
 
 const CLASSIFICATIONS: { value: TransactionClassification; label: string }[] = [
@@ -31,9 +24,7 @@ const CLASSIFICATIONS: { value: TransactionClassification; label: string }[] = [
   { value: 'gift', label: 'Don' },
 ];
 
-export const WizardTransactionsStep = () => {
-  const [transactions, setTransactions] = useState<TxDraft[]>([]);
-
+export const WizardTransactionsStep = ({ transactions, setTransactions }: Props) => {
   const addTransaction = () => {
     setTransactions((prev) => [
       ...prev,
@@ -64,8 +55,23 @@ export const WizardTransactionsStep = () => {
       <div>
         <h2 className="font-semibold text-base">Étape 2 — Transactions</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Importe ou saisis manuellement toutes tes opérations crypto de l'année.
+          Importe ou saisis manuellement toutes tes opérations crypto de l&apos;année.
         </p>
+      </div>
+
+      {/* CSV tip banner */}
+      <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+        <div className="flex items-start gap-3">
+          <Lightbulb className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+          <div className="text-sm">
+            <p className="font-semibold text-foreground mb-1">💡 Astuce : exporte tes transactions en CSV</p>
+            <p className="text-xs text-muted-foreground">
+              La plupart des plateformes (Binance, Coinbase, Kraken, Bitpanda, Revolut, Trade Republic…) 
+              permettent d&apos;exporter l&apos;historique de tes transactions au format CSV depuis les paramètres 
+              ou la section « Historique / Rapports ». C&apos;est plus fiable et plus rapide que la saisie manuelle.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* CSV Import placeholder */}
@@ -81,6 +87,13 @@ export const WizardTransactionsStep = () => {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Separator */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-xs text-muted-foreground font-medium">ou saisie manuelle</span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
 
       {/* Manual entry */}
       <div className="space-y-3">
@@ -145,7 +158,16 @@ export const WizardTransactionsStep = () => {
 
       {transactions.length === 0 && (
         <div className="text-center py-4">
+          <Info className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">Importe un CSV ou ajoute des transactions manuellement.</p>
+        </div>
+      )}
+
+      {transactions.length > 0 && (
+        <div className="p-3 rounded-xl bg-success/5 border border-success/20 text-center">
+          <p className="text-sm font-semibold text-success">
+            {transactions.length} transaction{transactions.length > 1 ? 's' : ''} saisie{transactions.length > 1 ? 's' : ''}
+          </p>
         </div>
       )}
     </div>

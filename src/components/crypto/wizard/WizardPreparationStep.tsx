@@ -1,6 +1,12 @@
 import { Info, FileText, CheckCircle2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { useState, useMemo } from 'react';
+import type { TxDraft } from '@/pages/crypto/CryptoWizard';
+
+interface Props {
+  transactions: TxDraft[];
+}
 
 const CHECKLIST_ITEMS = [
   'Comptes étrangers déclarés ? (3916 / 3916-bis)',
@@ -10,7 +16,7 @@ const CHECKLIST_ITEMS = [
   'Export PDF généré',
 ];
 
-export const WizardPreparationStep = () => {
+export const WizardPreparationStep = ({ transactions }: Props) => {
   const [checked, setChecked] = useState<Record<number, boolean>>({});
 
   const toggleItem = (idx: number) => {
@@ -18,6 +24,14 @@ export const WizardPreparationStep = () => {
   };
 
   const completedCount = Object.values(checked).filter(Boolean).length;
+
+  const taxableCount = transactions.filter((t) =>
+    ['crypto_to_fiat', 'payment'].includes(t.classification)
+  ).length;
+
+  const missingValorisation = transactions.filter(
+    (t) => ['crypto_to_fiat', 'payment'].includes(t.classification) && (!t.fiatValueEur || parseFloat(t.fiatValueEur) <= 0)
+  ).length;
 
   return (
     <div className="space-y-5">
@@ -28,6 +42,7 @@ export const WizardPreparationStep = () => {
         </p>
       </div>
 
+      {/* Summary */}
       <div className="p-4 rounded-xl bg-info/5 border border-info/20">
         <div className="flex items-start gap-3">
           <Info className="h-5 w-5 text-info mt-0.5 shrink-0" />
@@ -38,6 +53,15 @@ export const WizardPreparationStep = () => {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Quick stats */}
+      <div className="flex items-center gap-3 text-xs">
+        <Badge variant="secondary">{transactions.length} transaction{transactions.length > 1 ? 's' : ''}</Badge>
+        <Badge variant="secondary">{taxableCount} taxable{taxableCount > 1 ? 's' : ''}</Badge>
+        {missingValorisation > 0 && (
+          <Badge className="bg-warning/10 text-warning">{missingValorisation} valorisation{missingValorisation > 1 ? 's' : ''} manquante{missingValorisation > 1 ? 's' : ''}</Badge>
+        )}
       </div>
 
       {/* Checklist */}
