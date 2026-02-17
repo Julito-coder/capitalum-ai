@@ -52,6 +52,12 @@ export const DeadlineActionPanel = ({ deadline, onClose, onStatusChange, profile
 
   const handleAction = (action: typeof deadline.actions[0]) => {
     switch (action.type) {
+      case 'navigate':
+        if (action.target) {
+          navigate(action.target);
+          onClose();
+        }
+        break;
       case 'inapp-form':
         if (deadline.hasInAppForm) {
           setShowInAppForm(true);

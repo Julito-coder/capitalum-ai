@@ -297,7 +297,22 @@ export const calculateDashboardMetrics = (profile: UserProfile): DashboardMetric
         title: 'Crypto à déclarer (2086)',
         message: `Plus-value de ${formatCurrency(profile.cryptoPnl2025)} à reporter sur le formulaire 2086.`,
         severity: 'warning',
-        gain: 0
+        gain: 0,
+        action: '/crypto/2086'
+      });
+
+      const cryptoTax = Math.round(profile.cryptoPnl2025 * 0.30);
+      potentialSavings += Math.round(profile.cryptoPnl2025 * 0.005);
+      recommendations.push({
+        id: 'crypto-2086',
+        type: 'tax',
+        title: 'Déclarer mes crypto (2086)',
+        description: `${formatCurrency(profile.cryptoPnl2025)} de plus-values crypto à déclarer. Préparez votre formulaire 2086 avec Capitalum.`,
+        gain: Math.round(profile.cryptoPnl2025 * 0.005),
+        effort: '30 min',
+        deadline: '2025-05-22',
+        currentOption: { label: 'Non déclaré', value: cryptoTax + 750, detail: 'Impôt + amende 750 €' },
+        recommendedOption: { label: 'Déclaré', value: cryptoTax, detail: `PFU 30% = ${formatCurrency(cryptoTax)}` }
       });
     }
 

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Rocket, TrendingUp, ChevronRight, Sparkles, Check, Clock } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { DashboardRecommendation, formatCurrency, UserProfile } from '@/lib/dashboardService';
@@ -196,7 +197,14 @@ export const PriorityActionsCard = ({ recommendations, hasRealData, profile }: P
     .reduce((sum, r) => sum + r.gain, 0);
   const remainingGain = totalPotentialGain - completedGain;
 
+  const navigate = useNavigate();
+
   const handleOpenGuide = (recommendation: DashboardRecommendation) => {
+    // Navigate directly for crypto-2086
+    if (recommendation.id === 'crypto-2086') {
+      navigate('/crypto/2086');
+      return;
+    }
     const guide = getGuideForRecommendation(recommendation);
     openGuide(guide, profile);
   };

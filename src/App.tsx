@@ -41,6 +41,8 @@ import CryptoWizard from "./pages/crypto/CryptoWizard";
 import CryptoControls from "./pages/crypto/CryptoControls";
 import CryptoReportPack from "./pages/crypto/CryptoReportPack";
 import CryptoExports from "./pages/crypto/CryptoExports";
+// Formulaires
+import FormulairesPage from "./pages/Formulaires";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +82,8 @@ const App = () => (
                 <Route path="/pro/hiring" element={<ProtectedRoute><HiringSimulator /></ProtectedRoute>} />
                 <Route path="/pro/status" element={<ProtectedRoute><StatusComparator /></ProtectedRoute>} />
                 <Route path="/pro/cashflow" element={<ProtectedRoute><CashFlowForecast /></ProtectedRoute>} />
+                {/* Formulaires */}
+                <Route path="/formulaires" element={<ProtectedRoute><FormulairesPage /></ProtectedRoute>} />
                 {/* Crypto 2086 */}
                 <Route path="/crypto/2086" element={<ProtectedRoute><CryptoDashboard /></ProtectedRoute>} />
                 <Route path="/crypto/2086/wizard" element={<ProtectedRoute><CryptoWizard /></ProtectedRoute>} />
