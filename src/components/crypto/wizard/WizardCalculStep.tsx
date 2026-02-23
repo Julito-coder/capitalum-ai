@@ -1,10 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Info, Calculator, TrendingUp, TrendingDown, AlertTriangle,
-  ShieldCheck, Bug, ChevronDown,
+  ShieldCheck, Bug, ChevronDown, ChevronRight, Eye, BookOpen,
+  HelpCircle, ArrowRightLeft,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   computeChronologicalPMPA,
@@ -15,8 +17,11 @@ import {
   estimateTaxBareme,
   computeFieldMapping,
   type NormalizedTransaction,
+  type CessionDetail,
+  type ChronologicalResult,
 } from '@/domain/crypto/portfolioEngine';
 import type { TxDraft, AccountDraft } from '@/pages/crypto/CryptoWizard';
+import type { CryptoDraftData } from '@/lib/cryptoDraftService';
 
 const FIAT = new Set(['EUR', 'USD', 'GBP', 'CHF']);
 
@@ -53,11 +58,164 @@ interface Props {
   transactions: TxDraft[];
   accounts: AccountDraft[];
   initialPortfolioValue: string;
+  onCalcComplete?: (snapshot: CryptoDraftData['calcSnapshot']) => void;
 }
 
-export const WizardCalculStep = ({ transactions = [], accounts = [], initialPortfolioValue }: Props) => {
-  const normalizedTxs = useMemo(() => draftsToNormalized(transactions), [transactions]);
+// ── Diagnostic component for zero/empty results ──
+function ZeroDiagnostic({ normalizedTxs }: { normalizedTxs: NormalizedTransaction[] }) {
+  const cessions = normalizedTxs.filter((t) => t.type === 'cession');
+  const acquisitions = normalizedTxs.filter((t) => t.type === 'acquisition');
+  const transfers = normalizedTxs.filter((t) => t.type === 'transfer');
+  const nonTaxable = normalizedTxs.filter((t) => t.type === 'non_taxable');
+  const missingVal = cessions.filter((t) => !t.fiatValueEur || t.fiatValueEur <= 0);
+  const missingDate = normalizedTxs.filter((t) => !t.date);
 
+  const diagnostics: { icon: React.ReactNode; label: string; detail: string }[] = [];
+
+  if (normalizedTxs.length === 0) {
+    diagnostics.push({
+      icon: <HelpCircle className="h-4 w-4 text-muted-foreground" />,
+      label: 'Aucune transaction importée',
+      detail: 'Importez vos transactions via CSV ou saisie manuelle à l\'étape 2.',
+    });
+  } else if (cessions.length === 0) {
+    diagnostics.push({
+      icon: <ArrowRightLeft className="h-4 w-4 text-info" />,
+      label: '0 cession taxable détectée',
+      detail: `Vos ${normalizedTxs.length} opérations sont actuellement classées comme : ${acquisitions.length} acquisition(s), ${transfers.length} transfert(s), ${nonTaxable.length} échange(s) crypto-crypto. Seules les ventes vers EUR ou paiements en crypto sont taxables.`,
+    });
+  }
+
+  if (missingVal.length > 0) {
+    diagnostics.push({
+      icon: <AlertTriangle className="h-4 w-4 text-warning" />,
+      label: `${missingVal.length} valorisation(s) EUR manquante(s)`,
+      detail: 'Les cessions sans valeur EUR ne peuvent pas être calculées. Renseignez-les à l\'étape 3.',
+    });
+  }
+
+  if (missingDate.length > 0) {
+    diagnostics.push({
+      icon: <AlertTriangle className="h-4 w-4 text-destructive" />,
+      label: `${missingDate.length} transaction(s) sans date`,
+      detail: 'Les dates sont indispensables pour le calcul chronologique.',
+    });
+  }
+
+  if (cessions.length > 0 && acquisitions.length === 0) {
+    diagnostics.push({
+      icon: <AlertTriangle className="h-4 w-4 text-destructive" />,
+      label: 'Aucune acquisition renseignée',
+      detail: 'Le prix d\'acquisition est considéré comme 0 €, ce qui maximise la plus-value. Ajoutez vos achats à l\'étape 2.',
+    });
+  }
+
+  if (diagnostics.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+        <Info className="h-3.5 w-3.5" />
+        Diagnostic — Pourquoi ce résultat ?
+      </p>
+      {diagnostics.map((d, i) => (
+        <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-muted/10 border border-border/20 text-xs">
+          <span className="shrink-0 mt-0.5">{d.icon}</span>
+          <div>
+            <p className="font-semibold">{d.label}</p>
+            <p className="text-muted-foreground mt-0.5">{d.detail}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Pedagogical cession detail ──
+function CessionPedagogical({ line, index }: { line: CessionDetail; index: number }) {
+  const [mode, setMode] = useState<'simple' | 'expert'>('simple');
+
+  return (
+    <Card className="border-border/20">
+      <CardContent className="py-3 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold">
+            #{index + 1} — {line.date} — {line.assetName}
+          </span>
+          <div className="flex items-center gap-2">
+            <Badge variant={line.plusValue >= 0 ? 'default' : 'destructive'} className="text-[10px]">
+              {line.plusValue >= 0 ? '+' : ''}{formatEur(line.plusValue)}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-[10px]"
+              onClick={() => setMode(mode === 'simple' ? 'expert' : 'simple')}
+            >
+              {mode === 'simple' ? <Eye className="h-3 w-3 mr-1" /> : <BookOpen className="h-3 w-3 mr-1" />}
+              {mode === 'simple' ? 'Expert' : 'Simple'}
+            </Button>
+          </div>
+        </div>
+
+        {mode === 'simple' ? (
+          <div className="text-xs text-muted-foreground space-y-1.5 p-3 rounded-lg bg-muted/10">
+            <p>
+              Vous avez vendu pour <strong>{formatEur(line.prixCession)}</strong> de {line.assetName}.
+            </p>
+            <p>
+              Au moment de cette vente, votre portefeuille global valait{' '}
+              <strong>{formatEur(line.valeurGlobalePortefeuille)}</strong> et le prix total d'acquisition
+              cumulé était de <strong>{formatEur(line.prixTotalAcquisitionPortefeuille)}</strong>.
+            </p>
+            <p>
+              La part du prix d'acquisition imputable à cette cession est de{' '}
+              <strong>{formatEur(line.prixAcquisitionFraction)}</strong>{' '}
+              (soit {(line.fractionCedee * 100).toFixed(2)}% du portefeuille).
+            </p>
+            {line.frais > 0 && (
+              <p>Les frais de cession s'élèvent à <strong>{formatEur(line.frais)}</strong>.</p>
+            )}
+            <p className="font-semibold pt-1">
+              {line.plusValue >= 0
+                ? `→ Cette cession génère une plus-value de ${formatEur(line.plusValue)}.`
+                : `→ Cette cession génère une moins-value de ${formatEur(line.plusValue)}.`}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
+              <span>Prix cession (P<sub>c</sub>) :</span>
+              <span className="font-mono font-semibold text-right">{formatEur(line.prixCession)}</span>
+              <span>Prix total acq. (PA<sub>total</sub>) :</span>
+              <span className="font-mono font-semibold text-right">{formatEur(line.prixTotalAcquisitionPortefeuille)}</span>
+              <span>Valeur globale portefeuille (V<sub>g</sub>) :</span>
+              <span className="font-mono font-semibold text-right">{formatEur(line.valeurGlobalePortefeuille)}</span>
+              <span>Fraction cédée (P<sub>c</sub> / V<sub>g</sub>) :</span>
+              <span className="font-mono font-semibold text-right">{(line.fractionCedee * 100).toFixed(4)}%</span>
+              <span>PA imputable (PA<sub>total</sub> × fraction) :</span>
+              <span className="font-mono font-semibold text-right">{formatEur(line.prixAcquisitionFraction)}</span>
+              <span>Frais de cession :</span>
+              <span className="font-mono font-semibold text-right">{formatEur(line.frais)}</span>
+            </div>
+            <div className="p-2 rounded-lg bg-muted/20 font-mono text-[10px]">
+              PV = {formatEur(line.prixCession)} − {formatEur(line.prixAcquisitionFraction)} − {formatEur(line.frais)} = <strong>{formatEur(line.plusValue)}</strong>
+            </div>
+            {/* Portfolio state after */}
+            <div className="text-[10px] text-muted-foreground p-2 rounded-lg border border-border/10">
+              <p className="font-semibold mb-1">État du portefeuille après cette cession :</p>
+              <p>PA total : {formatEur(line.portfolioSnapshot.totalAcquisitionCost - line.prixAcquisitionFraction)}</p>
+              <p>Valeur portefeuille : {formatEur(line.portfolioSnapshot.portfolioValue - line.prixCession)}</p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export const WizardCalculStep = ({ transactions = [], accounts = [], initialPortfolioValue, onCalcComplete }: Props) => {
+  const normalizedTxs = useMemo(() => draftsToNormalized(transactions), [transactions]);
   const initPV = parseFloat(initialPortfolioValue) || 0;
 
   const result = useMemo(() => {
@@ -84,6 +242,25 @@ export const WizardCalculStep = ({ transactions = [], accounts = [], initialPort
 
   const cessionCount = normalizedTxs.filter((t) => t.type === 'cession').length;
   const acquisitionCount = normalizedTxs.filter((t) => t.type === 'acquisition').length;
+  const transferCount = normalizedTxs.filter((t) => t.type === 'transfer').length;
+  const nonTaxableCount = normalizedTxs.filter((t) => t.type === 'non_taxable').length;
+
+  // Notify parent of calc result
+  useEffect(() => {
+    if (result && onCalcComplete) {
+      onCalcComplete({
+        netGainEur: result.netGainEur,
+        case3AN: fieldMapping.case3AN,
+        case3BN: fieldMapping.case3BN,
+        totalCessionsEur: result.totalCessionsEur,
+        gainsEur: result.gainsEur,
+        lossesEur: result.lossesEur,
+        reliabilityScore: reliability.score,
+      });
+    }
+  }, [result, fieldMapping, reliability.score]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const hasBlockingAlerts = alerts.some((a) => a.type === 'blocking');
 
   return (
     <div className="space-y-5">
@@ -100,13 +277,39 @@ export const WizardCalculStep = ({ transactions = [], accounts = [], initialPort
           <Info className="h-5 w-5 text-info mt-0.5 shrink-0" />
           <div className="text-sm">
             <p className="font-semibold mb-1">Méthode PMPA chronologique (art. 150 VH bis CGI)</p>
-            <div className="font-mono text-xs bg-muted/30 p-3 rounded-lg mt-2">
-              Pour chaque cession :<br />
+            <p className="text-xs text-muted-foreground mb-2">
+              Pour chaque cession taxable, la plus-value est calculée en prenant en compte la valeur 
+              globale de votre portefeuille au moment de la vente :
+            </p>
+            <div className="font-mono text-xs bg-muted/30 p-3 rounded-lg">
               PV = Prix de cession<br />
               &nbsp;&nbsp;&nbsp;− (Prix total acq. × Prix cession / Valeur globale portefeuille)<br />
               &nbsp;&nbsp;&nbsp;− Frais de cession<br /><br />
-              Puis : totalAcq -= fraction × totalAcq ; portfolioValue -= prixCession
+              Après chaque cession : le prix d'acquisition et la valeur du portefeuille sont réduits.
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Breakdown of transactions */}
+      <div className="p-3 rounded-xl bg-muted/10 border border-border/20">
+        <p className="text-xs font-semibold mb-2">Ce que Capitalum a analysé</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div className="text-center p-2 rounded-lg bg-background">
+            <p className="text-lg font-bold">{normalizedTxs.length}</p>
+            <p className="text-muted-foreground">Total transactions</p>
+          </div>
+          <div className="text-center p-2 rounded-lg bg-destructive/5">
+            <p className="text-lg font-bold text-destructive">{cessionCount}</p>
+            <p className="text-muted-foreground">Cession(s) taxable(s)</p>
+          </div>
+          <div className="text-center p-2 rounded-lg bg-success/5">
+            <p className="text-lg font-bold text-success">{acquisitionCount}</p>
+            <p className="text-muted-foreground">Acquisition(s)</p>
+          </div>
+          <div className="text-center p-2 rounded-lg bg-muted/20">
+            <p className="text-lg font-bold">{transferCount + nonTaxableCount}</p>
+            <p className="text-muted-foreground">Exclue(s)</p>
           </div>
         </div>
       </div>
@@ -124,10 +327,6 @@ export const WizardCalculStep = ({ transactions = [], accounts = [], initialPort
           <div className="flex-1">
             <p className="text-2xl font-bold">{reliability.score}%</p>
             <p className="text-xs text-muted-foreground">{reliability.label}</p>
-          </div>
-          <div className="text-right text-xs text-muted-foreground">
-            <p>{cessionCount} cession{cessionCount > 1 ? 's' : ''}</p>
-            <p>{acquisitionCount} acquisition{acquisitionCount > 1 ? 's' : ''}</p>
           </div>
         </CardContent>
       </Card>
@@ -153,15 +352,24 @@ export const WizardCalculStep = ({ transactions = [], accounts = [], initialPort
         </div>
       )}
 
-      {/* Résultats */}
-      {!result || cessionCount === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-8 text-center">
-          <Calculator className="h-10 w-10 text-muted-foreground/30" />
-          <p className="text-sm text-muted-foreground">
-            Ajoutez des cessions taxables avec une valorisation EUR aux étapes précédentes.
+      {/* Diagnostic if no results */}
+      {(!result || cessionCount === 0) && (
+        <ZeroDiagnostic normalizedTxs={normalizedTxs} />
+      )}
+
+      {/* Blocking alert */}
+      {hasBlockingAlerts && result && (
+        <div className="p-4 rounded-xl bg-destructive/5 border border-destructive/20 text-center">
+          <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-2" />
+          <p className="text-sm font-semibold">Le calcul est bloqué</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Corrigez les alertes bloquantes ci-dessus avant de valider votre déclaration.
           </p>
         </div>
-      ) : (
+      )}
+
+      {/* Résultats */}
+      {result && cessionCount > 0 && (
         <>
           {/* KPIs */}
           <div className="grid grid-cols-2 gap-3">
@@ -248,39 +456,23 @@ export const WizardCalculStep = ({ transactions = [], accounts = [], initialPort
             </CardContent>
           </Card>
 
-          {/* Détail par cession */}
-          <Collapsible>
-            <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-2">
-              <ChevronDown className="h-3 w-3" />
-              Détail par cession ({result.cessionLines.length})
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="space-y-2 mt-2">
-                {result.cessionLines.map((line, idx) => (
-                  <Card key={line.transactionId} className="border-border/20">
-                    <CardContent className="py-3">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold">#{idx + 1} — {line.date} — {line.assetName}</span>
-                        <Badge variant={line.plusValue >= 0 ? 'default' : 'destructive'} className="text-[10px]">
-                          {line.plusValue >= 0 ? '+' : ''}{formatEur(line.plusValue)}
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 mt-2 text-[10px] text-muted-foreground">
-                        <span>Prix cession : {formatEur(line.prixCession)}</span>
-                        <span>Frais : {formatEur(line.frais)}</span>
-                        <span>Fraction cédée : {(line.fractionCedee * 100).toFixed(4)}%</span>
-                        <span>Acq. fraction : {formatEur(line.prixAcquisitionFraction)}</span>
-                        <span>Total acq. : {formatEur(line.prixTotalAcquisitionPortefeuille)}</span>
-                        <span>Valeur portefeuille : {formatEur(line.valeurGlobalePortefeuille)}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+          {/* Journal de calcul — détail par cession (pédagogique) */}
+          <div className="space-y-2">
+            <h3 className="font-semibold text-sm flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-primary" />
+              Journal de calcul — {result.cessionLines.length} cession(s) taxable(s)
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Chaque cession est détaillée ci-dessous. Basculez entre le mode simple (explication) 
+              et le mode expert (formule + variables).
+            </p>
+          </div>
 
-          {/* Audit trail */}
+          {result.cessionLines.map((line, idx) => (
+            <CessionPedagogical key={line.transactionId} line={line} index={idx} />
+          ))}
+
+          {/* Audit trail — debug mode */}
           <Collapsible>
             <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-2">
               <Bug className="h-3 w-3" />
