@@ -79,6 +79,45 @@ export type Database = {
           },
         ]
       }
+      ai_conversations: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_pinned: boolean
+          messages: Json
+          summary: string | null
+          tags: string[] | null
+          topic: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_pinned?: boolean
+          messages?: Json
+          summary?: string | null
+          tags?: string[] | null
+          topic?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_pinned?: boolean
+          messages?: Json
+          summary?: string | null
+          tags?: string[] | null
+          topic?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       crypto_accounts: {
         Row: {
           account_type: string

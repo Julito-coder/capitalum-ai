@@ -50,7 +50,7 @@ export const AIHelpWidget = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   
-  const { messages, isStreaming, streamChat, clearMessages, setMessages } = useGlossaryAI();
+  const { messages, isStreaming, streamChat, clearMessages, setMessages, saveCurrentConversation } = useGlossaryAI();
 
   // Get current topic based on route
   const currentTopic = routeTopics[location.pathname] || 'fiscalité générale';
@@ -156,12 +156,14 @@ Posez-moi vos questions !`,
     }
   };
 
-  const handleClose = () => {
+  const handleClose = async () => {
+    await saveCurrentConversation(currentTopic);
     setIsOpen(false);
     setIsExpanded(false);
   };
 
-  const handleNewChat = () => {
+  const handleNewChat = async () => {
+    await saveCurrentConversation(currentTopic);
     clearMessages();
     setMessages([{
       id: 'welcome-new',

@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.delete-user-account]
 verify_jwt = false
+
+[functions.purge-expired-conversations]
+verify_jwt = false

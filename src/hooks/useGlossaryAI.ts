@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { saveConversation } from '@/lib/conversationService';
 
 interface Message {
   id: string;
@@ -183,12 +184,23 @@ export const useGlossaryAI = () => {
     setMessages([]);
   }, []);
 
+  const saveCurrentConversation = useCallback(async (topic: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await saveConversation(user.id, messages, topic);
+    } catch (err) {
+      console.error('Auto-save conversation failed:', err);
+    }
+  }, [messages]);
+
   return {
     messages,
     isStreaming,
     streamChat,
     cancelStream,
     clearMessages,
-    setMessages
+    setMessages,
+    saveCurrentConversation
   };
 };
