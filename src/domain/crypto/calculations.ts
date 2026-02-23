@@ -44,22 +44,15 @@ export interface CessionInput {
 export function computeCessionLine(input: CessionInput): ComputedLine {
   const { prixCession, prixTotalAcquisitionPortefeuille, valeurGlobalePortefeuille, frais } = input;
 
-  if (valeurGlobalePortefeuille <= 0) {
-    return {
-      transactionId: input.transactionId,
-      date: input.date,
-      assetName: input.assetName,
-      prixCession,
-      prixTotalAcquisitionPortefeuille,
-      valeurGlobalePortefeuille,
-      fractionCedee: 0,
-      prixAcquisitionFraction: 0,
-      frais,
-      plusValue: 0,
-    };
-  }
+  // Si la valeur globale du portefeuille est <= 0, on utilise le prix de cession
+  // comme valeur plancher (fraction cédée = 100%). Fiscalement, cela signifie que
+  // la PV = prixCession - prixAcquisitionFraction - frais.
+  // Si acquisition = 0, PV = prixCession - frais (pire cas pour le contribuable).
+  const effectivePortfolioValue = valeurGlobalePortefeuille > 0
+    ? valeurGlobalePortefeuille
+    : prixCession;
 
-  const fractionCedee = roundCents(prixCession / valeurGlobalePortefeuille);
+  const fractionCedee = roundCents(prixCession / effectivePortfolioValue);
   const prixAcquisitionFraction = roundCents(prixTotalAcquisitionPortefeuille * fractionCedee);
   const plusValue = roundCents(prixCession - prixAcquisitionFraction - frais);
 
