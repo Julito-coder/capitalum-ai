@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Info, Calculator, TrendingUp, TrendingDown, ChevronDown } from 'lucide-react';
+import { Info, Calculator, TrendingUp, TrendingDown, ChevronDown, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -29,7 +29,7 @@ function isCessionTx(t: TxDraft): boolean {
 
 function draftsToTaxableTransactions(drafts: TxDraft[]): CryptoTransaction[] {
   return drafts
-    .filter((d) => d.date && d.assetFrom && d.qtyFrom && isCessionTx(d))
+    .filter((d) => d.date && d.assetFrom && isCessionTx(d))
     .filter((d) => d.fiatValueEur && parseFloat(d.fiatValueEur) > 0)
     .map((d) => ({
       id: d.id,
@@ -96,7 +96,8 @@ export const WizardCalculStep = ({ transactions = [], accounts = [] }: Props) =>
 
   const autoPortfolioValue = useMemo(() => {
     const totalCessions = taxableTxs.reduce((s, t) => s + (t.fiatValueEur || 0), 0);
-    return autoTotalAcquisitions + totalCessions;
+    // La valeur du portefeuille est au minimum le total des cessions (plancher conservateur)
+    return Math.max(autoTotalAcquisitions + totalCessions, totalCessions);
   }, [autoTotalAcquisitions, taxableTxs]);
 
   // Overrides optionnels
@@ -111,7 +112,7 @@ export const WizardCalculStep = ({ transactions = [], accounts = [] }: Props) =>
     : autoPortfolioValue;
 
   // Calcul automatique dès que les données le permettent
-  const canCompute = taxableTxs.length > 0 && totalAcqNum > 0 && portfolioNum > 0;
+  const canCompute = taxableTxs.length > 0 && portfolioNum > 0;
 
   const computation = useMemo(() => {
     if (!canCompute) return null;
@@ -212,6 +213,22 @@ export const WizardCalculStep = ({ transactions = [], accounts = [] }: Props) =>
           </Card>
         </CollapsibleContent>
       </Collapsible>
+
+      {/* Avertissement si aucune acquisition détectée */}
+      {autoTotalAcquisitions === 0 && taxableTxs.length > 0 && (
+        <div className="p-4 rounded-xl bg-warning/10 border border-warning/30">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-warning mt-0.5 shrink-0" />
+            <div className="text-sm">
+              <p className="font-semibold text-warning">Aucune acquisition détectée</p>
+              <p className="text-muted-foreground mt-1">
+                Le calcul considère un prix d'acquisition de 0 €, ce qui <strong>maximise la plus-value imposable</strong>.
+                Renseignez vos achats (fiat → crypto) aux étapes précédentes pour un calcul plus précis.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Résumé cessions */}
       {taxableTxs.length > 0 && (
