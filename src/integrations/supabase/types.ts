@@ -1285,8 +1285,11 @@ export type Database = {
           assumptions: string | null
           computation_id: string | null
           created_at: string
+          current_step: number | null
+          data_checksum: string | null
           field_mapping: Json | null
           foreign_accounts_summary: Json | null
+          form_data: Json | null
           id: string
           identity_snapshot: Json | null
           notes: string | null
@@ -1298,13 +1301,17 @@ export type Database = {
           taxable_events_summary: Json | null
           updated_at: string
           user_id: string
+          version: number | null
         }
         Insert: {
           assumptions?: string | null
           computation_id?: string | null
           created_at?: string
+          current_step?: number | null
+          data_checksum?: string | null
           field_mapping?: Json | null
           foreign_accounts_summary?: Json | null
+          form_data?: Json | null
           id?: string
           identity_snapshot?: Json | null
           notes?: string | null
@@ -1316,13 +1323,17 @@ export type Database = {
           taxable_events_summary?: Json | null
           updated_at?: string
           user_id: string
+          version?: number | null
         }
         Update: {
           assumptions?: string | null
           computation_id?: string | null
           created_at?: string
+          current_step?: number | null
+          data_checksum?: string | null
           field_mapping?: Json | null
           foreign_accounts_summary?: Json | null
+          form_data?: Json | null
           id?: string
           identity_snapshot?: Json | null
           notes?: string | null
@@ -1334,6 +1345,7 @@ export type Database = {
           taxable_events_summary?: Json | null
           updated_at?: string
           user_id?: string
+          version?: number | null
         }
         Relationships: [
           {
