@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'; // wizard v2
+import { useState, useCallback } from 'react'; // wizard v3 — chronological PMPA
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,6 +35,8 @@ export interface TxDraft {
   fiatValueEur: string;
   feesEur: string;
   classification: TransactionClassification;
+  /** Override de la valeur globale du portefeuille à ce moment (optionnel) */
+  portfolioValueOverride?: string;
 }
 
 const STEPS: { key: WizardStep; label: string; shortLabel: string }[] = [
@@ -43,7 +45,7 @@ const STEPS: { key: WizardStep; label: string; shortLabel: string }[] = [
   { key: 'valorisation', label: 'Valorisation EUR', shortLabel: 'Valeur' },
   { key: 'qualification', label: 'Qualification fiscale', shortLabel: 'Qualif.' },
   { key: 'calcul', label: 'Calcul PV/MV', shortLabel: 'Calcul' },
-  { key: 'preparation', label: 'Préparer le 2086', shortLabel: 'Préparer' },
+  { key: 'preparation', label: 'Synthèse & Export', shortLabel: 'Synthèse' },
 ];
 
 const CryptoWizard = () => {
@@ -55,6 +57,7 @@ const CryptoWizard = () => {
   // ── Shared state ──
   const [accounts, setAccounts] = useState<AccountDraft[]>([]);
   const [transactions, setTransactions] = useState<TxDraft[]>([]);
+  const [initialPortfolioValue, setInitialPortfolioValue] = useState('');
 
   const goNext = useCallback(() => {
     if (currentStepIdx < STEPS.length - 1) setCurrentStepIdx((i) => i + 1);
@@ -69,15 +72,45 @@ const CryptoWizard = () => {
       case 'sources':
         return <WizardSourcesStep accounts={accounts} setAccounts={setAccounts} />;
       case 'transactions':
-        return <WizardTransactionsStep transactions={transactions} setTransactions={setTransactions} accounts={accounts} />;
+        return (
+          <WizardTransactionsStep
+            transactions={transactions}
+            setTransactions={setTransactions}
+            accounts={accounts}
+          />
+        );
       case 'valorisation':
-        return <WizardValorisationStep transactions={transactions} setTransactions={setTransactions} />;
+        return (
+          <WizardValorisationStep
+            transactions={transactions}
+            setTransactions={setTransactions}
+            initialPortfolioValue={initialPortfolioValue}
+            setInitialPortfolioValue={setInitialPortfolioValue}
+          />
+        );
       case 'qualification':
-        return <WizardQualificationStep transactions={transactions} setTransactions={setTransactions} />;
+        return (
+          <WizardQualificationStep
+            transactions={transactions}
+            setTransactions={setTransactions}
+          />
+        );
       case 'calcul':
-        return <WizardCalculStep transactions={transactions} accounts={accounts} />;
+        return (
+          <WizardCalculStep
+            transactions={transactions}
+            accounts={accounts}
+            initialPortfolioValue={initialPortfolioValue}
+          />
+        );
       case 'preparation':
-        return <WizardPreparationStep transactions={transactions} />;
+        return (
+          <WizardPreparationStep
+            transactions={transactions}
+            accounts={accounts}
+            initialPortfolioValue={initialPortfolioValue}
+          />
+        );
       default:
         return null;
     }
