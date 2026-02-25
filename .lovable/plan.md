@@ -1,94 +1,96 @@
 
 
-# Plan : Correction du calcul fiscal — Prise en compte des cessions taxables (ventes EUR)
+# Plan : Hub central des formulaires avec stockage et suivi des brouillons
 
-## Probleme identifie
+## Objectif
 
-Le moteur de calcul (`portfolioEngine.ts`) et l'etape de calcul (`WizardCalculStep.tsx`) ne prennent pas correctement en compte les transactions classifiees "Vente -> EUR" (crypto_to_fiat) pour plusieurs raisons :
+Transformer la page Formulaires en hub central ou tous les brouillons et formulaires finalises sont visibles, avec progression detaillee, quel que soit leur point d'origine (calendrier, dashboard, acces direct).
 
-1. **Filtrage silencieux** : La fonction `draftsToNormalized` (ligne 33 de WizardCalculStep) filtre les transactions avec `.filter((d) => d.date && d.assetFrom)`. Si l'utilisateur ne remplit pas le champ "De" (assetFrom), la transaction est supprimee sans avertissement.
+## Constat actuel
 
-2. **Classification `fiat_to_crypto` manquante** : Il n'existe aucune classification explicite pour les achats (EUR -> crypto). Les achats doivent etre classifies comme acquisitions pour alimenter le `totalAcquisitionCost` du PMPA. Actuellement le fallback fonctionne uniquement si `assetFrom` est une devise fiat ET `assetTo` n'est pas fiat — mais ce cas n'est pas explicite dans l'UI.
+- La page Formulaires charge deja les brouillons depuis `tax_form_2086_drafts`, donc les formulaires demarres depuis le calendrier apparaissent deja (meme table).
+- Mais les informations affichees sont minimales : juste l'annee, le statut et la date de modification.
+- Pas de progression (etape en cours, nombre de transactions, comptes).
+- Pas de separation entre brouillons en cours et formulaires finalises/reportes.
+- Le bouton "Reprendre" pointe vers `/crypto/2086` (le dashboard) au lieu du wizard directement.
 
-3. **Pas de diagnostic quand des transactions sont filtrees** : Quand des transactions sont exclues du calcul (champs manquants), aucun message n'explique pourquoi elles disparaissent.
+## Modifications prevues
 
-4. **Qualification step ne distingue pas achats vs ventes** : La qualification montre les classifications mais ne differencie pas clairement "achat fiat->crypto" comme type distinct.
+### A. Enrichir les donnees chargees dans Formulaires.tsx
 
-## Corrections prevues
+Charger en plus pour chaque brouillon :
+- `current_step` et `form_data` (pour la progression et le snapshot de calcul)
+- Le nombre de transactions (`crypto_transactions` count par user + tax_year)
+- Le nombre de comptes (`crypto_accounts` count par user + tax_year)
 
-### A. Ajouter la classification `fiat_to_crypto` (portfolioEngine.ts + UI)
+### B. Separer les brouillons en deux sections
 
-- Ajouter `'fiat_to_crypto'` dans les `ACQUISITION_CLASSIFICATIONS` du moteur
-- Ajouter l'option dans le selecteur de la step Transactions et Qualification
-- Quand l'utilisateur entre EUR dans "De" et BTC dans "Vers", auto-suggerer `fiat_to_crypto`
+1. **En cours** : status = `draft` ou `review` — avec bouton "Reprendre" qui pointe vers `/crypto/2086/wizard`
+2. **Finalises** : status = `ready`, `reported`, `archived` — avec boutons "Voir" et "Exporter PDF"
 
-### B. Corriger `draftsToNormalized` pour ne plus filtrer silencieusement
+### C. Carte de brouillon enrichie
 
-- Remplacer le filtre strict par un filtre qui conserve les transactions avec au minimum une date
-- Pour les transactions sans `assetFrom`, generer une alerte visible au lieu de les supprimer
-- Ajouter des logs dans le diagnostic quand des transactions sont exclues
+Chaque carte de brouillon affichera :
+- Titre : "2086 — Crypto {annee}"
+- Badge de statut (Brouillon, En revue, Pret, Reporte, Archive)
+- Barre de progression (etape X/6)
+- Compteurs : X comptes, Y transactions
+- Resultat fiscal si disponible (case 3AN / 3BN depuis `form_data.calcSnapshot`)
+- Date de derniere modification
+- Actions : Reprendre (brouillons) / Voir + Exporter (finalises) / Supprimer
 
-### C. Ameliorer le diagnostic zero-result
+### D. Bouton "Reprendre" corrige
 
-- Compter combien de transactions ont ete filtrees et pourquoi
-- Afficher : "X transaction(s) ignoree(s) car champ 'De' vide"
-- Afficher : "X cession(s) taxable(s) detectee(s) — assurez-vous que la valeur EUR est renseignee"
-
-### D. Auto-detection du type dans la step Transactions
-
-- Quand `assetFrom` = EUR/USD et `assetTo` = crypto -> auto-classer en `fiat_to_crypto` (acquisition)
-- Quand `assetFrom` = crypto et `assetTo` = EUR/USD -> auto-classer en `crypto_to_fiat` (cession taxable)
-- Feedback visuel immediat (badge "Taxable" / "Acquisition")
+Pointer vers `/crypto/2086/wizard` au lieu de `/crypto/2086` pour atterrir directement dans le wizard a l'etape en cours.
 
 ## Fichiers modifies
 
 | Fichier | Modification |
 |---------|-------------|
-| `src/domain/crypto/portfolioEngine.ts` | Ajouter `fiat_to_crypto` dans `ACQUISITION_CLASSIFICATIONS`. Ameliorer `classifyTransaction` pour gerer ce cas explicitement. |
-| `src/domain/crypto/types.ts` | Ajouter `fiat_to_crypto` au type `TransactionClassification` |
-| `src/components/crypto/wizard/WizardCalculStep.tsx` | Corriger `draftsToNormalized` : ne plus filtrer silencieusement, ajouter compteur de transactions exclues dans le diagnostic |
-| `src/components/crypto/wizard/WizardTransactionsStep.tsx` | Ajouter `fiat_to_crypto` dans les classifications, auto-detection du type selon les assets remplis |
-| `src/components/crypto/wizard/WizardQualificationStep.tsx` | Ajouter `fiat_to_crypto` dans les classifications affichees, marquer comme "Non taxable (acquisition)" |
+| `src/pages/Formulaires.tsx` | Refonte complete de la section brouillons : enrichissement des donnees, separation en cours/finalises, cartes detaillees avec progression, compteurs et resultat fiscal |
 
 ## Detail technique
 
-### portfolioEngine.ts — classifyTransaction
+### Requete enrichie
 
 ```text
-Avant :
-  ACQUISITION_CLASSIFICATIONS = ['income', 'airdrop', 'mining', 'staking', 'gift']
-  
-Apres :
-  ACQUISITION_CLASSIFICATIONS = ['income', 'airdrop', 'mining', 'staking', 'gift', 'fiat_to_crypto']
+// Charger les drafts avec current_step et form_data
+.select('id, tax_year, status, updated_at, regime, notes, current_step, form_data')
+
+// + compter transactions et comptes par tax_year
+const txCounts = await supabase
+  .from('crypto_transactions')
+  .select('tax_year', { count: 'exact', head: true })
+  .eq('user_id', user.id)
+
+const accCounts = await supabase
+  .from('crypto_accounts')
+  .select('tax_year', { count: 'exact', head: true })
+  .eq('user_id', user.id)
 ```
 
-La fonction `classifyTransaction` garde sa logique existante mais la nouvelle classification est traitee explicitement avant le fallback.
-
-### WizardCalculStep.tsx — draftsToNormalized
+### Separation des sections
 
 ```text
-Avant :
-  .filter((d) => d.date && d.assetFrom)
-  
-Apres :
-  .filter((d) => d.date)  // On garde toutes les transactions avec une date
-  // + avertissement dans le diagnostic si assetFrom est vide
+const inProgressDrafts = drafts.filter(d => ['draft', 'review'].includes(d.status))
+const completedDrafts = drafts.filter(d => ['ready', 'reported', 'archived'].includes(d.status))
 ```
 
-Les transactions sans `assetFrom` seront converties avec `assetFrom = '???'` et une alerte sera generee, au lieu d'etre silencieusement supprimees.
+### Carte enrichie
 
-### Auto-classification dans WizardTransactionsStep
+Chaque carte affiche :
+- Barre `Progress` basee sur `(current_step + 1) / 6 * 100`
+- Compteurs de transactions/comptes
+- Si `form_data.calcSnapshot` existe : afficher case3AN et case3BN
+- Bouton principal : "Reprendre l'etape X" pour les brouillons, "Voir le resume" pour les finalises
 
-Quand l'utilisateur modifie `assetFrom` ou `assetTo`, le systeme detecte automatiquement :
-- Si EUR->crypto : classification = `fiat_to_crypto`
-- Si crypto->EUR : classification = `crypto_to_fiat`
-- Ne pas ecraser si l'utilisateur a manuellement choisi un autre type
+### Export depuis la page Formulaires
+
+Pour les formulaires finalises, un bouton "Exporter PDF" declenchera le meme code que `CryptoExports.tsx` (appel a `exportCrypto2086Pdf`) directement depuis cette page, sans avoir a naviguer dans le wizard.
 
 ## Impact
 
-Cette correction garantit que :
-1. Les ventes crypto -> EUR sont systematiquement comptees comme cessions taxables
-2. Les achats EUR -> crypto alimentent correctement le prix total d'acquisition
-3. Aucune transaction n'est silencieusement ignoree sans explication
-4. Le diagnostic explique clairement quand et pourquoi des transactions sont exclues
-
+- Tous les formulaires (peu importe leur origine) sont centralises et visibles
+- L'utilisateur voit clairement ou il en est dans chaque brouillon
+- Les formulaires termines sont archives et re-exportables
+- Navigation directe vers le wizard pour reprendre le travail
