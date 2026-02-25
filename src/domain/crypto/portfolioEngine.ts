@@ -76,7 +76,7 @@ function isFiat(asset: string): boolean {
 // ── Transaction classification ──────────────────
 
 const ACQUISITION_CLASSIFICATIONS = new Set([
-  'income', 'airdrop', 'mining', 'staking', 'gift',
+  'income', 'airdrop', 'mining', 'staking', 'gift', 'fiat_to_crypto',
 ]);
 
 const TAXABLE_CESSION_CLASSIFICATIONS = new Set([
