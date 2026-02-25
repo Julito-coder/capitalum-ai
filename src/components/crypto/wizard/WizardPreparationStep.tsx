@@ -118,7 +118,10 @@ export const WizardPreparationStep = ({ transactions, accounts, initialPortfolio
         date: l.date,
         assetFrom: l.assetName,
         prixCession: l.prixCession,
+        prixTotalAcquisitionPortefeuille: l.prixTotalAcquisitionPortefeuille,
+        valeurGlobalePortefeuille: l.valeurGlobalePortefeuille,
         fractionCedee: l.fractionCedee,
+        prixAcquisitionFraction: l.prixAcquisitionFraction,
         plusValue: l.plusValue,
         frais: l.frais,
       }));
@@ -143,6 +146,7 @@ export const WizardPreparationStep = ({ transactions, accounts, initialPortfolio
           step: e.step,
           formula: e.formula,
           result: e.result,
+          inputs: e.inputs,
         }));
         exportCryptoAuditPdf(auditEntries, pdfLines, pdfTotals, 2025);
         toast({ title: '📋 Journal d\'audit téléchargé' });

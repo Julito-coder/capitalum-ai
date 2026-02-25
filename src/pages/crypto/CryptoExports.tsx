@@ -58,7 +58,10 @@ const CryptoExports = () => {
         date: l.date || '',
         assetFrom: l.assetName || l.asset_from || '',
         prixCession: l.prixCession || l.prix_cession || 0,
+        prixTotalAcquisitionPortefeuille: l.prixTotalAcquisitionPortefeuille || l.prix_total_acquisition_portefeuille || 0,
+        valeurGlobalePortefeuille: l.valeurGlobalePortefeuille || l.valeur_globale_portefeuille || 0,
         fractionCedee: l.fractionCedee || l.fraction_cedee || 0,
+        prixAcquisitionFraction: l.prixAcquisitionFraction || l.prix_acquisition_fraction || 0,
         plusValue: l.plusValue || l.plus_value || 0,
         frais: l.frais || l.fees || 0,
       }));
@@ -85,6 +88,7 @@ const CryptoExports = () => {
           step: e.step || '',
           formula: e.formula || '',
           result: e.result || 0,
+          inputs: e.inputs || undefined,
         }));
         exportCryptoAuditPdf(auditEntries, lines, totals, taxYear);
         toast({ title: '📋 PDF généré', description: "Le journal d'audit a été téléchargé." });
