@@ -34,16 +34,16 @@ interface Props {
 
 function draftsToNormalized(drafts: TxDraft[]): NormalizedTransaction[] {
   return drafts
-    .filter((d) => d.date && d.assetFrom)
+    .filter((d) => d.date)
     .map((d) => ({
       id: d.id,
       date: d.date,
       type: classifyTransaction({
-        assetFrom: d.assetFrom,
+        assetFrom: d.assetFrom || '???',
         assetTo: d.assetTo,
         classification: d.classification,
       }),
-      assetFrom: d.assetFrom,
+      assetFrom: d.assetFrom || '???',
       assetTo: d.assetTo || 'EUR',
       qtyFrom: parseFloat(d.qtyFrom) || 0,
       qtyTo: parseFloat(d.qtyTo) || 0,
