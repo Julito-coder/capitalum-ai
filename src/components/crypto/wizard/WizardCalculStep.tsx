@@ -28,12 +28,31 @@ const FIAT = new Set(['EUR', 'USD', 'GBP', 'CHF']);
 const formatEur = (n: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
 
-function draftsToNormalized(drafts: TxDraft[]): NormalizedTransaction[] {
-  return drafts
-    .filter((d) => d.date && d.assetFrom)
+interface NormalizationResult {
+  transactions: NormalizedTransaction[];
+  excludedCount: number;
+  excludedReasons: string[];
+}
+
+function draftsToNormalized(drafts: TxDraft[]): NormalizationResult {
+  const excludedReasons: string[] = [];
+  let excludedCount = 0;
+
+  const transactions = drafts
+    .filter((d) => {
+      if (!d.date) {
+        excludedCount++;
+        return false;
+      }
+      return true;
+    })
     .map((d) => {
+      const assetFrom = d.assetFrom || '???';
+      if (!d.assetFrom) {
+        excludedReasons.push(`Transaction du ${d.date} : champ "De" vide (traité comme inconnu)`);
+      }
       const type = classifyTransaction({
-        assetFrom: d.assetFrom,
+        assetFrom,
         assetTo: d.assetTo,
         classification: d.classification,
       });
@@ -41,7 +60,7 @@ function draftsToNormalized(drafts: TxDraft[]): NormalizedTransaction[] {
         id: d.id,
         date: d.date,
         type,
-        assetFrom: d.assetFrom,
+        assetFrom,
         assetTo: d.assetTo || 'EUR',
         qtyFrom: parseFloat(d.qtyFrom) || 0,
         qtyTo: parseFloat(d.qtyTo) || 0,
@@ -52,6 +71,12 @@ function draftsToNormalized(drafts: TxDraft[]): NormalizedTransaction[] {
         portfolioValueOverride: d.portfolioValueOverride ? parseFloat(d.portfolioValueOverride) : undefined,
       };
     });
+
+  if (excludedCount > 0) {
+    excludedReasons.unshift(`${excludedCount} transaction(s) ignorée(s) car sans date`);
+  }
+
+  return { transactions, excludedCount, excludedReasons };
 }
 
 interface Props {
@@ -215,7 +240,8 @@ function CessionPedagogical({ line, index }: { line: CessionDetail; index: numbe
 }
 
 export const WizardCalculStep = ({ transactions = [], accounts = [], initialPortfolioValue, onCalcComplete }: Props) => {
-  const normalizedTxs = useMemo(() => draftsToNormalized(transactions), [transactions]);
+  const normResult = useMemo(() => draftsToNormalized(transactions), [transactions]);
+  const normalizedTxs = normResult.transactions;
   const initPV = parseFloat(initialPortfolioValue) || 0;
 
   const result = useMemo(() => {
@@ -312,6 +338,16 @@ export const WizardCalculStep = ({ transactions = [], accounts = [], initialPort
             <p className="text-muted-foreground">Exclue(s)</p>
           </div>
         </div>
+        {normResult.excludedReasons.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {normResult.excludedReasons.map((r, i) => (
+              <p key={i} className="text-[10px] text-warning flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3 shrink-0" />
+                {r}
+              </p>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Reliability score */}

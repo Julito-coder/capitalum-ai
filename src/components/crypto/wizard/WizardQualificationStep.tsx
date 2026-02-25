@@ -11,11 +11,12 @@ interface Props {
 }
 
 const TAXABLE_TYPES: TransactionClassification[] = ['crypto_to_fiat', 'payment'];
-const NON_TAXABLE_TYPES: TransactionClassification[] = ['transfer'];
+const NON_TAXABLE_TYPES: TransactionClassification[] = ['transfer', 'fiat_to_crypto'];
 const REVIEW_TYPES: TransactionClassification[] = ['staking', 'airdrop', 'income', 'mining', 'gift'];
 
 const CLASSIFICATIONS: { value: TransactionClassification; label: string }[] = [
   { value: 'crypto_to_fiat', label: 'Vente → EUR (taxable)' },
+  { value: 'fiat_to_crypto', label: 'Achat EUR → crypto (acquisition, non taxable)' },
   { value: 'crypto_to_crypto', label: 'Échange crypto → crypto' },
   { value: 'payment', label: 'Paiement en crypto (taxable)' },
   { value: 'transfer', label: 'Transfert interne (non taxable)' },

@@ -26,6 +26,7 @@ interface Props {
 
 const CLASSIFICATIONS: { value: TransactionClassification; label: string; short: string }[] = [
   { value: 'crypto_to_fiat', label: 'Vente → EUR (taxable)', short: 'Vente' },
+  { value: 'fiat_to_crypto', label: 'Achat EUR → crypto (acquisition)', short: 'Achat' },
   { value: 'crypto_to_crypto', label: 'Échange crypto → crypto', short: 'Échange' },
   { value: 'payment', label: 'Paiement en crypto (taxable)', short: 'Paiement' },
   { value: 'transfer', label: 'Transfert interne', short: 'Transfert' },
@@ -65,7 +66,21 @@ export const WizardTransactionsStep = ({ transactions = [], setTransactions, acc
   }, [setTransactions]);
 
   const updateTx = useCallback((id: string, field: keyof TxDraft, value: string) => {
-    setTransactions((prev) => prev.map((t) => (t.id === id ? { ...t, [field]: value } : t)));
+    setTransactions((prev) => prev.map((t) => {
+      if (t.id !== id) return t;
+      const updated = { ...t, [field]: value };
+      // Auto-classification based on asset pair
+      if (field === 'assetFrom' || field === 'assetTo') {
+        const from = (field === 'assetFrom' ? value : t.assetFrom)?.toUpperCase() || '';
+        const to = (field === 'assetTo' ? value : t.assetTo)?.toUpperCase() || '';
+        if (FIAT_CURRENCIES.has(from) && to && !FIAT_CURRENCIES.has(to)) {
+          updated.classification = 'fiat_to_crypto' as TransactionClassification;
+        } else if (from && !FIAT_CURRENCIES.has(from) && FIAT_CURRENCIES.has(to)) {
+          updated.classification = 'crypto_to_fiat' as TransactionClassification;
+        }
+      }
+      return updated;
+    }));
   }, [setTransactions]);
 
   const removeTx = useCallback((id: string) => {

@@ -6,6 +6,7 @@
 // ── Classification ──────────────────────────────
 export type TransactionClassification =
   | 'crypto_to_fiat'
+  | 'fiat_to_crypto'
   | 'crypto_to_crypto'
   | 'payment'
   | 'income'
