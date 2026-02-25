@@ -1,180 +1,94 @@
 
-# Plan : Sauvegarde automatique des conversations IA avec retention 30 jours
 
-## Vue d'ensemble
+# Plan : Correction du calcul fiscal — Prise en compte des cessions taxables (ventes EUR)
 
-Creer un systeme complet qui :
-- Sauvegarde automatiquement chaque conversation avec l'assistant IA dans une table dediee
-- Affiche l'historique dans une nouvelle section du glossaire
-- Purge automatiquement les conversations de plus de 30 jours
-- Permet de marquer une conversation comme "sauvegardee definitivement"
-- Offre recherche, filtres et export
+## Probleme identifie
 
----
+Le moteur de calcul (`portfolioEngine.ts`) et l'etape de calcul (`WizardCalculStep.tsx`) ne prennent pas correctement en compte les transactions classifiees "Vente -> EUR" (crypto_to_fiat) pour plusieurs raisons :
 
-## 1. Table de base de donnees
+1. **Filtrage silencieux** : La fonction `draftsToNormalized` (ligne 33 de WizardCalculStep) filtre les transactions avec `.filter((d) => d.date && d.assetFrom)`. Si l'utilisateur ne remplit pas le champ "De" (assetFrom), la transaction est supprimee sans avertissement.
 
-### Nouvelle table `ai_conversations`
+2. **Classification `fiat_to_crypto` manquante** : Il n'existe aucune classification explicite pour les achats (EUR -> crypto). Les achats doivent etre classifies comme acquisitions pour alimenter le `totalAcquisitionCost` du PMPA. Actuellement le fallback fonctionne uniquement si `assetFrom` est une devise fiat ET `assetTo` n'est pas fiat — mais ce cas n'est pas explicite dans l'UI.
+
+3. **Pas de diagnostic quand des transactions sont filtrees** : Quand des transactions sont exclues du calcul (champs manquants), aucun message n'explique pourquoi elles disparaissent.
+
+4. **Qualification step ne distingue pas achats vs ventes** : La qualification montre les classifications mais ne differencie pas clairement "achat fiat->crypto" comme type distinct.
+
+## Corrections prevues
+
+### A. Ajouter la classification `fiat_to_crypto` (portfolioEngine.ts + UI)
+
+- Ajouter `'fiat_to_crypto'` dans les `ACQUISITION_CLASSIFICATIONS` du moteur
+- Ajouter l'option dans le selecteur de la step Transactions et Qualification
+- Quand l'utilisateur entre EUR dans "De" et BTC dans "Vers", auto-suggerer `fiat_to_crypto`
+
+### B. Corriger `draftsToNormalized` pour ne plus filtrer silencieusement
+
+- Remplacer le filtre strict par un filtre qui conserve les transactions avec au minimum une date
+- Pour les transactions sans `assetFrom`, generer une alerte visible au lieu de les supprimer
+- Ajouter des logs dans le diagnostic quand des transactions sont exclues
+
+### C. Ameliorer le diagnostic zero-result
+
+- Compter combien de transactions ont ete filtrees et pourquoi
+- Afficher : "X transaction(s) ignoree(s) car champ 'De' vide"
+- Afficher : "X cession(s) taxable(s) detectee(s) — assurez-vous que la valeur EUR est renseignee"
+
+### D. Auto-detection du type dans la step Transactions
+
+- Quand `assetFrom` = EUR/USD et `assetTo` = crypto -> auto-classer en `fiat_to_crypto` (acquisition)
+- Quand `assetFrom` = crypto et `assetTo` = EUR/USD -> auto-classer en `crypto_to_fiat` (cession taxable)
+- Feedback visuel immediat (badge "Taxable" / "Acquisition")
+
+## Fichiers modifies
+
+| Fichier | Modification |
+|---------|-------------|
+| `src/domain/crypto/portfolioEngine.ts` | Ajouter `fiat_to_crypto` dans `ACQUISITION_CLASSIFICATIONS`. Ameliorer `classifyTransaction` pour gerer ce cas explicitement. |
+| `src/domain/crypto/types.ts` | Ajouter `fiat_to_crypto` au type `TransactionClassification` |
+| `src/components/crypto/wizard/WizardCalculStep.tsx` | Corriger `draftsToNormalized` : ne plus filtrer silencieusement, ajouter compteur de transactions exclues dans le diagnostic |
+| `src/components/crypto/wizard/WizardTransactionsStep.tsx` | Ajouter `fiat_to_crypto` dans les classifications, auto-detection du type selon les assets remplis |
+| `src/components/crypto/wizard/WizardQualificationStep.tsx` | Ajouter `fiat_to_crypto` dans les classifications affichees, marquer comme "Non taxable (acquisition)" |
+
+## Detail technique
+
+### portfolioEngine.ts — classifyTransaction
 
 ```text
-id              uuid        PK, gen_random_uuid()
-user_id         uuid        NOT NULL (ref auth.users)
-topic           text        sujet/page au moment de la conversation
-summary         text        resume auto (premiere question ou titre)
-messages        jsonb       tableau complet [{role, content, timestamp}]
-tags            text[]      mots-cles fiscaux extraits
-is_pinned       boolean     false (sauvegarde definitive)
-expires_at      timestamptz created_at + 30 jours (NULL si pinned)
-created_at      timestamptz now()
-updated_at      timestamptz now()
+Avant :
+  ACQUISITION_CLASSIFICATIONS = ['income', 'airdrop', 'mining', 'staking', 'gift']
+  
+Apres :
+  ACQUISITION_CLASSIFICATIONS = ['income', 'airdrop', 'mining', 'staking', 'gift', 'fiat_to_crypto']
 ```
 
-Politiques RLS :
-- SELECT, INSERT, UPDATE, DELETE : `auth.uid() = user_id`
+La fonction `classifyTransaction` garde sa logique existante mais la nouvelle classification est traitee explicitement avant le fallback.
 
-Index :
-- `user_id, created_at DESC` pour les listes
-- `expires_at` pour la purge
+### WizardCalculStep.tsx — draftsToNormalized
 
----
+```text
+Avant :
+  .filter((d) => d.date && d.assetFrom)
+  
+Apres :
+  .filter((d) => d.date)  // On garde toutes les transactions avec une date
+  // + avertissement dans le diagnostic si assetFrom est vide
+```
 
-## 2. Sauvegarde automatique des conversations
+Les transactions sans `assetFrom` seront converties avec `assetFrom = '???'` et une alerte sera generee, au lieu d'etre silencieusement supprimees.
 
-### Modifier `src/hooks/useGlossaryAI.ts`
+### Auto-classification dans WizardTransactionsStep
 
-Ajouter une fonction `saveConversation` qui :
-- S'execute automatiquement quand l'utilisateur ferme le widget ou demarre une nouvelle conversation
-- Extrait le resume (premiere question utilisateur)
-- Detecte les tags fiscaux automatiquement (TMI, PER, URSSAF, etc.) en cherchant dans le contenu
-- Calcule `expires_at = now() + 30 jours`
-- Insere dans `ai_conversations`
-- Ne sauvegarde pas les conversations vides (uniquement le welcome message)
+Quand l'utilisateur modifie `assetFrom` ou `assetTo`, le systeme detecte automatiquement :
+- Si EUR->crypto : classification = `fiat_to_crypto`
+- Si crypto->EUR : classification = `crypto_to_fiat`
+- Ne pas ecraser si l'utilisateur a manuellement choisi un autre type
 
-### Modifier `src/components/ai/AIHelpWidget.tsx`
+## Impact
 
-- Appeler `saveConversation` dans `handleClose` et `handleNewChat` avant de vider les messages
-- Passer le `topic` actuel a la sauvegarde
+Cette correction garantit que :
+1. Les ventes crypto -> EUR sont systematiquement comptees comme cessions taxables
+2. Les achats EUR -> crypto alimentent correctement le prix total d'acquisition
+3. Aucune transaction n'est silencieusement ignoree sans explication
+4. Le diagnostic explique clairement quand et pourquoi des transactions sont exclues
 
----
-
-## 3. Extraction automatique des tags
-
-Creer un utilitaire `src/lib/conversationTagExtractor.ts` :
-
-- Dictionnaire de mots-cles fiscaux : TMI, IR, PER, PEA, URSSAF, micro-entreprise, TVA, CFE, SCPI, assurance-vie, deficit foncier, plus-value, crypto, 2042, 2044, 2086, etc.
-- Scanner le contenu des messages pour detecter ces termes
-- Retourner un tableau de tags uniques
-- Lier aux IDs du glossaire existant quand possible (mapping tag -> glossaryTermId)
-
----
-
-## 4. Purge automatique (CRON)
-
-### Creer une edge function `supabase/functions/purge-expired-conversations/index.ts`
-
-- Supprime les lignes ou `expires_at < now()` et `is_pinned = false`
-- Retourne le nombre de lignes supprimees
-
-### Planifier via pg_cron
-
-- Execution quotidienne a 3h du matin
-- Appel HTTP vers l'edge function
-
----
-
-## 5. Interface dans le Glossaire
-
-### Modifier `src/pages/Glossary.tsx`
-
-Ajouter un onglet/section "Historique conversations" avec :
-
-**En-tete** :
-- Compteur de conversations archivees
-- Barre de recherche dediee (filtre par mot-cle dans messages et tags)
-- Filtre par date (semaine / mois)
-- Filtre par categorie fiscale (basee sur les tags)
-
-**Liste des conversations** :
-- Carte par conversation avec :
-  - Resume (premiere question)
-  - Date relative ("il y a 3 jours")
-  - Tags fiscaux sous forme de badges
-  - Indicateur de temps restant avant expiration (barre de progression orange)
-  - Bouton epingle (toggle `is_pinned`) avec icone cadenas
-  - Bouton supprimer
-- Conversations epinglees en premier, puis chronologique decroissant
-
-**Vue detail** :
-- Au clic sur une conversation, afficher le fil complet (question/reponse)
-- Bouton "Exporter en texte" (copie dans le presse-papier)
-- Bouton "Relancer cette conversation" (ouvre le widget avec les messages pre-charges)
-- Liens vers les termes du glossaire detectes dans la conversation
-
-### Nouveau composant `src/components/glossary/ConversationHistory.tsx`
-
-Composant dedie qui encapsule toute la logique d'historique :
-- Hook `useConversationHistory` pour fetch/delete/pin
-- Gestion de la pagination (20 conversations par page)
-- Etats de chargement et vide
-
----
-
-## 6. Hooks et services
-
-### `src/hooks/useConversationHistory.ts`
-
-- `conversations` : liste paginee
-- `isLoading` : etat de chargement
-- `searchConversations(query)` : recherche full-text
-- `pinConversation(id)` : toggle is_pinned + set/unset expires_at
-- `deleteConversation(id)` : suppression manuelle
-- `loadMore()` : pagination
-
-### `src/lib/conversationService.ts`
-
-- `saveConversation(userId, messages, topic, tags)` : insertion
-- `extractTags(messages)` : detection de mots-cles
-- `generateSummary(messages)` : premiere question user comme resume
-
----
-
-## 7. Export de conversation
-
-Dans le composant `ConversationHistory`, bouton "Exporter" qui :
-- Formate la conversation en texte lisible (horodatage + role + contenu)
-- Copie dans le presse-papier avec `navigator.clipboard.writeText()`
-- Toast de confirmation
-
----
-
-## 8. Securite et performance
-
-- RLS stricte : chaque utilisateur ne voit que ses conversations
-- Les messages complets sont stockes en JSONB (pas de PII dans les logs)
-- Pas de stockage des donnees du profil utilisateur dans la conversation (deja dans `profiles`)
-- Pagination serveur pour eviter de charger des centaines de conversations
-- La sauvegarde est asynchrone (fire-and-forget) pour ne pas bloquer l'UX du widget
-
----
-
-## Fichiers a creer/modifier
-
-1. **Migration SQL** : table `ai_conversations` avec RLS
-2. **`src/lib/conversationService.ts`** (nouveau) : logique de sauvegarde et tags
-3. **`src/hooks/useConversationHistory.ts`** (nouveau) : hook de lecture/gestion
-4. **`src/hooks/useGlossaryAI.ts`** : ajouter saveConversation
-5. **`src/components/ai/AIHelpWidget.tsx`** : appeler save au close/new chat
-6. **`src/components/glossary/ConversationHistory.tsx`** (nouveau) : UI historique
-7. **`src/pages/Glossary.tsx`** : integrer l'onglet historique
-8. **`supabase/functions/purge-expired-conversations/index.ts`** (nouveau) : edge function de purge
-9. **SQL CRON** : planification de la purge quotidienne
-
-## Ordre d'implementation
-
-1. Migration DB (table + RLS + index)
-2. Service de sauvegarde + extracteur de tags
-3. Integration dans le hook et widget AI
-4. Hook d'historique
-5. Composant ConversationHistory
-6. Integration dans Glossary.tsx
-7. Edge function de purge + CRON
