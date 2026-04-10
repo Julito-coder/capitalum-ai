@@ -1,5 +1,5 @@
 // =============================================================================
-// CAPITALUM — Dossier de Financement Immobilier Locatif — Export PDF Premium
+// ELIO — Dossier de Financement Immobilier Locatif — Export PDF Premium
 // Document professionnel de 12 pages pour établissements bancaires haut de gamme
 // =============================================================================
 
@@ -43,18 +43,18 @@ const defaultConfig: PDFConfig = {
 // =============================================================================
 
 const COLORS = {
-  primary: [30, 58, 138] as [number, number, number],      // Navy #1E3A8A
-  primaryLight: [59, 130, 246] as [number, number, number], // Blue #3B82F6
-  success: [16, 185, 129] as [number, number, number],      // Green #10B981
-  successLight: [209, 250, 229] as [number, number, number], // Light green
-  warning: [245, 158, 11] as [number, number, number],      // Orange #F59E0B
-  warningLight: [254, 243, 199] as [number, number, number], // Light orange
-  danger: [239, 68, 68] as [number, number, number],        // Red #EF4444
-  dangerLight: [254, 226, 226] as [number, number, number], // Light red
-  dark: [15, 23, 42] as [number, number, number],           // Slate 900
-  text: [51, 65, 85] as [number, number, number],           // Slate 600
-  muted: [100, 116, 139] as [number, number, number],       // Slate 500
-  light: [241, 245, 249] as [number, number, number],       // Slate 100
+  primary: [27, 58, 92] as [number, number, number],       // Navy #1B3A5C
+  primaryLight: [200, 148, 62] as [number, number, number], // Gold #C8943E
+  success: [75, 130, 100] as [number, number, number],      // Sage Green #4B8264
+  successLight: [220, 240, 225] as [number, number, number],
+  warning: [217, 119, 6] as [number, number, number],       // Amber #D97706
+  warningLight: [254, 243, 199] as [number, number, number],
+  danger: [204, 85, 61] as [number, number, number],        // Terracotta
+  dangerLight: [254, 226, 226] as [number, number, number],
+  dark: [27, 46, 61] as [number, number, number],
+  text: [51, 65, 85] as [number, number, number],
+  muted: [100, 116, 139] as [number, number, number],
+  light: [245, 243, 240] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
 };
 

@@ -45,19 +45,19 @@ function fmtPct(n: number): string {
   return `${(n * 100).toFixed(2)}%`;
 }
 
-// ── Capitalum brand colors (RGB) ────────────────
+// ── Élio brand colors (RGB) ────────────────
 const BRAND = {
-  navy: [30, 58, 138] as [number, number, number],
-  navyLight: [37, 99, 235] as [number, number, number],
-  cyan: [34, 211, 238] as [number, number, number],
-  green: [16, 185, 129] as [number, number, number],
-  red: [239, 68, 68] as [number, number, number],
-  orange: [245, 158, 11] as [number, number, number],
+  navy: [27, 58, 92] as [number, number, number],
+  navyLight: [37, 99, 160] as [number, number, number],
+  gold: [200, 148, 62] as [number, number, number],
+  green: [75, 130, 100] as [number, number, number],
+  red: [204, 85, 61] as [number, number, number],
+  orange: [217, 119, 6] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
-  grayLight: [241, 245, 249] as [number, number, number],
+  grayLight: [245, 243, 240] as [number, number, number],
   grayMedium: [148, 163, 184] as [number, number, number],
   grayDark: [30, 41, 59] as [number, number, number],
-  textDark: [15, 23, 42] as [number, number, number],
+  textDark: [27, 46, 61] as [number, number, number],
   textMuted: [100, 116, 139] as [number, number, number],
 };
 
@@ -133,20 +133,20 @@ class PdfBuilder {
     this.doc.rect(0, 0, this.pageW, 42, 'F');
 
     // Accent line
-    this.doc.setFillColor(...BRAND.cyan);
+    this.doc.setFillColor(...BRAND.gold);
     this.doc.rect(0, 42, this.pageW, 1.5, 'F');
 
     // Logo text
     this.doc.setFontSize(22);
     this.doc.setFont('Helvetica', 'bold');
     this.doc.setTextColor(...BRAND.white);
-    this.doc.text('CAPITALUM', this.marginL, 18);
+    this.doc.text('ELIO', this.marginL, 18);
 
     // Subtitle
     this.doc.setFontSize(9);
     this.doc.setFont('Helvetica', 'normal');
-    this.doc.setTextColor(180, 210, 255);
-    this.doc.text(norm('Plateforme de gestion fiscale & patrimoniale'), this.marginL, 25);
+    this.doc.setTextColor(200, 190, 170);
+    this.doc.text(norm('Copilote administratif & financier'), this.marginL, 25);
 
     // Document title
     this.doc.setFontSize(14);
