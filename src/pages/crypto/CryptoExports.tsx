@@ -155,7 +155,7 @@ const CryptoExports = () => {
             <p className="text-sm text-muted-foreground">
               Les documents exportés seront archivés automatiquement dans
               <br />
-              <span className="font-mono text-xs">Capitalum Drive / 2025 / Fiscalité / Crypto / 2086</span>
+              <span className="font-mono text-xs">Élio Drive / 2025 / Fiscalité / Crypto / 2086</span>
             </p>
           </CardContent>
         </Card>

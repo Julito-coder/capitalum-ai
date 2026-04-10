@@ -109,7 +109,7 @@ export const FIELD_TOOLTIPS: Record<string, FieldTooltipData> = {
   netNetYield: {
     shortTip: "Cashflow après impôts / Prix total × 100",
     definition: "La rentabilité nette-nette intègre l'impact fiscal réel selon votre régime (micro, réel, LMNP...).",
-    impact: "C'est l'indicateur le plus proche de votre gain réel, mais varie selon votre situation fiscale.",
+    impact: "C'est l'indicateur le plus proche de votre gain réel, mais varie selon ta situation fiscale.",
     typicalValue: "1-3% en moyenne, peut être négatif si forte fiscalité.",
     source: "Calcul basé sur le cashflow après impôts annuel moyen.",
   },
@@ -120,7 +120,7 @@ export const FIELD_TOOLTIPS: Record<string, FieldTooltipData> = {
     definition: "Le cashflow avant impôts est la somme qui reste chaque mois après avoir payé toutes les charges et le crédit, mais avant impôt sur le revenu.",
     impact: "Un cashflow positif signifie que le bien s'autofinance. Un cashflow négatif implique un effort d'épargne mensuel.",
     typicalValue: "0 à +200€/mois pour un bien autofinancé. Négatif en début de prêt si peu d'apport.",
-    source: "Calculé automatiquement à partir de vos données.",
+    source: "Calculé automatiquement à partir de tes données.",
   },
   cashflowAfterTax: {
     shortTip: "Cashflow avant impôts - Impôts fonciers",
@@ -144,7 +144,7 @@ export const FIELD_TOOLTIPS: Record<string, FieldTooltipData> = {
   vacancyRate: {
     shortTip: "% du temps où le bien est vacant",
     definition: "Le taux de vacance représente la période pendant laquelle le bien n'est pas loué entre deux locataires.",
-    impact: "Réduit directement vos revenus. Un taux élevé dégrade la rentabilité et le DSCR.",
+    impact: "Réduit directement tes revenus. Un taux élevé dégrade la rentabilité et le DSCR.",
     typicalValue: "2-5% en zone tendue (grandes villes), 5-10% en zone moins demandée.",
     source: "Statistiques locales, agences immobilières, historique du bien.",
     example: "5% = environ 18 jours de vacance par an."
@@ -169,15 +169,15 @@ export const FIELD_TOOLTIPS: Record<string, FieldTooltipData> = {
   // Fiscalité
   tmi: {
     shortTip: "Tranche Marginale d'Imposition",
-    definition: "La TMI est le taux d'imposition appliqué à la dernière tranche de vos revenus. C'est le taux qui s'applique à vos revenus fonciers supplémentaires.",
+    definition: "La TMI est le taux d'imposition appliqué à la dernière tranche de tes revenus. C'est le taux qui s'applique à tes revenus fonciers supplémentaires.",
     impact: "Plus votre TMI est élevée, plus les revenus fonciers seront taxés. Le choix du régime fiscal devient crucial.",
-    typicalValue: "0%, 11%, 30%, 41% ou 45% selon vos revenus.",
+    typicalValue: "0%, 11%, 30%, 41% ou 45% selon tes revenus.",
     source: "Votre dernier avis d'imposition, page 2.",
     example: "Revenus de 40 000€ → TMI à 30%."
   },
   amortization: {
     shortTip: "Déduction comptable de la valeur du bien",
-    definition: "L'amortissement permet de déduire fiscalement la perte de valeur théorique du bien (bâti, mobilier, travaux) de vos revenus.",
+    definition: "L'amortissement permet de déduire fiscalement la perte de valeur théorique du bien (bâti, mobilier, travaux) de tes revenus.",
     impact: "Réduit fortement l'imposition en LMNP réel ou SCI IS. Peut créer un déficit reportable.",
     typicalValue: "Bâti sur 30-50 ans, mobilier sur 5-10 ans, travaux sur 10-15 ans.",
     source: "Comptable spécialisé LMNP ou expert-comptable.",
@@ -203,7 +203,7 @@ export const FIELD_TOOLTIPS: Record<string, FieldTooltipData> = {
   equity: {
     shortTip: "Valeur du bien - Dette restante",
     definition: "L'équité (ou capitaux propres) représente la part du bien qui vous appartient réellement.",
-    impact: "Elle croît avec les remboursements et la valorisation du bien. C'est votre patrimoine net.",
+    impact: "Elle croît avec les remboursements et la valorisation du bien. C'est ton patrimoine net.",
     typicalValue: "Commence à l'apport, augmente progressivement.",
     source: "Valeur estimée - Capital restant dû.",
   },

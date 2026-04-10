@@ -132,7 +132,7 @@ const CalendarPage = () => {
               <Calendar className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold">Cockpit patrimonial</h1>
+              <h1 className="text-2xl lg:text-3xl font-serif font-bold">Cockpit patrimonial</h1>
               <p className="text-muted-foreground text-sm">
                 Tes échéances fiscales personnalisées · {deadlines.length} actions détectées
               </p>

@@ -31,7 +31,7 @@ interface ActionableInsight {
 
 const calculateHealthStatus = (profile: UserProfile | null): HealthStatus => {
   if (!profile?.isSelfEmployed) {
-    return { label: 'N/A', color: 'warning', description: 'Activez votre profil pro', score: 0 };
+    return { label: 'N/A', color: 'warning', description: 'Activez ton profil pro', score: 0 };
   }
   
   const ca = profile.annualRevenueHt || 0;
@@ -128,7 +128,7 @@ export const FinancialHealthCard = ({ profile, hasRealData }: FinancialHealthCar
             </div>
             <p className="text-base font-medium mb-1">Activité non configurée</p>
             <p className="text-sm text-muted-foreground mb-5 max-w-[280px]">
-              Complétez votre profil professionnel pour suivre votre activité.
+              Complétez ton profil professionnel pour suivre ton activité.
             </p>
             <Button 
               onClick={() => navigate('/pro/onboarding')} 

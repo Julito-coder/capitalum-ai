@@ -62,7 +62,7 @@ const HiringSimulator = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Simulateur d'embauche</h1>
+            <h1 className="text-2xl lg:text-3xl font-serif font-bold">Simulateur d'embauche</h1>
             <p className="text-muted-foreground mt-1">
               Calculez le coût réel d'une embauche avec les aides disponibles
             </p>
@@ -252,7 +252,7 @@ const HiringSimulator = () => {
                     <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50">
                       <AlertTriangle className="h-5 w-5 text-muted-foreground" />
                       <p className="text-muted-foreground">
-                        Aucune aide spécifique détectée. Consultez un expert pour vérifier votre éligibilité.
+                        Aucune aide spécifique détectée. Consulte un expert pour vérifier votre éligibilité.
                       </p>
                     </div>
                   )}

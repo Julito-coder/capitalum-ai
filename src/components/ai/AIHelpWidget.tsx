@@ -126,11 +126,11 @@ export const AIHelpWidget = () => {
       setMessages([{
         id: 'welcome',
         role: 'assistant',
-        content: `👋 Bonjour ! Je suis votre assistant fiscal Capitalum.
+        content: `👋 Salut ! Je suis ton copilote Élio.
 
-Je peux vous aider à comprendre les concepts fiscaux et financiers. Vous êtes actuellement sur la page **${currentTopic}**.
+Je peux t'aider à comprendre les concepts fiscaux et financiers. Tu es actuellement sur la page **${currentTopic}**.
 
-Posez-moi vos questions !`,
+Pose-moi tes questions !`,
         timestamp: new Date()
       }]);
     }
@@ -170,7 +170,7 @@ Posez-moi vos questions !`,
       role: 'assistant',
       content: `💬 Nouvelle conversation ! 
 
-Vous êtes sur **${currentTopic}**. Comment puis-je vous aider ?`,
+Tu es sur **${currentTopic}**. Comment puis-je t'aider ?`,
       timestamp: new Date()
     }]);
   };
@@ -322,7 +322,7 @@ Vous êtes sur **${currentTopic}**. Comment puis-je vous aider ?`,
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Posez votre question..."
+            placeholder="Pose ta question..."
             className="flex-1 bg-muted/50"
             disabled={isStreaming}
           />
@@ -340,7 +340,7 @@ Vous êtes sur **${currentTopic}**. Comment puis-je vous aider ?`,
           </Button>
         </div>
         <p className="text-[10px] text-muted-foreground text-center mt-2">
-          Propulsé par Capitalum AI • <a href="/glossary" className="hover:underline">Consulter le glossaire</a>
+          Propulsé par Elio AI • <a href="/glossary" className="hover:underline">Consulter le glossaire</a>
         </p>
       </div>
     </div>

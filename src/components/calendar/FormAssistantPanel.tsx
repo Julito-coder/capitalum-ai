@@ -87,7 +87,7 @@ export const FormAssistantPanel = ({ formType, formTitle, userContext, activeFie
       <div className="p-4 border-b border-border/30 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold text-sm">Assistant Capitalum</h3>
+          <h3 className="font-semibold text-sm">Assistant Elio</h3>
         </div>
         {onClose && (
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>

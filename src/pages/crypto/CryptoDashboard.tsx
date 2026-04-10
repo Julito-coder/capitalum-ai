@@ -104,7 +104,7 @@ const CryptoDashboard = () => {
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-info mt-0.5 shrink-0" />
             <p className="text-sm text-muted-foreground">
-              Capitalum t'aide à <strong>préparer</strong> ta déclaration 2086 et à{' '}
+              Elio t'aide à <strong>préparer</strong> ta déclaration 2086 et à{' '}
               <strong>reporter</strong> les montants sur impots.gouv.fr. Ce n'est pas un service
               de dépôt fiscal officiel.
             </p>

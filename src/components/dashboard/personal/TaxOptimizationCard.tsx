@@ -204,7 +204,7 @@ export const TaxOptimizationCard = ({ profile, hasRealData }: TaxOptimizationCar
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Cliquez sur un levier inactif pour débloquer cette économie
+              Clique sur un levier inactif pour débloquer cette économie
             </p>
           </div>
         )}

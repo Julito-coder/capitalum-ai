@@ -60,7 +60,7 @@ const Simulator = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl lg:text-3xl font-bold mb-2">Simulateur fiscal</h1>
-          <p className="text-muted-foreground">Explorez différents scénarios et optimisez votre situation</p>
+          <p className="text-muted-foreground">Explorez différents scénarios et optimisez ta situation</p>
         </div>
 
         {/* Input Controls */}

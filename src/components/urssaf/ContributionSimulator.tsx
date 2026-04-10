@@ -148,7 +148,7 @@ export const ContributionSimulator = ({
               <ul className="text-muted-foreground space-y-1">
                 <li>• Provisionnez {(result.urssafRate * 100).toFixed(0)}% de chaque encaissement</li>
                 <li>• Échéances trimestrielles : 30/04, 31/07, 31/10, 31/01</li>
-                <li>• Pensez à l'ACRE si vous êtes éligible (-50% la 1ère année)</li>
+                <li>• Pensez à l'ACRE si tu es éligible (-50% la 1ère année)</li>
               </ul>
             </div>
           </div>

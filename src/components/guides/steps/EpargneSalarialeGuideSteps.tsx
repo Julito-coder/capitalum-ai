@@ -279,7 +279,7 @@ const EpargneSalarialeActionStep = ({ onNext }: { onNext: () => void }) => {
           </h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>• Demandez à votre service RH</li>
-            <li>• Consultez votre intranet entreprise</li>
+            <li>• Consulte votre intranet entreprise</li>
             <li>• Vérifiez vos bulletins de paie (rubrique épargne salariale)</li>
             <li>• Cherchez un courrier/mail de votre gestionnaire d'épargne</li>
           </ul>

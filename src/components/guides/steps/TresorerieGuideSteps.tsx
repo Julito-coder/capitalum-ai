@@ -59,7 +59,7 @@ export const createTresorerieGuide = (profile: UserProfile | null): ActionGuide 
   const steps: GuideStep[] = [
     {
       id: 'diagnostic',
-      title: 'Analyse de votre trésorerie',
+      title: 'Analyse de ta trésorerie',
       content: (
         <div className="space-y-5">
           <div className="p-4 rounded-xl bg-warning/10 border border-warning/20">
@@ -68,7 +68,7 @@ export const createTresorerieGuide = (profile: UserProfile | null): ActionGuide 
               <div>
                 <h4 className="font-semibold text-warning mb-1">Trésorerie dormante détectée</h4>
                 <p className="text-sm text-muted-foreground">
-                  Votre trésorerie génère peu ou pas de rendement. À 3.5% de rendement moyen, 
+                  Ta trésorerie génère peu ou pas de rendement. À 3.5% de rendement moyen, 
                   vous perdez environ {formatCurrency(tresorerieEstimee * 0.035)}/an.
                 </p>
               </div>
@@ -117,7 +117,7 @@ export const createTresorerieGuide = (profile: UserProfile | null): ActionGuide 
       content: (
         <div className="space-y-5">
           <p className="text-sm text-muted-foreground">
-            Voici les 3 stratégies adaptées à votre profil de dirigeant :
+            Voici les 3 stratégies adaptées à ton profil de dirigeant :
           </p>
 
           <div className="space-y-3">
@@ -185,7 +185,7 @@ export const createTresorerieGuide = (profile: UserProfile | null): ActionGuide 
                 <div>
                   <p className="text-sm font-medium">Définir le seuil de sécurité</p>
                   <p className="text-xs text-muted-foreground">
-                    Conservez {formatCurrency(seuilSecurite)} sur votre compte courant
+                    Conservez {formatCurrency(seuilSecurite)} sur ton compte courant
                   </p>
                 </div>
               </div>
@@ -223,7 +223,7 @@ export const createTresorerieGuide = (profile: UserProfile | null): ActionGuide 
             <div className="flex items-start gap-2">
               <Building2 className="h-4 w-4 text-info shrink-0 mt-0.5" />
               <p className="text-xs text-muted-foreground">
-                <strong className="text-info">Option holding</strong> : Si votre CA dépasse 100k€ et que vous 
+                <strong className="text-info">Option holding</strong> : Si ton CA dépasse 100k€ et que vous 
                 n'avez pas besoin de la trésorerie à court terme, la création d'une holding permet 
                 d'optimiser la fiscalité des placements (régime mère-fille).
               </p>
@@ -246,7 +246,7 @@ export const createTresorerieGuide = (profile: UserProfile | null): ActionGuide 
             </div>
             <h3 className="text-lg font-semibold mb-2">Plan de déploiement validé</h3>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-              En déployant votre trésorerie excédentaire, vous générez {formatCurrency(gainPotentiel)} de revenus supplémentaires par an.
+              En déployant ta trésorerie excédentaire, vous générez {formatCurrency(gainPotentiel)} de revenus supplémentaires par an.
             </p>
           </div>
 

@@ -47,7 +47,7 @@ export const WizardQualificationStep = ({ transactions, setTransactions }: Props
       <div>
         <h2 className="font-semibold text-base">Étape 4 — Qualification fiscale</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Capitalum classe automatiquement chaque opération. Vérifie et corrige si besoin.
+          Elio classe automatiquement chaque opération. Vérifie et corrige si besoin.
         </p>
       </div>
 

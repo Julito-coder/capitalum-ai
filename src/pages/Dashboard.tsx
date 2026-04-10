@@ -157,7 +157,7 @@ const Dashboard = () => {
               <p className="text-muted-foreground text-sm mb-1">
                 Bonjour, {displayName} 👋
               </p>
-              <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+              <h1 className="text-2xl lg:text-3xl font-serif font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
                 {isProfessionalSpace ? 'Pilotage Pro' : 'Tableau de bord'}
               </h1>
               {metrics && metrics.profileTypes.length > 0 && isPersonalSpace && (
@@ -208,7 +208,7 @@ const Dashboard = () => {
             {/* Section 1: Vue d'ensemble */}
             <DashboardSection
               title="Vue d'ensemble"
-              subtitle="Votre situation financière en un coup d'œil"
+              subtitle="Ta situation financière en un coup d'œil"
               icon={Wallet}
               iconColor="text-primary"
               columns={2}
@@ -224,7 +224,7 @@ const Dashboard = () => {
             {/* Section 2: Actions & Optimisation */}
             <DashboardSection
               title="Actions & Optimisation"
-              subtitle="Recommandations personnalisées pour optimiser votre situation"
+              subtitle="Recommandations personnalisées pour optimiser ta situation"
               icon={Target}
               iconColor="text-success"
               columns={2}
@@ -269,7 +269,7 @@ const Dashboard = () => {
             {/* Section 1: Santé Financière */}
             <DashboardSection
               title="Santé Financière"
-              subtitle="Vue d'ensemble de votre activité professionnelle"
+              subtitle="Vue d'ensemble de ton activité professionnelle"
               icon={TrendingUp}
               iconColor="text-accent"
               columns={2}
@@ -322,14 +322,14 @@ const Dashboard = () => {
         >
           <p className="text-sm text-muted-foreground">
             <Sparkles className="inline h-4 w-4 mr-1 text-primary" />
-            <strong>Capitalum</strong> analyse votre situation pour vous aider à décider sereinement.
+            <strong>Élio</strong> analyse ta situation pour t'aider à décider sereinement.
             {!hasRealData && (
               <span className="block mt-2">
                   <button 
                     onClick={() => navigate(isProfessionalSpace ? '/pro/onboarding' : '/fiscal-profile')}
                     className="text-primary hover:underline font-medium"
                   >
-                  Complétez votre profil
+                  Complète ton profil
                 </button>
                 {' '}pour des recommandations personnalisées.
               </span>

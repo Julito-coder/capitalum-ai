@@ -123,8 +123,8 @@ export const INDICES_DATA: IndexData[] = [
     ],
     
     composition: [
-      { sector: 'Technologies', weight: 24.5, color: '#3b82f6' },
-      { sector: 'Finance', weight: 15.2, color: '#10b981' },
+      { sector: 'Technologies', weight: 24.5, color: '#1B3A5C' },
+      { sector: 'Finance', weight: 15.2, color: '#4B8264' },
       { sector: 'Santé', weight: 11.8, color: '#f59e0b' },
       { sector: 'Consommation', weight: 10.5, color: '#8b5cf6' },
       { sector: 'Industrie', weight: 10.3, color: '#ef4444' },
@@ -208,11 +208,11 @@ export const INDICES_DATA: IndexData[] = [
     ],
     
     composition: [
-      { sector: 'Finance', weight: 18.5, color: '#10b981' },
+      { sector: 'Finance', weight: 18.5, color: '#4B8264' },
       { sector: 'Industrie', weight: 16.2, color: '#ef4444' },
       { sector: 'Santé', weight: 14.8, color: '#f59e0b' },
       { sector: 'Consommation', weight: 12.5, color: '#8b5cf6' },
-      { sector: 'Technologies', weight: 8.3, color: '#3b82f6' },
+      { sector: 'Technologies', weight: 8.3, color: '#1B3A5C' },
       { sector: 'Énergie', weight: 6.2, color: '#ec4899' },
       { sector: 'Autres', weight: 23.5, color: '#6b7280' },
     ],
@@ -292,8 +292,8 @@ export const INDICES_DATA: IndexData[] = [
     ],
     
     composition: [
-      { sector: 'Technologies', weight: 31.5, color: '#3b82f6' },
-      { sector: 'Finance', weight: 13.2, color: '#10b981' },
+      { sector: 'Technologies', weight: 31.5, color: '#1B3A5C' },
+      { sector: 'Finance', weight: 13.2, color: '#4B8264' },
       { sector: 'Santé', weight: 11.5, color: '#f59e0b' },
       { sector: 'Consommation', weight: 10.8, color: '#8b5cf6' },
       { sector: 'Communication', weight: 9.2, color: '#ec4899' },
@@ -376,8 +376,8 @@ export const INDICES_DATA: IndexData[] = [
     ],
     
     composition: [
-      { sector: 'Souverains', weight: 58.0, color: '#3b82f6' },
-      { sector: 'Entreprises', weight: 22.0, color: '#10b981' },
+      { sector: 'Souverains', weight: 58.0, color: '#1B3A5C' },
+      { sector: 'Entreprises', weight: 22.0, color: '#4B8264' },
       { sector: 'Covered Bonds', weight: 12.0, color: '#f59e0b' },
       { sector: 'Agences', weight: 8.0, color: '#8b5cf6' },
     ],
@@ -451,8 +451,8 @@ export const INDICES_DATA: IndexData[] = [
     ],
     
     composition: [
-      { sector: 'Obligations État', weight: 45.0, color: '#3b82f6' },
-      { sector: 'Obligations entreprises', weight: 30.0, color: '#10b981' },
+      { sector: 'Obligations État', weight: 45.0, color: '#1B3A5C' },
+      { sector: 'Obligations entreprises', weight: 30.0, color: '#4B8264' },
       { sector: 'Immobilier', weight: 10.0, color: '#f59e0b' },
       { sector: 'Actions', weight: 8.0, color: '#8b5cf6' },
       { sector: 'Monétaire', weight: 7.0, color: '#6b7280' },
@@ -521,8 +521,8 @@ export const INDICES_DATA: IndexData[] = [
     ],
     
     composition: [
-      { sector: 'Technologies', weight: 22.5, color: '#3b82f6' },
-      { sector: 'Finance', weight: 21.8, color: '#10b981' },
+      { sector: 'Technologies', weight: 22.5, color: '#1B3A5C' },
+      { sector: 'Finance', weight: 21.8, color: '#4B8264' },
       { sector: 'Consommation', weight: 13.5, color: '#8b5cf6' },
       { sector: 'Communication', weight: 8.2, color: '#ec4899' },
       { sector: 'Énergie', weight: 5.5, color: '#ef4444' },
@@ -679,7 +679,7 @@ export function getRiskLevelLabel(level: RiskLevel): string {
 
 export function getRiskLevelColor(level: RiskLevel): string {
   const colors: Record<RiskLevel, string> = {
-    1: '#10b981', // green
+    1: '#4B8264', // green
     2: '#22c55e',
     3: '#84cc16', // lime
     4: '#eab308', // yellow

@@ -67,7 +67,7 @@ const ResetPassword = () => {
       <Card className="w-full max-w-md shadow-xl border-border/50">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <img src={logo} alt="Capitalum" className="h-12 w-auto" />
+            <img src={logo} alt="Elio" className="h-12 w-auto" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">Nouveau mot de passe</CardTitle>

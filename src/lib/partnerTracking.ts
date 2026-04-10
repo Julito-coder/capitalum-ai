@@ -1,4 +1,4 @@
-const UTM_SOURCE = 'capitalum';
+const UTM_SOURCE = 'elio';
 const UTM_MEDIUM = 'recommendation';
 
 export type PartnerPosition = 'primary' | 'alternative' | 'neobanking';
@@ -43,12 +43,12 @@ export const trackPartnerClick = (
 
   // Store locally for analytics
   try {
-    const stored = localStorage.getItem('capitalum_partner_clicks');
+    const stored = localStorage.getItem('elio_partner_clicks');
     const clicks: PartnerClickEvent[] = stored ? JSON.parse(stored) : [];
     clicks.push(event);
     // Keep last 100 clicks
     if (clicks.length > 100) clicks.splice(0, clicks.length - 100);
-    localStorage.setItem('capitalum_partner_clicks', JSON.stringify(clicks));
+    localStorage.setItem('elio_partner_clicks', JSON.stringify(clicks));
   } catch {
     // Silent fail for storage errors
   }
@@ -56,7 +56,7 @@ export const trackPartnerClick = (
   // Custom event for external analytics
   if (typeof window !== 'undefined') {
     window.dispatchEvent(
-      new CustomEvent('capitalum:partner_click', { detail: event })
+      new CustomEvent('elio:partner_click', { detail: event })
     );
   }
 };

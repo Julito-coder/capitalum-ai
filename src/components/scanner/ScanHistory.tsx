@@ -218,7 +218,7 @@ export const ScanHistory = ({ onViewScan, onClose }: Props) => {
 
       {selectedIds.length > 0 && selectedIds.length < 2 && (
         <div className="text-sm text-muted-foreground text-center mb-4 p-3 bg-muted/30 rounded-lg">
-          Sélectionnez une deuxième analyse pour comparer
+          Sélectionne une deuxième analyse pour comparer
         </div>
       )}
 

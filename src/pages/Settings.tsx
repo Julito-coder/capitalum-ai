@@ -47,7 +47,7 @@ const Settings = () => {
     const result = passwordSchema.safeParse(newPassword);
     if (!result.success) errors.newPassword = result.error.errors[0].message;
     if (newPassword !== confirmPassword) errors.confirmPassword = 'Les mots de passe ne correspondent pas';
-    if (!currentPassword) errors.currentPassword = 'Veuillez entrer votre mot de passe actuel';
+    if (!currentPassword) errors.currentPassword = 'Veuillez entrer ton mot de passe actuel';
 
     setPasswordErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -135,7 +135,7 @@ const Settings = () => {
       await supabase.auth.signOut();
       setDeleteLoading(false);
       navigate('/auth', { replace: true });
-      toast({ title: 'Compte supprimé', description: 'Votre compte et toutes vos données ont été définitivement supprimés.' });
+      toast({ title: 'Compte supprimé', description: 'Ton compte et toutes tes données ont été définitivement supprimés.' });
     } catch (err) {
       console.error('Delete account error:', err);
       toast({ variant: 'destructive', title: 'Erreur', description: 'Une erreur est survenue.' });
@@ -153,7 +153,7 @@ const Settings = () => {
       <div className="max-w-3xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Paramètres</h1>
-          <p className="text-muted-foreground mt-1">Gérez votre compte et vos préférences</p>
+          <p className="text-muted-foreground mt-1">Gérez ton compte et vos préférences</p>
         </div>
 
         {/* Profile Section */}
@@ -163,7 +163,7 @@ const Settings = () => {
               <User className="h-5 w-5 text-primary" />
               <CardTitle>Informations personnelles</CardTitle>
             </div>
-            <CardDescription>Modifiez vos informations de profil</CardDescription>
+            <CardDescription>Modifie vos informations de profil</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleProfileUpdate} className="space-y-4">
@@ -195,7 +195,7 @@ const Settings = () => {
               <Lock className="h-5 w-5 text-primary" />
               <CardTitle>Sécurité</CardTitle>
             </div>
-            <CardDescription>Modifiez votre mot de passe</CardDescription>
+            <CardDescription>Modifie ton mot de passe</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handlePasswordChange} className="space-y-4">
@@ -300,11 +300,11 @@ const Settings = () => {
               <Trash2 className="h-5 w-5 text-destructive" />
               <CardTitle className="text-destructive">Zone de danger</CardTitle>
             </div>
-            <CardDescription>Actions irréversibles sur votre compte</CardDescription>
+            <CardDescription>Actions irréversibles sur ton compte</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              La suppression de votre compte est <strong>irréversible</strong>. Toutes vos données, simulations et documents seront définitivement supprimés.
+              La suppression de ton compte est <strong>irréversible</strong>. Toutes tes données, simulations et documents seront définitivement supprimés.
             </p>
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -315,9 +315,9 @@ const Settings = () => {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Supprimer votre compte ?</AlertDialogTitle>
+                  <AlertDialogTitle>Supprimer ton compte ?</AlertDialogTitle>
                   <AlertDialogDescription className="space-y-3">
-                    <p>Cette action est irréversible. Toutes vos données seront supprimées :</p>
+                    <p>Cette action est irréversible. Toutes tes données seront supprimées :</p>
                     <ul className="list-disc list-inside text-sm space-y-1">
                       <li>Profil fiscal et données personnelles</li>
                       <li>Simulations immobilières</li>

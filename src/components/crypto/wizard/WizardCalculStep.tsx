@@ -186,7 +186,7 @@ function CessionPedagogical({ line, index }: { line: CessionDetail; index: numbe
         {mode === 'simple' ? (
           <div className="text-xs text-muted-foreground space-y-1.5 p-3 rounded-lg bg-muted/10">
             <p>
-              Vous avez vendu pour <strong>{formatEur(line.prixCession)}</strong> de {line.assetName}.
+              Tu as vendu pour <strong>{formatEur(line.prixCession)}</strong> de {line.assetName}.
             </p>
             <p>
               Au moment de cette vente, votre portefeuille global valait{' '}
@@ -319,7 +319,7 @@ export const WizardCalculStep = ({ transactions = [], accounts = [], initialPort
 
       {/* Breakdown of transactions */}
       <div className="p-3 rounded-xl bg-muted/10 border border-border/20">
-        <p className="text-xs font-semibold mb-2">Ce que Capitalum a analysé</p>
+        <p className="text-xs font-semibold mb-2">Ce que Elio a analysé</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           <div className="text-center p-2 rounded-lg bg-background">
             <p className="text-lg font-bold">{normalizedTxs.length}</p>
@@ -399,7 +399,7 @@ export const WizardCalculStep = ({ transactions = [], accounts = [], initialPort
           <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-2" />
           <p className="text-sm font-semibold">Le calcul est bloqué</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Corrigez les alertes bloquantes ci-dessus avant de valider votre déclaration.
+            Corrigez les alertes bloquantes ci-dessus avant de valider ta déclaration.
           </p>
         </div>
       )}

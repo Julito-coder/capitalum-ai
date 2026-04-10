@@ -62,7 +62,7 @@ export const StatusStructureCard = ({ profile, hasRealData }: StatusStructureCar
             </div>
             <p className="text-muted-foreground mb-2">Données insuffisantes</p>
             <p className="text-sm text-muted-foreground/70 mb-4 max-w-xs">
-              Complétez votre profil professionnel pour comparer les statuts juridiques.
+              Complétez ton profil professionnel pour comparer les statuts juridiques.
             </p>
             <Button onClick={() => navigate('/pro/onboarding')} size="sm">
               Configurer mon activité

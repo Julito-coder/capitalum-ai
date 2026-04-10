@@ -19,7 +19,6 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useSpace } from '@/contexts/SpaceContext';
 import { SpaceToggle } from './SpaceToggle';
-import logo from '@/assets/logo.png';
 
 // Navigation items for Personal space (Particuliers)
 const personalNavItems = [
@@ -60,8 +59,10 @@ export const Sidebar = () => {
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-sidebar-border bg-sidebar flex flex-col">
       {/* Logo */}
       <div className="flex items-center gap-3 p-6 border-b border-sidebar-border">
-        <img src={logo} alt="Capitalum" className="h-10 w-10 rounded-xl" />
-        <span className="text-xl font-bold gradient-text">CAPITALUM</span>
+        <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
+          <span className="text-xl font-serif font-bold text-primary-foreground">É</span>
+        </div>
+        <span className="text-xl font-serif font-bold gradient-text">Élio</span>
       </div>
 
       {/* Space Toggle */}

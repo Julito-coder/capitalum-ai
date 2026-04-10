@@ -56,10 +56,10 @@ const RegimeReelEducationStep = ({ onNext }: { onNext: () => void }) => (
         Quand passer au réel ?
       </h4>
       <ul className="space-y-2 text-sm text-muted-foreground">
-        <li>• Vos charges dépassent 22% de votre CA</li>
-        <li>• Vous avez des investissements importants (matériel, véhicule)</li>
+        <li>• Vos charges dépassent 22% de ton CA</li>
+        <li>• Tu as des investissements importants (matériel, véhicule)</li>
         <li>• Vous approchez du plafond micro (77 700€)</li>
-        <li>• Vous pouvez amortir du matériel coûteux</li>
+        <li>• Tu peux amortir du matériel coûteux</li>
       </ul>
     </div>
 
@@ -101,7 +101,7 @@ const RegimeReelSimulationStep = ({ onNext, profile }: { onNext: () => void; pro
   return (
     <div className="space-y-6">
       <div className="p-4 rounded-xl bg-info/5 border border-info/15">
-        <h3 className="font-semibold mb-2">Votre situation actuelle</h3>
+        <h3 className="font-semibold mb-2">Ta situation actuelle</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-muted-foreground text-xs">CA annuel</p>
@@ -173,7 +173,7 @@ const RegimeReelSimulationStep = ({ onNext, profile }: { onNext: () => void; pro
 
       <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
         <p className="text-xs text-muted-foreground">
-          ⚠️ Simulation indicative. Consultez un expert-comptable pour une analyse précise.
+          ⚠️ Simulation indicative. Consulte un expert-comptable pour une analyse précise.
         </p>
       </div>
     </div>
@@ -280,7 +280,7 @@ const RegimeReelConfirmationStep = ({ onNext }: { onNext: () => void }) => (
       <CheckCircle2 className="h-12 w-12 text-success mx-auto mb-4" />
       <h3 className="text-lg font-semibold mb-2">Analyse terminée !</h3>
       <p className="text-sm text-muted-foreground">
-        Vous avez les éléments pour décider du meilleur régime fiscal.
+        Tu as les éléments pour décider du meilleur régime fiscal.
       </p>
     </div>
 
@@ -312,7 +312,7 @@ const RegimeReelConfirmationStep = ({ onNext }: { onNext: () => void }) => (
 export const createRegimeReelGuide = (estimatedGain: number = 2000): ActionGuide => ({
   id: 'regime-reel',
   title: 'Étudier le passage au réel',
-  subtitle: 'Optimisez la fiscalité de votre activité',
+  subtitle: 'Optimisez la fiscalité de ton activité',
   category: 'status',
   estimatedGain,
   effort: 'Étude comptable',

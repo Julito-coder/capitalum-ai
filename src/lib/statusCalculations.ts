@@ -92,7 +92,7 @@ export interface StatusAnalysis {
   pros: string[];
   cons: string[];
   warnings: string[];
-  capitalumScore: number;
+  elioScore: number;
   recommendation: string;
   details: {
     label: string;
@@ -222,7 +222,7 @@ export function calculateMicroEntrepreneur(data: StatusFormData): StatusAnalysis
       'Pas de distinction patrimoine pro/perso',
     ],
     warnings,
-    capitalumScore: score,
+    elioScore: score,
     recommendation: eligible
       ? realExpensesBetter
         ? 'Votre niveau de charges réelles rend le régime réel plus intéressant.'
@@ -280,7 +280,7 @@ export function calculateEURL_IR(data: StatusFormData): StatusAnalysis {
       'Cotisations minimales même sans bénéfice (~1 100 €/an)',
     ],
     warnings,
-    capitalumScore: score,
+    elioScore: score,
     recommendation: totalExpenses > data.annualRevenue * 0.35
       ? 'Vos charges élevées rendent la déduction au réel très avantageuse.'
       : 'Structure solide mais les cotisations TNS à 45% sont significatives.',
@@ -350,7 +350,7 @@ export function calculateSASU(data: StatusFormData): StatusAnalysis {
       profit < 40_000 ? '⚠️ Peu rentable sous 40 000 € de bénéfice' : 'Coût fixe de gestion important',
     ],
     warnings,
-    capitalumScore: score,
+    elioScore: score,
     recommendation: data.wantsUnemployment
       ? 'La SASU est le seul statut permettant de cumuler activité et droits au chômage.'
       : data.wantsDividends && profit > 60_000
@@ -411,7 +411,7 @@ export function calculatePortage(data: StatusFormData): StatusAnalysis {
       'Pas de récupération de TVA sur achats',
     ],
     warnings,
-    capitalumScore: score,
+    elioScore: score,
     recommendation: data.wantsUnemployment && data.yearsInBusiness < 2
       ? 'Solution idéale pour démarrer avec filet de sécurité (chômage + CDI).'
       : 'Le portage est sécurisant mais coûteux à long terme.',
@@ -432,5 +432,5 @@ export function calculateAllStatuses(data: StatusFormData): StatusAnalysis[] {
     calculateSASU(data),
     calculatePortage(data),
   ];
-  return results.sort((a, b) => b.capitalumScore - a.capitalumScore);
+  return results.sort((a, b) => b.elioScore - a.elioScore);
 }

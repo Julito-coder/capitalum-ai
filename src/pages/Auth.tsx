@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
-import logo from '@/assets/logo.png';
+
 import { lovable } from '@/integrations/lovable';
 import { Separator } from '@/components/ui/separator';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
@@ -69,7 +69,7 @@ const Auth = () => {
       if (error.message.includes('Invalid login credentials')) {
         message = 'Email ou mot de passe incorrect';
       } else if (error.message.includes('Email not confirmed')) {
-        message = 'Veuillez confirmer votre email avant de vous connecter';
+        message = 'Veuillez confirmer ton email avant de vous connecter';
       }
       toast({
         variant: 'destructive',
@@ -103,7 +103,7 @@ const Auth = () => {
       setJustSignedUp(true);
       toast({
         title: 'Compte créé',
-        description: 'Bienvenue sur Capitalum !',
+        description: 'Bienvenue sur Élio !',
       });
     }
   };
@@ -171,11 +171,13 @@ const Auth = () => {
       <Card className="w-full max-w-md shadow-xl border-border/50">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <img src={logo} alt="Capitalum" className="h-12 w-auto" />
+            <div className="h-14 w-14 rounded-xl bg-primary flex items-center justify-center">
+              <span className="text-2xl font-serif font-bold text-primary-foreground">É</span>
+            </div>
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">Capitalum</CardTitle>
-            <CardDescription>Votre assistant fiscal intelligent</CardDescription>
+            <CardTitle className="text-2xl font-serif font-bold">Élio</CardTitle>
+            <CardDescription>Ne perds plus un euro par manque d'information</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -195,7 +197,7 @@ const Auth = () => {
                   <Input
                     id="signin-email"
                     type="email"
-                    placeholder="votre@email.com"
+                    placeholder="ton@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -289,7 +291,7 @@ const Auth = () => {
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="votre@email.com"
+                    placeholder="ton@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required

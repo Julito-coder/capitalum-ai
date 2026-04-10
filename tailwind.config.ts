@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+        serif: ['Libre Baskerville', 'Georgia', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -96,8 +97,8 @@ export default {
           to: { opacity: "1", transform: "translateX(0)" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px -5px hsl(187 85% 53% / 0.3)" },
-          "50%": { boxShadow: "0 0 30px -5px hsl(187 85% 53% / 0.5)" },
+          "0%, 100%": { boxShadow: "0 0 20px -5px hsl(210 53% 23% / 0.2)" },
+          "50%": { boxShadow: "0 0 30px -5px hsl(210 53% 23% / 0.35)" },
         },
         "number-count": {
           from: { opacity: "0" },

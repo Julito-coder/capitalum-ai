@@ -12,7 +12,7 @@ export function WarningsAndDisclaimer() {
     {
       icon: Shield,
       title: 'Importance de l\'horizon',
-      description: 'Plus votre horizon est long, plus vous pouvez prendre de risque. Ne placez jamais de l\'argent dont vous aurez besoin à court terme.',
+      description: 'Plus ton horizon est long, plus tu peux prendre de risque. Ne placez jamais de l\'argent dont vous aurez besoin à court terme.',
       color: 'primary',
     },
     {
@@ -89,7 +89,7 @@ export function WarningsAndDisclaimer() {
         <p className="text-xs text-muted-foreground">
           ⚠️ <strong>Les performances passées ne préjugent pas des performances futures.</strong><br />
           Tout investissement comporte des risques de perte en capital. 
-          Consultez un conseiller financier agréé avant toute décision d'investissement.
+          Consulte un conseiller financier agréé avant toute décision d'investissement.
         </p>
       </div>
     </div>

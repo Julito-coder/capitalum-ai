@@ -151,7 +151,7 @@ export const PartnerRecommendations = ({ type, profile, campaign }: PartnerRecom
       {/* Relevance score */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Pertinence pour votre profil</span>
+          <span className="text-muted-foreground">Pertinence pour ton profil</span>
           <span className="font-semibold text-primary">{relevanceScore}%</span>
         </div>
         <Progress value={relevanceScore} className="h-2" />

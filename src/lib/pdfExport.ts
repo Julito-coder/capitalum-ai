@@ -53,7 +53,7 @@ export function exportTaxReportPDF(result: ScanResult): void {
   };
 
   // Header
-  addTitle('CAPITALUM - Rapport d\'Audit Fiscal 2026');
+  addTitle('ELIO - Rapport d\'Audit Fiscal 2026');
   y += 5;
   
   doc.setFontSize(10);
@@ -229,10 +229,10 @@ export function exportTaxReportPDF(result: ScanResult): void {
   doc.text(disclaimerLines, margin, y);
   y += disclaimerLines.length * 4 + 5;
   
-  doc.text("Source : impots.gouv.fr | Généré par CAPITALUM", margin, y);
+  doc.text("Source : impots.gouv.fr | Généré par ELIO", margin, y);
   doc.setTextColor(0);
 
   // Save
-  const filename = `audit-fiscal-capitalum-${result.timestamp.toISOString().split('T')[0]}.pdf`;
+  const filename = `audit-fiscal-elio-${result.timestamp.toISOString().split('T')[0]}.pdf`;
   doc.save(filename);
 }

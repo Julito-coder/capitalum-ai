@@ -181,9 +181,9 @@ const InvoiceManager = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Gestion des factures</h1>
+            <h1 className="text-2xl lg:text-3xl font-serif font-bold">Gestion des factures</h1>
             <p className="text-muted-foreground mt-1">
-              Créez, suivez et gérez toutes vos factures
+              Créez, suivez et gérez toutes tes factures
             </p>
           </div>
           <button 

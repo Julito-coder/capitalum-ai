@@ -108,7 +108,7 @@ export function RiskAnalysis({ selectedProfileId, horizon, monthlyContribution }
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold mb-2">Analyse des risques</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Comprenez les risques associés à votre profil {profile.name} et les scénarios possibles.
+          Comprenez les risques associés à ton profil {profile.name} et les scénarios possibles.
         </p>
       </div>
 
@@ -179,8 +179,8 @@ export function RiskAnalysis({ selectedProfileId, horizon, monthlyContribution }
                   <Radar
                     name="Score"
                     dataKey="value"
-                    stroke="#3b82f6"
-                    fill="#3b82f6"
+                    stroke="#1B3A5C"
+                    fill="#1B3A5C"
                     fillOpacity={0.3}
                   />
                   <Tooltip />
@@ -314,12 +314,12 @@ export function RiskAnalysis({ selectedProfileId, horizon, monthlyContribution }
                   <p className="text-sm">
                     {horizon < 5 ? (
                       <><AlertTriangle className="h-4 w-4 inline mr-1 text-destructive" />
-                      Votre horizon de {horizon} ans est court pour ce profil. Risque de perte en capital.</>
+                      Ton horizon de {horizon} ans est court pour ce profil. Risque de perte en capital.</>
                     ) : horizon < 10 ? (
                       <>Horizon de {horizon} ans : adapté au profil {profile.name}.</>
                     ) : (
                       <><Shield className="h-4 w-4 inline mr-1 text-success" />
-                      Votre horizon de {horizon} ans est idéal pour lisser la volatilité.</>
+                      Ton horizon de {horizon} ans est idéal pour lisser la volatilité.</>
                     )}
                   </p>
                 </div>
@@ -406,7 +406,7 @@ export function RiskAnalysis({ selectedProfileId, horizon, monthlyContribution }
             <p className="text-sm text-muted-foreground">
               <Info className="h-4 w-4 inline mr-1" />
               Avec un profil {profile.name} et un rendement attendu de {profile.expectedReturn}%/an, 
-              vous vous situez {profile.expectedReturn > FRANCE_AVERAGES.pea.median10Y ? 'au-dessus' : 'en dessous'} de 
+              vous te situes {profile.expectedReturn > FRANCE_AVERAGES.pea.median10Y ? 'au-dessus' : 'en dessous'} de 
               la médiane française des PEA.
             </p>
           </div>

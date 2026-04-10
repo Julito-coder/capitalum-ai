@@ -97,7 +97,7 @@ const CompareSimulations = () => {
             </Button>
             <div>
               <h1 className="text-2xl font-bold">Comparateur de scénarios</h1>
-              <p className="text-muted-foreground">Sélectionnez 2 à 4 projets à comparer</p>
+              <p className="text-muted-foreground">Sélectionne 2 à 4 projets à comparer</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

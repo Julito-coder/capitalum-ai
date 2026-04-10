@@ -234,7 +234,7 @@ export default function SavingsSimulator() {
 // Introduction Step Component
 function IntroductionStep({ inputs }: { inputs: SavingsInputs }) {
   const objectiveLabels = {
-    retraite: 'compléter vos revenus à la retraite',
+    retraite: 'compléter tes revenus à la retraite',
     capital: 'constituer un capital long terme',
     complement: 'disposer d\'un complément futur',
   };
@@ -246,7 +246,7 @@ function IntroductionStep({ inputs }: { inputs: SavingsInputs }) {
           <PiggyBank className="h-16 w-16 text-primary mx-auto mb-6" />
           <h2 className="text-3xl font-bold mb-4">Simulation d'épargne long terme</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Cette simulation vise à vous aider à comprendre comment épargner progressivement 
+            Cette simulation vise à t'aider à comprendre comment épargner progressivement 
             via des solutions simples et accessibles en France.
           </p>
         </CardContent>
@@ -257,7 +257,7 @@ function IntroductionStep({ inputs }: { inputs: SavingsInputs }) {
         <CardContent className="p-6">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
-            Votre profil
+            Ton profil
           </h3>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="p-4 rounded-lg bg-muted/30">
@@ -354,7 +354,7 @@ function ConclusionStep({
           <CheckCircle2 className="h-16 w-16 text-success mx-auto mb-6" />
           <h2 className="text-3xl font-bold mb-4">Comprendre est la première étape</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Vous avez maintenant une vision claire des mécanismes d'épargne long terme en France,
+            Tu as maintenant une vision claire des mécanismes d'épargne long terme en France,
             des indices disponibles et des risques associés.
           </p>
         </CardContent>
@@ -363,7 +363,7 @@ function ConclusionStep({
       {/* Summary */}
       <Card className="glass-card">
         <CardContent className="p-6">
-          <h3 className="font-semibold mb-4">Récapitulatif de votre simulation</h3>
+          <h3 className="font-semibold mb-4">Récapitulatif de ta simulation</h3>
           
           <div className="grid md:grid-cols-2 gap-6">
             <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
@@ -401,7 +401,7 @@ function ConclusionStep({
       {/* Key Learnings */}
       <Card className="glass-card">
         <CardContent className="p-6">
-          <h3 className="font-semibold mb-4">Ce que vous avez appris</h3>
+          <h3 className="font-semibold mb-4">Ce que tu as appris</h3>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="p-3 rounded-lg bg-muted/30">
               <Layers className="h-5 w-5 text-primary mb-2" />
@@ -452,7 +452,7 @@ function ConclusionStep({
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
               <span className="text-primary font-bold">3</span>
               <p className="text-sm text-muted-foreground">
-                <strong>Consultez un conseiller</strong> pour un accompagnement personnalisé si nécessaire
+                <strong>Consulte un conseiller</strong> pour un accompagnement personnalisé si nécessaire
               </p>
             </div>
           </div>

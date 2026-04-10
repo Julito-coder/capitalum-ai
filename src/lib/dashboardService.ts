@@ -307,7 +307,7 @@ export const calculateDashboardMetrics = (profile: UserProfile): DashboardMetric
         id: 'crypto-2086',
         type: 'tax',
         title: 'Déclarer mes crypto (2086)',
-        description: `${formatCurrency(profile.cryptoPnl2025)} de plus-values crypto à déclarer. Préparez votre formulaire 2086 avec Capitalum.`,
+        description: `${formatCurrency(profile.cryptoPnl2025)} de plus-values crypto à déclarer. Préparez votre formulaire 2086 avec Elio.`,
         gain: Math.round(profile.cryptoPnl2025 * 0.005),
         effort: '30 min',
         deadline: '2025-05-22',
