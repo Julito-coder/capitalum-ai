@@ -52,7 +52,7 @@ const StatusComparator = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold">Comparateur de statuts</h1>
+          <h1 className="text-2xl lg:text-3xl font-serif font-bold">Comparateur de statuts</h1>
           <p className="text-muted-foreground mt-1">Analyse personnalisée selon ta situation — Barèmes 2025</p>
         </div>
 

@@ -119,7 +119,7 @@ const URSSAFTracking = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Suivi URSSAF</h1>
+            <h1 className="text-2xl lg:text-3xl font-serif font-bold">Suivi URSSAF</h1>
             <p className="text-muted-foreground mt-1">
               Gérez vos cotisations sociales mois par mois
             </p>

@@ -133,7 +133,7 @@ const CashFlowForecast = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">Prévisions trésorerie</h1>
+            <h1 className="text-2xl lg:text-3xl font-serif font-bold">Prévisions trésorerie</h1>
             <p className="text-muted-foreground mt-1">
               Anticipe tes flux basés sur ton CA réel
             </p>

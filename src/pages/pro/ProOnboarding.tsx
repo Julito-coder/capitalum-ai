@@ -130,7 +130,7 @@ const ProOnboarding = () => {
               <Home className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold">Mon activité professionnelle</h1>
+              <h1 className="text-2xl lg:text-3xl font-serif font-bold">Mon activité professionnelle</h1>
               <p className="text-muted-foreground mt-1">
                 Configurez ton profil pour des calculs personnalisés
               </p>
