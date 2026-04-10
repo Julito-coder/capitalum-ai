@@ -164,7 +164,7 @@ export function ComparisonTable({ results }: ComparisonTableProps) {
         <CardContent className="p-6">
           <h3 className="font-bold mb-4 flex items-center gap-2">
             <ArrowRight className="h-5 w-5 text-primary" />
-            Lecture selon votre profil
+            Lecture selon ton profil
           </h3>
           
           <div className="grid md:grid-cols-2 gap-4">
@@ -177,7 +177,7 @@ export function ComparisonTable({ results }: ComparisonTableProps) {
             </div>
             
             <div className="p-4 rounded-lg bg-accent/5 border border-accent/10">
-              <p className="text-sm font-semibold mb-2">Si vous êtes fortement imposé (TMI ≥ 30%)</p>
+              <p className="text-sm font-semibold mb-2">Si tu es fortement imposé (TMI ≥ 30%)</p>
               <p className="text-sm text-muted-foreground">
                 Le PER en complément peut être très intéressant : l'économie d'impôt immédiate 
                 réduit considérablement votre effort réel.

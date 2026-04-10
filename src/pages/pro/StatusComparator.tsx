@@ -53,7 +53,7 @@ const StatusComparator = () => {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold">Comparateur de statuts</h1>
-          <p className="text-muted-foreground mt-1">Analyse personnalisée selon votre situation — Barèmes 2025</p>
+          <p className="text-muted-foreground mt-1">Analyse personnalisée selon ta situation — Barèmes 2025</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -62,7 +62,7 @@ const StatusComparator = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Calculator className="h-5 w-5 text-primary" />
-                Votre situation
+                Ta situation
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -299,7 +299,7 @@ const StatusComparator = () => {
               <Info className="h-4 w-4 shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium mb-1">Avertissement</p>
-                <p>Ces estimations sont basées sur les barèmes 2025 (IR, cotisations sociales, IS). Elles ne constituent pas un conseil fiscal. Consultez votre expert-comptable pour une analyse personnalisée tenant compte de l'ensemble de votre situation.</p>
+                <p>Ces estimations sont basées sur les barèmes 2025 (IR, cotisations sociales, IS). Elles ne constituent pas un conseil fiscal. Consulte votre expert-comptable pour une analyse personnalisée tenant compte de l'ensemble de ta situation.</p>
               </div>
             </div>
           </div>

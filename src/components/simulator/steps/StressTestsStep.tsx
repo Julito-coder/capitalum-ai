@@ -600,7 +600,7 @@ const StressTestsStep: React.FC<StressTestsStepProps> = ({ data, onChange }) => 
                   <h4 className="font-semibold text-warning">Attention requise</h4>
                   <p className="text-sm text-muted-foreground mt-1">
                     Le scénario stressé révèle des fragilités. Considérez un apport plus important, 
-                    une renégociation du prix, ou vérifiez que vous pouvez assumer l'effort d'épargne 
+                    une renégociation du prix, ou vérifiez que tu peux assumer l'effort d'épargne 
                     de {Math.abs(stressedValues.stressedCashflow).toFixed(0)}€/mois en cas de conditions défavorables.
                   </p>
                 </div>

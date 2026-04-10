@@ -172,7 +172,7 @@ export const ProjectsSimulationsCard = () => {
             </div>
             <p className="text-base font-medium mb-1">Aucun projet</p>
             <p className="text-sm text-muted-foreground mb-5 max-w-[260px]">
-              Lancez une simulation pour visualiser votre patrimoine futur.
+              Lancez une simulation pour visualiser ton patrimoine futur.
             </p>
             <div className="flex gap-2">
               <Button variant="outline" className="min-h-[44px]" onClick={() => navigate('/simulator/new')}>

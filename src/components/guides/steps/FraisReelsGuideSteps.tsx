@@ -27,8 +27,8 @@ const FraisReelsEducationStep = ({ onNext }: { onNext: () => void }) => (
         <div>
           <h3 className="font-semibold mb-2">Frais réels vs Abattement 10%</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Par défaut, l'administration fiscale déduit <strong>10% de vos revenus</strong> pour frais professionnels. 
-            Mais si vos frais réels dépassent ce montant, vous pouvez les déclarer !
+            Par défaut, l'administration fiscale déduit <strong>10% de tes revenus</strong> pour frais professionnels. 
+            Mais si vos frais réels dépassent ce montant, tu peux les déclarer !
           </p>
         </div>
       </div>

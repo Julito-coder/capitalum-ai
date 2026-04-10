@@ -241,7 +241,7 @@ const URSSAFTracking = () => {
               <div>
                 <h4 className="font-semibold mb-1">Conseils URSSAF</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Provisionnez {(urssafRate * 100).toFixed(0)}% de votre CA pour les cotisations</li>
+                  <li>• Provisionnez {(urssafRate * 100).toFixed(0)}% de ton CA pour les cotisations</li>
                   <li>• Optez pour le prélèvement mensuel pour lisser la trésorerie</li>
                   <li>• Déclarez à temps pour éviter les pénalités (10% de majoration)</li>
                   <li>• Vérifiez votre éligibilité à l'ACRE (réduction de 50% la première année)</li>

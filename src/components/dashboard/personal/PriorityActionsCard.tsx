@@ -251,7 +251,7 @@ export const PriorityActionsCard = ({ recommendations, hasRealData, profile }: P
         {!hasRealData && (
           <div className="p-3.5 rounded-xl bg-primary/5 border border-primary/15 text-center">
             <p className="text-xs text-muted-foreground">
-              💡 <span className="text-primary font-medium">Conseil</span> : Complétez votre profil pour des recommandations personnalisées.
+              💡 <span className="text-primary font-medium">Conseil</span> : Complétez ton profil pour des recommandations personnalisées.
             </p>
           </div>
         )}

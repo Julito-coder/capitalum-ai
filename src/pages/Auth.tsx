@@ -69,7 +69,7 @@ const Auth = () => {
       if (error.message.includes('Invalid login credentials')) {
         message = 'Email ou mot de passe incorrect';
       } else if (error.message.includes('Email not confirmed')) {
-        message = 'Veuillez confirmer votre email avant de vous connecter';
+        message = 'Veuillez confirmer ton email avant de vous connecter';
       }
       toast({
         variant: 'destructive',
@@ -197,7 +197,7 @@ const Auth = () => {
                   <Input
                     id="signin-email"
                     type="email"
-                    placeholder="votre@email.com"
+                    placeholder="ton@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -291,7 +291,7 @@ const Auth = () => {
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="votre@email.com"
+                    placeholder="ton@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required

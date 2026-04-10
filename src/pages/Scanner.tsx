@@ -98,7 +98,7 @@ const Scanner = () => {
             </h1>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
               Détectez les erreurs potentielles et découvrez les optimisations fiscales 
-              adaptées à votre situation avant de soumettre votre déclaration 2026.
+              adaptées à ta situation avant de soumettre ta déclaration 2026.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -118,7 +118,7 @@ const Scanner = () => {
                 </div>
                 <h3 className="font-semibold mb-2">Optimisations</h3>
                 <p className="text-sm text-muted-foreground">
-                  Découvrez les réductions et crédits d'impôt auxquels vous avez droit.
+                  Découvrez les réductions et crédits d'impôt auxquels tu as droit.
                 </p>
               </div>
               
@@ -167,7 +167,7 @@ const Scanner = () => {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Importez votre déclaration pour une analyse IA approfondie.
+                  Importez ta déclaration pour une analyse IA approfondie.
                 </p>
               </button>
 
@@ -185,7 +185,7 @@ const Scanner = () => {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Consultez et comparez vos analyses précédentes.
+                  Consulte et comparez vos analyses précédentes.
                 </p>
               </button>
             </div>

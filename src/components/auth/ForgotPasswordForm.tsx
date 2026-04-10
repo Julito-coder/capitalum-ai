@@ -70,7 +70,7 @@ export const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
       <div className="text-center space-y-2">
         <h3 className="text-lg font-semibold">Mot de passe oublié</h3>
         <p className="text-sm text-muted-foreground">
-          Entrez votre email pour recevoir un lien de réinitialisation.
+          Entrez ton email pour recevoir un lien de réinitialisation.
         </p>
       </div>
       <div className="space-y-2">
@@ -78,7 +78,7 @@ export const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
         <Input
           id="reset-email"
           type="email"
-          placeholder="votre@email.com"
+          placeholder="ton@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required

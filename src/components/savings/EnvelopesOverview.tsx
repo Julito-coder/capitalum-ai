@@ -101,7 +101,7 @@ export function EnvelopesOverview() {
         <h2 className="text-2xl font-bold mb-2">Les grandes enveloppes d'épargne</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Deux solutions principales pour investir sur le long terme en France, 
-          avec des avantages fiscaux distincts selon votre situation.
+          avec des avantages fiscaux distincts selon ta situation.
         </p>
       </div>
 

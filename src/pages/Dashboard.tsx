@@ -208,7 +208,7 @@ const Dashboard = () => {
             {/* Section 1: Vue d'ensemble */}
             <DashboardSection
               title="Vue d'ensemble"
-              subtitle="Votre situation financière en un coup d'œil"
+              subtitle="Ta situation financière en un coup d'œil"
               icon={Wallet}
               iconColor="text-primary"
               columns={2}
@@ -224,7 +224,7 @@ const Dashboard = () => {
             {/* Section 2: Actions & Optimisation */}
             <DashboardSection
               title="Actions & Optimisation"
-              subtitle="Recommandations personnalisées pour optimiser votre situation"
+              subtitle="Recommandations personnalisées pour optimiser ta situation"
               icon={Target}
               iconColor="text-success"
               columns={2}
@@ -269,7 +269,7 @@ const Dashboard = () => {
             {/* Section 1: Santé Financière */}
             <DashboardSection
               title="Santé Financière"
-              subtitle="Vue d'ensemble de votre activité professionnelle"
+              subtitle="Vue d'ensemble de ton activité professionnelle"
               icon={TrendingUp}
               iconColor="text-accent"
               columns={2}

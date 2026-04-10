@@ -23,7 +23,7 @@ export const ProfileSelectionStep = ({ data, updateData }: Props) => {
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold mb-2">Bienvenue sur ELIO 👋</h2>
         <p className="text-muted-foreground">
-          Sélectionnez toutes les sources de revenus qui vous concernent
+          Sélectionne toutes les sources de revenus qui vous concernent
         </p>
       </div>
 
@@ -59,7 +59,7 @@ export const ProfileSelectionStep = ({ data, updateData }: Props) => {
       </div>
 
       <p className="text-center text-sm text-muted-foreground mt-6">
-        Vous pouvez sélectionner plusieurs profils si vous avez des revenus mixtes
+        Tu peux sélectionner plusieurs profils si tu as des revenus mixtes
       </p>
     </div>
   );

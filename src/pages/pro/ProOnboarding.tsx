@@ -132,7 +132,7 @@ const ProOnboarding = () => {
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold">Mon activité professionnelle</h1>
               <p className="text-muted-foreground mt-1">
-                Configurez votre profil pour des calculs personnalisés
+                Configurez ton profil pour des calculs personnalisés
               </p>
             </div>
           </div>
@@ -160,7 +160,7 @@ const ProOnboarding = () => {
                 Identité de l'entreprise
               </CardTitle>
               <CardDescription>
-                Informations de base sur votre activité
+                Informations de base sur ton activité
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -393,7 +393,7 @@ const ProOnboarding = () => {
 
               <div className="p-4 rounded-xl bg-warning/10 border border-warning/20">
                 <p className="text-sm text-warning">
-                  💡 Ces estimations sont basées sur vos déclarations. Rendez-vous dans "Suivi CA" pour saisir votre CA mensuel réel.
+                  💡 Ces estimations sont basées sur vos déclarations. Rendez-vous dans "Suivi CA" pour saisir ton CA mensuel réel.
                 </p>
               </div>
             </CardContent>

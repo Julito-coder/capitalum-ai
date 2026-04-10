@@ -246,7 +246,7 @@ export const NotificationsPanel = ({ unreadCount: externalCount, onCountChange }
               </div>
               <p className="text-muted-foreground">Aucune notification</p>
               <p className="text-sm text-muted-foreground/70 mt-1">
-                Vous êtes à jour !
+                Tu es à jour !
               </p>
             </div>
           ) : (

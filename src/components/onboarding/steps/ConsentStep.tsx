@@ -28,7 +28,7 @@ export const ConsentStep = ({ data, updateData }: Props) => {
       <div className="p-4 rounded-lg bg-muted/30 border border-border">
         <h3 className="font-medium mb-4 flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5 text-success" />
-          Récapitulatif de vos données
+          Récapitulatif de tes données
         </h3>
         
         <div className="space-y-2 mb-4">
@@ -120,7 +120,7 @@ export const ConsentStep = ({ data, updateData }: Props) => {
         <div className="text-sm text-muted-foreground">
           <p className="font-medium text-foreground mb-1">Sécurité & Confidentialité</p>
           <ul className="space-y-1">
-            <li>• Chiffrement AES-256 de toutes vos données</li>
+            <li>• Chiffrement AES-256 de toutes tes données</li>
             <li>• Hébergement RGPD en Europe</li>
             <li>• Suppression complète sur demande</li>
             <li>• Conseil non-substitutif d'un expert-comptable</li>

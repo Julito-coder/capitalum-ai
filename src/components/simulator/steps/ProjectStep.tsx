@@ -286,7 +286,7 @@ export const ProjectStep = ({ state, updateState, mode }: ProjectStepProps) => {
               description="Paris, Lyon, Lille..."
               tooltip={{
                 shortTip: "Certaines villes limitent le montant des loyers",
-                definition: "L'encadrement des loyers plafonne le loyer que vous pouvez demander dans certaines zones tendues.",
+                definition: "L'encadrement des loyers plafonne le loyer que tu peux demander dans certaines zones tendues.",
                 impact: "Peut limiter la rentabilité mais réduit aussi le risque de vacance.",
                 typicalValue: "Paris, Lyon, Lille, Bordeaux, Montpellier et d'autres grandes villes.",
                 source: "Préfecture ou site du gouvernement."
@@ -340,7 +340,7 @@ export const ProjectStep = ({ state, updateState, mode }: ProjectStepProps) => {
             <p className="font-medium">Valeurs par défaut appliquées</p>
             <p className="text-muted-foreground">
               Prix, loyer et charges pré-remplis selon les données de marché de {state.project.city}. 
-              Vous pouvez les modifier dans les étapes suivantes.
+              Tu peux les modifier dans les étapes suivantes.
             </p>
           </div>
         </div>

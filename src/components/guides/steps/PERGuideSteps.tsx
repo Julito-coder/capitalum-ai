@@ -108,7 +108,7 @@ const PERSimulationStep = ({ onNext, profile }: { onNext: () => void; profile?: 
       <div className="p-4 rounded-xl bg-info/5 border border-info/15">
         <h3 className="font-semibold mb-2 flex items-center gap-2">
           <Wallet className="h-5 w-5 text-info" />
-          Votre situation
+          Ta situation
         </h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
@@ -226,7 +226,7 @@ const PERActionStep = ({ onNext, profile }: { onNext: () => void; profile?: User
               </li>
               <li className="flex items-start gap-2">
                 <span className="font-bold text-primary">4.</span>
-                <span>Conservez le justificatif pour votre déclaration</span>
+                <span>Conservez le justificatif pour ta déclaration</span>
               </li>
             </ul>
           </div>
@@ -264,7 +264,7 @@ const PERConfirmationStep = ({ onNext }: { onNext: () => void }) => (
       <CheckCircle2 className="h-12 w-12 text-success mx-auto mb-4" />
       <h3 className="text-lg font-semibold mb-2">Félicitations !</h3>
       <p className="text-sm text-muted-foreground">
-        Vous avez toutes les informations pour optimiser votre PER.
+        Tu as toutes les informations pour optimiser votre PER.
       </p>
     </div>
 
@@ -281,13 +281,13 @@ const PERConfirmationStep = ({ onNext }: { onNext: () => void }) => (
         </li>
         <li className="flex items-center gap-2">
           <span className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">3</span>
-          <span>Déclarer le montant sur votre déclaration 2025</span>
+          <span>Déclarer le montant sur ta déclaration 2025</span>
         </li>
       </ul>
     </div>
 
     <p className="text-xs text-muted-foreground">
-      Indiquez ci-dessous si vous avez réalisé cette action ou si vous la ferez plus tard.
+      Indiquez ci-dessous si tu as réalisé cette action ou si vous la ferez plus tard.
     </p>
   </div>
 );

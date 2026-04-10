@@ -44,7 +44,7 @@ const Audit = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl lg:text-3xl font-bold mb-2">Audit fiscal 2024</h1>
-          <p className="text-muted-foreground">Analyse complète de votre situation fiscale</p>
+          <p className="text-muted-foreground">Analyse complète de ta situation fiscale</p>
         </div>
 
         {/* Score Card */}
@@ -82,7 +82,7 @@ const Audit = () => {
             <div className="flex-1 text-center lg:text-left">
               <h2 className="text-xl font-semibold mb-2">Score global : BON</h2>
               <p className="text-muted-foreground mb-4">
-                Votre situation fiscale est correcte mais peut être optimisée.
+                Ta situation fiscale est correcte mais peut être optimisée.
                 <br />
                 <span className="text-success font-medium">+{formatCurrency(2220)}</span> d'économies potentielles identifiées.
               </p>

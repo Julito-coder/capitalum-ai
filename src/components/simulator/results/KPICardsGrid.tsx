@@ -206,7 +206,7 @@ export const KPICardsGrid: React.FC<KPICardsGridProps> = ({
       value: formatCurrency(r.break_even_rent || 0),
       subtitle: 'Break-even',
       icon: <Target className="h-5 w-5 text-warning" />,
-      tooltip: 'Loyer minimum pour atteindre l\'équilibre (cashflow = 0). Plus votre loyer actuel est au-dessus, plus vous avez de marge.',
+      tooltip: 'Loyer minimum pour atteindre l\'équilibre (cashflow = 0). Plus votre loyer actuel est au-dessus, plus tu as de marge.',
       status: rental && r.break_even_rent < rental.rent_monthly * 0.8 ? 'excellent' : rental && r.break_even_rent < rental.rent_monthly ? 'good' : 'warning',
     },
     {

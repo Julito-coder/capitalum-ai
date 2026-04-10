@@ -106,7 +106,7 @@ Veuillez analyser ce document fiscal français et identifier les erreurs et opti
     try {
       const documentContent = await extractTextFromFile(uploadedFile);
       
-      setProgress('Récupération de votre profil...');
+      setProgress('Récupération de ton profil...');
       
       const { data: profile } = await supabase
         .from('profiles')
@@ -198,9 +198,9 @@ Veuillez analyser ce document fiscal français et identifier les erreurs et opti
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-2">Analyser votre déclaration</h2>
+        <h2 className="text-2xl font-bold mb-2">Analyser ta déclaration</h2>
         <p className="text-muted-foreground">
-          Uploadez votre déclaration d'impôts pour une analyse IA personnalisée.
+          Uploadez ta déclaration d'impôts pour une analyse IA personnalisée.
         </p>
       </div>
 
@@ -212,7 +212,7 @@ Veuillez analyser ce document fiscal français et identifier les erreurs et opti
             <div>
               <h3 className="font-semibold">Type de formulaire</h3>
               <p className="text-xs text-muted-foreground">
-                {autoDetect ? 'L\'IA identifiera automatiquement le type' : 'Sélectionnez manuellement'}
+                {autoDetect ? 'L\'IA identifiera automatiquement le type' : 'Sélectionne manuellement'}
               </p>
             </div>
           </div>
@@ -307,7 +307,7 @@ Veuillez analyser ce document fiscal français et identifier les erreurs et opti
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
               <Upload className="w-8 h-8 text-primary" />
             </div>
-            <p className="text-lg font-medium mb-2">Déposez votre déclaration ici</p>
+            <p className="text-lg font-medium mb-2">Déposez ta déclaration ici</p>
             <p className="text-sm text-muted-foreground mb-4">ou cliquez pour sélectionner</p>
             <p className="text-xs text-muted-foreground">PDF, TXT, Images (max 20 MB)</p>
             <input 
@@ -342,7 +342,7 @@ Veuillez analyser ce document fiscal français et identifier les erreurs et opti
         <div>
           <p className="text-sm font-medium">Profil fiscal</p>
           <p className="text-xs text-muted-foreground">
-            Renseignez votre profil (situation familiale, enfants, revenus fonciers) pour une analyse plus précise.
+            Renseignez ton profil (situation familiale, enfants, revenus fonciers) pour une analyse plus précise.
           </p>
         </div>
       </div>

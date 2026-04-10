@@ -310,7 +310,7 @@ export const createRemunerationGuide = (profile: UserProfile | null): ActionGuid
             </div>
             <h3 className="text-lg font-semibold mb-2">Optimisation initiée</h3>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-              En appliquant le scénario "{bestScenario.label}", vous pouvez améliorer votre revenu net de {formatCurrency(potentialGain)}/an.
+              En appliquant le scénario "{bestScenario.label}", tu peux améliorer votre revenu net de {formatCurrency(potentialGain)}/an.
             </p>
           </div>
 

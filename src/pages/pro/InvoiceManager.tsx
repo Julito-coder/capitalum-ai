@@ -183,7 +183,7 @@ const InvoiceManager = () => {
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Gestion des factures</h1>
             <p className="text-muted-foreground mt-1">
-              Créez, suivez et gérez toutes vos factures
+              Créez, suivez et gérez toutes tes factures
             </p>
           </div>
           <button 

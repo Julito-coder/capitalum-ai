@@ -150,7 +150,7 @@ export const ProOptimizationsCard = ({ profile, hasRealData }: ProOptimizationsC
             </div>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">Cliquez pour démarrer un parcours guidé</p>
+        <p className="text-sm text-muted-foreground">Clique pour démarrer un parcours guidé</p>
       </CardHeader>
       <CardContent className="space-y-3">
         {optimizations.map((opt) => {

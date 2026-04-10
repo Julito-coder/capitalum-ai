@@ -252,7 +252,7 @@ const HiringSimulator = () => {
                     <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50">
                       <AlertTriangle className="h-5 w-5 text-muted-foreground" />
                       <p className="text-muted-foreground">
-                        Aucune aide spécifique détectée. Consultez un expert pour vérifier votre éligibilité.
+                        Aucune aide spécifique détectée. Consulte un expert pour vérifier votre éligibilité.
                       </p>
                     </div>
                   )}

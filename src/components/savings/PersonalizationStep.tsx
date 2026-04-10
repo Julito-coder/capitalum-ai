@@ -70,7 +70,7 @@ export function PersonalizationStep({
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold mb-2">Personnalisation avancée</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Affinez votre profil pour des recommandations plus précises.
+          Affinez ton profil pour des recommandations plus précises.
         </p>
       </div>
 
@@ -79,7 +79,7 @@ export function PersonalizationStep({
         <CardContent className="p-6">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <User className="h-5 w-5 text-primary" />
-            Votre situation actuelle
+            Ta situation actuelle
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-3 rounded-lg bg-muted/30 text-center">
@@ -116,7 +116,7 @@ export function PersonalizationStep({
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
-            Choisissez votre profil de risque
+            Choisissez ton profil de risque
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -246,11 +246,11 @@ export function PersonalizationStep({
                 <div className="p-4 rounded-lg bg-muted/30">
                   <Lightbulb className="h-5 w-5 text-primary mb-2" />
                   <p className="text-sm">
-                    <strong>Plus votre horizon est long, plus vous pouvez prendre de risques.</strong>
+                    <strong>Plus ton horizon est long, plus tu peux prendre de risques.</strong>
                   </p>
                   <p className="text-sm text-muted-foreground mt-2">
                     Sur 20 ans, les fluctuations à court terme s'effacent. Un profil dynamique 
-                    devient alors pertinent car vous avez le temps de récupérer d'éventuelles baisses.
+                    devient alors pertinent car tu as le temps de récupérer d'éventuelles baisses.
                   </p>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center text-sm">

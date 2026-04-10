@@ -135,7 +135,7 @@ const CashFlowForecast = () => {
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Prévisions trésorerie</h1>
             <p className="text-muted-foreground mt-1">
-              Anticipez vos flux basés sur votre CA réel
+              Anticipe tes flux basés sur ton CA réel
             </p>
           </div>
           <Badge className={negativeMonths.length > 0 ? 'bg-destructive/20 text-destructive' : 'bg-success/20 text-success'}>
@@ -170,7 +170,7 @@ const CashFlowForecast = () => {
                 <div className="p-3 rounded-lg bg-primary/10 text-center">
                   <span className="font-bold text-lg">{formatCurrency(monthlyIncome)}</span>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Basé sur votre saisie CA
+                    Basé sur ta saisie CA
                   </p>
                 </div>
               </div>
@@ -208,7 +208,7 @@ const CashFlowForecast = () => {
                 Projection sur 12 mois
               </CardTitle>
               <CardDescription>
-                Basée sur votre CA réel et échéances URSSAF
+                Basée sur ton CA réel et échéances URSSAF
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -363,10 +363,10 @@ const CashFlowForecast = () => {
                 <div>
                   <h4 className="font-semibold mb-2">Attention : trésorerie négative prévue</h4>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Votre trésorerie pourrait devenir négative sur {negativeMonths.length} mois.
+                    Ta trésorerie pourrait devenir négative sur {negativeMonths.length} mois.
                   </p>
                   <ul className="text-sm space-y-1 text-muted-foreground">
-                    <li>• Anticipez les paiements URSSAF en provisionnant chaque mois</li>
+                    <li>• Anticipe les paiements URSSAF en provisionnant chaque mois</li>
                     <li>• Accélérez vos encaissements clients</li>
                     <li>• Envisagez une facilité de caisse</li>
                   </ul>

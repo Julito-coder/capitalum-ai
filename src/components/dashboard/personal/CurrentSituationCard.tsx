@@ -77,7 +77,7 @@ export const CurrentSituationCard = ({ profile, hasRealData }: CurrentSituationC
               Données manquantes
             </p>
             <p className="text-sm text-muted-foreground mb-5 max-w-[280px]">
-              Complétez votre profil pour voir votre situation financière.
+              Complétez ton profil pour voir ta situation financière.
             </p>
             <Button 
               onClick={() => navigate('/onboarding')} 
@@ -162,7 +162,7 @@ export const CurrentSituationCard = ({ profile, hasRealData }: CurrentSituationC
 
         {/* Info footer */}
         <p className="text-[11px] text-muted-foreground/60 text-center pt-1">
-          💡 Estimations basées sur votre profil
+          💡 Estimations basées sur ton profil
         </p>
       </CardContent>
     </Card>

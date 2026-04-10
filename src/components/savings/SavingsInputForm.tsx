@@ -21,9 +21,9 @@ export function SavingsInputForm({ inputs, onChange }: SavingsInputFormProps) {
   return (
     <div className="space-y-8">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">Paramètres de votre simulation</h2>
+        <h2 className="text-2xl font-bold mb-2">Paramètres de ta simulation</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Ajustez ces hypothèses selon votre situation. Ces valeurs sont modifiables à tout moment.
+          Ajustez ces hypothèses selon ta situation. Ces valeurs sont modifiables à tout moment.
         </p>
       </div>
 
@@ -112,7 +112,7 @@ export function SavingsInputForm({ inputs, onChange }: SavingsInputFormProps) {
               onValueChange={(v) => handleChange('tmi', parseInt(v))}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sélectionnez votre TMI" />
+                <SelectValue placeholder="Sélectionne votre TMI" />
               </SelectTrigger>
               <SelectContent>
                 {SAVINGS_CONSTANTS.TMI_BRACKETS.map((tmi) => (

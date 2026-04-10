@@ -174,7 +174,7 @@ const RevenueTracker = () => {
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Suivi du chiffre d'affaires</h1>
             <p className="text-muted-foreground mt-1">
-              Saisissez votre CA mensuel pour un suivi précis
+              Saisissez ton CA mensuel pour un suivi précis
             </p>
           </div>
           <select className="btn-secondary px-4 py-2 w-fit">
@@ -265,7 +265,7 @@ const RevenueTracker = () => {
               Saisie mensuelle {selectedYear}
             </CardTitle>
             <CardDescription>
-              Cliquez sur un mois pour saisir ou modifier votre CA
+              Clique sur un mois pour saisir ou modifier ton CA
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -365,7 +365,7 @@ const RevenueTracker = () => {
           <Card className="glass-card">
             <CardHeader>
               <CardTitle>CA mensuel</CardTitle>
-              <CardDescription>Évolution de votre chiffre d'affaires</CardDescription>
+              <CardDescription>Évolution de ton chiffre d'affaires</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">

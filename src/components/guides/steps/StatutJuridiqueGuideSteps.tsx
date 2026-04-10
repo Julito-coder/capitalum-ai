@@ -97,7 +97,7 @@ export const createStatutJuridiqueGuide = (profile: UserProfile | null): ActionG
   const steps: GuideStep[] = [
     {
       id: 'diagnostic',
-      title: 'Analyse de votre statut',
+      title: 'Analyse de ton statut',
       content: (
         <div className="space-y-5">
           {gainPotentiel > 2000 ? (
@@ -119,7 +119,7 @@ export const createStatutJuridiqueGuide = (profile: UserProfile | null): ActionG
                 <div>
                   <h4 className="font-semibold text-primary mb-1">Statut adapté</h4>
                   <p className="text-sm text-muted-foreground">
-                    Votre statut actuel semble optimal pour votre niveau d'activité.
+                    Ton statut actuel semble optimal pour votre niveau d'activité.
                   </p>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export const createStatutJuridiqueGuide = (profile: UserProfile | null): ActionG
       content: (
         <div className="space-y-5">
           <p className="text-sm text-muted-foreground">
-            Simulation basée sur votre CA de {formatCurrency(profile?.annualRevenueHt || 60000)} :
+            Simulation basée sur ton CA de {formatCurrency(profile?.annualRevenueHt || 60000)} :
           </p>
 
           <div className="space-y-3">
@@ -288,7 +288,7 @@ export const createStatutJuridiqueGuide = (profile: UserProfile | null): ActionG
               <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
               <p className="text-xs text-muted-foreground">
                 <strong className="text-warning">Important</strong> : Un changement de statut a des 
-                implications fiscales, sociales et juridiques. Consultez un expert-comptable avant 
+                implications fiscales, sociales et juridiques. Consulte un expert-comptable avant 
                 toute décision.
               </p>
             </div>
@@ -309,7 +309,7 @@ export const createStatutJuridiqueGuide = (profile: UserProfile | null): ActionG
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
               {gainPotentiel > 2000 
                 ? `Le passage en ${bestStatut.label} pourrait vous faire gagner ${formatCurrency(gainPotentiel)}/an.`
-                : `Votre statut ${currentStatut.label} reste adapté à votre situation actuelle.`
+                : `Ton statut ${currentStatut.label} reste adapté à ta situation actuelle.`
               }
             </p>
           </div>

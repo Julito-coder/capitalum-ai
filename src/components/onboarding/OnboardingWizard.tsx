@@ -27,7 +27,7 @@ interface Step {
 }
 
 const ALL_STEPS: Step[] = [
-  { id: 'profile', title: 'Votre profil', description: 'Sélectionnez vos sources de revenus' },
+  { id: 'profile', title: 'Ton profil', description: 'Sélectionne vos sources de revenus' },
   { id: 'identity', title: 'Identité', description: 'Informations personnelles et fiscales' },
   { id: 'family', title: 'Situation familiale', description: 'Foyer fiscal et personnes à charge' },
   { id: 'objective', title: 'Objectif principal', description: 'Que souhaitez-vous optimiser ?' },
