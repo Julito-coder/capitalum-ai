@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Clock } from 'lucide-react';
-import logo from '@/assets/logo.png';
 
 interface Props {
   onStart: () => void;
@@ -20,7 +19,9 @@ export const WelcomeStep = ({ onStart }: Props) => {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.1, duration: 0.5 }}
       >
-        <img src={logo} alt="Capitalum" className="h-16 w-auto mb-8" />
+        <div className="h-16 w-16 rounded-2xl bg-primary flex items-center justify-center mb-8">
+          <span className="text-3xl font-serif font-bold text-primary-foreground">É</span>
+        </div>
       </motion.div>
 
       <motion.h1
@@ -29,7 +30,7 @@ export const WelcomeStep = ({ onStart }: Props) => {
         transition={{ delay: 0.2 }}
         className="text-3xl lg:text-4xl font-bold mb-4"
       >
-        Bienvenue sur Capitalum 👋
+        Bienvenue sur <span className="font-serif">Élio</span> 👋
       </motion.h1>
 
       <motion.p
