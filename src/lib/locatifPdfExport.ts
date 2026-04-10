@@ -574,7 +574,7 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
     doc.setFontSize(7);
     doc.setTextColor(COLORS.muted[0], COLORS.muted[1], COLORS.muted[2]);
     doc.text(normalizeText(`Dossier de Financement Locatif — ${clientInfo.fullName}`), margin, 10);
-    doc.text('CAPITALUM', pageWidth - margin, 10, { align: 'right' });
+    doc.text('ELIO', pageWidth - margin, 10, { align: 'right' });
   };
 
   const addFooter = () => {
@@ -647,7 +647,7 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
   doc.setFontSize(28);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text('CAPITALUM', pageWidth / 2, 25, { align: 'center' });
+  doc.text('ELIO', pageWidth / 2, 25, { align: 'center' });
 
   doc.setFontSize(14);
   doc.setFont('helvetica', 'normal');
@@ -713,7 +713,7 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
   doc.setTextColor(COLORS.muted[0], COLORS.muted[1], COLORS.muted[2]);
   const dateStr = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   doc.text(normalizeText(`Document genere le ${dateStr}`), pageWidth / 2, y, { align: 'center' });
-  doc.text('via CAPITALUM — Simulateur patrimonial', pageWidth / 2, y + 8, { align: 'center' });
+  doc.text('via ELIO — Simulateur patrimonial', pageWidth / 2, y + 8, { align: 'center' });
 
   addFooter();
 
@@ -1564,7 +1564,7 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
     'Ce document est une simulation financiere reposant sur des hypotheses fournies par l\'utilisateur.',
     '',
     'Il ne constitue ni une offre de credit, ni un engagement de financement de la part d\'un',
-    'etablissement bancaire ou de CAPITALUM.',
+    'etablissement bancaire ou de ELIO.',
     '',
     'Les projections financieres sont fondees sur des hypotheses susceptibles d\'evoluer en fonction',
     'des conditions de marche, des taux d\'interet, de la fiscalite et d\'autres facteurs economiques.',
@@ -1574,7 +1574,7 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
     'Avant toute decision d\'investissement, il est recommande de consulter un conseiller en gestion',
     'de patrimoine ou un professionnel du financement immobilier.',
     '',
-    'CAPITALUM decline toute responsabilite quant aux decisions prises sur la base de ce document.',
+    'ELIO decline toute responsabilite quant aux decisions prises sur la base de ce document.',
     '',
     'Les indicateurs DSCR, TRI et rentabilites sont calcules selon les normes bancaires francaises.',
   ];
@@ -1593,12 +1593,12 @@ export async function generateLocatifBankPDF(data: FullProjectData, config: PDFC
 
   doc.setFontSize(8);
   doc.setTextColor(COLORS.muted[0], COLORS.muted[1], COLORS.muted[2]);
-  doc.text('Document genere automatiquement via la plateforme CAPITALUM', margin + 8, y + 12);
+  doc.text('Document genere automatiquement via la plateforme ELIO', margin + 8, y + 12);
   doc.text(normalizeText(`Date : ${dateStr}`), margin + 8, y + 22);
   doc.text(normalizeText(`Client : ${clientInfo.fullName}`), margin + 8, y + 32);
 
   doc.setFontSize(7);
-  doc.text('www.capitalum.fr', pageWidth - margin - 8, y + 32, { align: 'right' });
+  doc.text('www.elio.fr', pageWidth - margin - 8, y + 32, { align: 'right' });
 
   // ==========================================================================
   // SAVE PDF

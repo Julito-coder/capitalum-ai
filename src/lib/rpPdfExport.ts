@@ -1,5 +1,5 @@
 // PDF Export Premium for Résidence Principale (RP) - "Dossier de Financement RP"
-// CAPITALUM - Dossier de financement professionnel pour banques privées et courtiers haut de gamme
+// ELIO - Dossier de financement professionnel pour banques privées et courtiers haut de gamme
 // Version 2.0 - Transformation en dossier d'analyse financière bancaire
 
 import jsPDF from 'jspdf';
@@ -593,7 +593,7 @@ export async function generateRPBankPDF(
     doc.setTextColor(COLORS.muted[0], COLORS.muted[1], COLORS.muted[2]);
     doc.text(`Dossier de financement — ${clientInfo.fullName}`, margin, 10);
     doc.setFont('helvetica', 'bold');
-    doc.text('CAPITALUM', pageWidth - margin, 10, { align: 'right' });
+    doc.text('ELIO', pageWidth - margin, 10, { align: 'right' });
     doc.setFont('helvetica', 'normal');
   };
   
@@ -700,7 +700,7 @@ export async function generateRPBankPDF(
   doc.setFontSize(28);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text('CAPITALUM', pageWidth / 2, 26, { align: 'center' });
+  doc.text('ELIO', pageWidth / 2, 26, { align: 'center' });
   
   // Document title
   doc.setFontSize(12);
@@ -780,7 +780,7 @@ export async function generateRPBankPDF(
   
   y += 8;
   doc.setFontSize(8);
-  doc.text('Analyse financière et patrimoniale issue de la simulation CAPITALUM', pageWidth / 2, y, { align: 'center' });
+  doc.text('Analyse financière et patrimoniale issue de la simulation ELIO', pageWidth / 2, y, { align: 'center' });
   
   addFooter();
   
@@ -1507,7 +1507,7 @@ export async function generateRPBankPDF(
   const disclaimerParagraphs = [
     'Ce document est une simulation financière fondée sur les informations déclarées par le client.',
     '',
-    'Il ne constitue ni une offre de prêt, ni un engagement de financement de la part d\'un établissement bancaire ou de CAPITALUM.',
+    'Il ne constitue ni une offre de prêt, ni un engagement de financement de la part d\'un établissement bancaire ou de ELIO.',
     '',
     'Les projections financières sont fondées sur des hypothèses susceptibles d\'évoluer en fonction des conditions de marché, des taux d\'intérêt et d\'autres facteurs économiques.',
     '',
@@ -1515,7 +1515,7 @@ export async function generateRPBankPDF(
     '',
     'Avant toute décision d\'achat, il est recommandé de consulter un professionnel du financement immobilier.',
     '',
-    'CAPITALUM décline toute responsabilité quant aux décisions prises sur la base de ce document.',
+    'ELIO décline toute responsabilité quant aux décisions prises sur la base de ce document.',
   ];
   
   let disclaimerY = y + 10;
@@ -1538,7 +1538,7 @@ export async function generateRPBankPDF(
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text('CAPITALUM', margin + 10, y + 14);
+  doc.text('ELIO', margin + 10, y + 14);
   
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
