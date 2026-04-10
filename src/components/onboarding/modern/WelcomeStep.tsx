@@ -28,7 +28,7 @@ export const WelcomeStep = ({ onStart }: Props) => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="text-3xl lg:text-4xl font-bold mb-4"
+        className="text-3xl lg:text-4xl font-serif font-bold mb-4"
       >
         Bienvenue sur <span className="font-serif">Élio</span> 👋
       </motion.h1>
