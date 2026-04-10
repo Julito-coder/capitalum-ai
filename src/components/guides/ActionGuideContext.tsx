@@ -58,11 +58,11 @@ export const ActionGuideProvider: React.FC<ActionGuideProviderProps> = ({ childr
   const [currentGuide, setCurrentGuide] = useState<ActionGuide | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [completedActions, setCompletedActions] = useState<string[]>(() => {
-    const stored = localStorage.getItem('capitalum_completed_actions');
+    const stored = localStorage.getItem('elio_completed_actions');
     return stored ? JSON.parse(stored) : [];
   });
   const [pendingActions, setPendingActions] = useState<string[]>(() => {
-    const stored = localStorage.getItem('capitalum_pending_actions');
+    const stored = localStorage.getItem('elio_pending_actions');
     return stored ? JSON.parse(stored) : [];
   });
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -104,12 +104,12 @@ export const ActionGuideProvider: React.FC<ActionGuideProviderProps> = ({ childr
     setCompletedActions(prev => {
       if (prev.includes(actionId)) return prev;
       const updated = [...prev, actionId];
-      localStorage.setItem('capitalum_completed_actions', JSON.stringify(updated));
+      localStorage.setItem('elio_completed_actions', JSON.stringify(updated));
       return updated;
     });
     setPendingActions(prev => {
       const updated = prev.filter(id => id !== actionId);
-      localStorage.setItem('capitalum_pending_actions', JSON.stringify(updated));
+      localStorage.setItem('elio_pending_actions', JSON.stringify(updated));
       return updated;
     });
   }, []);
@@ -118,7 +118,7 @@ export const ActionGuideProvider: React.FC<ActionGuideProviderProps> = ({ childr
     setPendingActions(prev => {
       if (prev.includes(actionId)) return prev;
       const updated = [...prev, actionId];
-      localStorage.setItem('capitalum_pending_actions', JSON.stringify(updated));
+      localStorage.setItem('elio_pending_actions', JSON.stringify(updated));
       return updated;
     });
   }, []);

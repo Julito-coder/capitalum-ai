@@ -48,7 +48,7 @@ export const EMPTY_DRAFT: Omit<CryptoDraftData, 'userId'> = {
   calcSnapshot: null,
 };
 
-const LOCAL_STORAGE_KEY = 'capitalum_crypto_draft_2086';
+const LOCAL_STORAGE_KEY = 'elio_crypto_draft_2086';
 
 // ── Checksum ──────────────────────────────────
 

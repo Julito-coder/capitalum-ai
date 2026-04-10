@@ -340,7 +340,7 @@ Tu es sur **${currentTopic}**. Comment puis-je t'aider ?`,
           </Button>
         </div>
         <p className="text-[10px] text-muted-foreground text-center mt-2">
-          Propulsé par Capitalum AI • <a href="/glossary" className="hover:underline">Consulter le glossaire</a>
+          Propulsé par Elio AI • <a href="/glossary" className="hover:underline">Consulter le glossaire</a>
         </p>
       </div>
     </div>

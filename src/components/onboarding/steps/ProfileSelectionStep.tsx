@@ -21,7 +21,7 @@ export const ProfileSelectionStep = ({ data, updateData }: Props) => {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">Bienvenue sur CAPITALUM 👋</h2>
+        <h2 className="text-2xl font-bold mb-2">Bienvenue sur ELIO 👋</h2>
         <p className="text-muted-foreground">
           Sélectionnez toutes les sources de revenus qui vous concernent
         </p>

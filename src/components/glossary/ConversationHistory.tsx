@@ -38,7 +38,7 @@ export const ConversationHistory = ({ onSelectGlossaryTerm, onResumeConversation
       const time = new Date(m.timestamp).toLocaleString('fr-FR');
       return `[${time}] ${role}\n${m.content}`;
     });
-    const text = `Conversation Capitalum — ${conv.topic || 'Sans sujet'}\n${new Date(conv.created_at).toLocaleDateString('fr-FR')}\n${'─'.repeat(40)}\n\n${lines.join('\n\n')}`;
+    const text = `Conversation Elio — ${conv.topic || 'Sans sujet'}\n${new Date(conv.created_at).toLocaleDateString('fr-FR')}\n${'─'.repeat(40)}\n\n${lines.join('\n\n')}`;
     navigator.clipboard.writeText(text);
     toast({ title: 'Copié !', description: 'Conversation copiée dans le presse-papier.' });
   };

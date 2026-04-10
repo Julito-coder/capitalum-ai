@@ -19,7 +19,7 @@ export const ProfileCompletionPopup = () => {
 
     const checkAndShow = async () => {
       // Check if dismissed recently
-      const dismissedKey = `capitalum_fiscal_popup_dismissed_${user.id}`;
+      const dismissedKey = `elio_fiscal_popup_dismissed_${user.id}`;
       const dismissed = localStorage.getItem(dismissedKey);
       if (dismissed) {
         const daysSince = (Date.now() - new Date(dismissed).getTime()) / (1000 * 60 * 60 * 24);
@@ -40,7 +40,7 @@ export const ProfileCompletionPopup = () => {
 
   const dismiss = () => {
     if (user) {
-      localStorage.setItem(`capitalum_fiscal_popup_dismissed_${user.id}`, new Date().toISOString());
+      localStorage.setItem(`elio_fiscal_popup_dismissed_${user.id}`, new Date().toISOString());
     }
     setVisible(false);
   };

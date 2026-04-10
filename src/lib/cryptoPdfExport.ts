@@ -182,7 +182,7 @@ class PdfBuilder {
       this.doc.setFont('Helvetica', 'normal');
       this.doc.setTextColor(...BRAND.textMuted);
       this.doc.text(
-        norm(`Capitalum - ${this.docTitle} ${this.taxYear}`),
+        norm(`Elio - ${this.docTitle} ${this.taxYear}`),
         this.marginL,
         this.pageH - 10
       );
@@ -588,11 +588,11 @@ export function exportCrypto2086Pdf(
   pdf.mutedLine('Formule : PV = Prix_cession - (Prix_total_acq x Prix_cession / Valeur_globale) - Frais');
   pdf.mutedLine('Les arrondis sont appliques uniquement sur les resultats finaux (centimes d\'euro).');
   pdf.gap(2);
-  pdf.mutedLine(`Document genere le ${new Date().toLocaleString('fr-FR')} par Capitalum.`);
+  pdf.mutedLine(`Document genere le ${new Date().toLocaleString('fr-FR')} par Elio.`);
 
   // ── Footers ───────────────────────────────
   pdf.drawFooterAll();
-  pdf.save(`Capitalum_2086_Synthese_${taxYear}.pdf`);
+  pdf.save(`Elio_2086_Synthese_${taxYear}.pdf`);
 }
 
 // ── Audit PDF ───────────────────────────────────
@@ -702,9 +702,9 @@ export function exportCryptoAuditPdf(
   }
 
   pdf.gap(4);
-  pdf.mutedLine(`Document genere le ${new Date().toLocaleString('fr-FR')} par Capitalum.`);
+  pdf.mutedLine(`Document genere le ${new Date().toLocaleString('fr-FR')} par Elio.`);
 
   // ── Footers ───────────────────────────────
   pdf.drawFooterAll();
-  pdf.save(`Capitalum_2086_Audit_${taxYear}.pdf`);
+  pdf.save(`Elio_2086_Audit_${taxYear}.pdf`);
 }

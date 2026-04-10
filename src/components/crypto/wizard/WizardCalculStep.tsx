@@ -319,7 +319,7 @@ export const WizardCalculStep = ({ transactions = [], accounts = [], initialPort
 
       {/* Breakdown of transactions */}
       <div className="p-3 rounded-xl bg-muted/10 border border-border/20">
-        <p className="text-xs font-semibold mb-2">Ce que Capitalum a analysé</p>
+        <p className="text-xs font-semibold mb-2">Ce que Elio a analysé</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           <div className="text-center p-2 rounded-lg bg-background">
             <p className="text-lg font-bold">{normalizedTxs.length}</p>

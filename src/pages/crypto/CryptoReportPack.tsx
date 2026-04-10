@@ -71,7 +71,7 @@ const CryptoReportPack = () => {
               <div>
                 <h3 className="font-semibold text-sm">Étape 1 — Ouvrir impots.gouv</h3>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Capitalum ne transmet pas à la DGFiP. Tu reportes manuellement les valeurs
+                  Elio ne transmet pas à la DGFiP. Tu reportes manuellement les valeurs
                   calculées ci-dessous.
                 </p>
               </div>

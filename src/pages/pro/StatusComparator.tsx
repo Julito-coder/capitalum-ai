@@ -180,7 +180,7 @@ const StatusComparator = () => {
                           <h3 className="font-bold text-lg">{status.name}</h3>
                           {isBest && (
                             <Badge className="bg-success/20 text-success border-success/30">
-                              <Star className="h-3 w-3 mr-1" />Recommandé Capitalum
+                              <Star className="h-3 w-3 mr-1" />Recommandé Elio
                             </Badge>
                           )}
                           {!status.eligible && (
@@ -193,7 +193,7 @@ const StatusComparator = () => {
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">Score</p>
                         <p className={`text-2xl font-bold ${isBest ? 'text-success' : ''}`}>
-                          {status.capitalumScore}<span className="text-sm text-muted-foreground">/100</span>
+                          {status.elioScore}<span className="text-sm text-muted-foreground">/100</span>
                         </p>
                       </div>
                     </div>
