@@ -358,13 +358,13 @@ export async function generateBankPDF(data: FullProjectData, config: PDFConfig =
 
   // Colors (RGB tuples)
   const colors = {
-    primary: [59, 130, 246] as [number, number, number],
-    success: [34, 197, 94] as [number, number, number],
-    warning: [234, 179, 8] as [number, number, number],
-    danger: [239, 68, 68] as [number, number, number],
+    primary: [27, 58, 92] as [number, number, number],
+    success: [75, 130, 100] as [number, number, number],
+    warning: [217, 119, 6] as [number, number, number],
+    danger: [204, 85, 61] as [number, number, number],
     muted: [148, 163, 184] as [number, number, number],
-    dark: [30, 41, 59] as [number, number, number],
-    light: [248, 250, 252] as [number, number, number],
+    dark: [27, 46, 61] as [number, number, number],
+    light: [245, 243, 240] as [number, number, number],
   };
 
   // Helper functions

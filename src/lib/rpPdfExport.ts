@@ -70,27 +70,27 @@ interface RPPDFConfig {
 
 const COLORS = {
   // Brand
-  navy: [30, 58, 138] as [number, number, number],     // #1E3A8A - Primary Navy
-  navyLight: [59, 130, 246] as [number, number, number], // #3B82F6 - Accent Blue
+  navy: [27, 58, 92] as [number, number, number],       // #1B3A5C - Primary
+  navyLight: [200, 148, 62] as [number, number, number], // #C8943E - Gold accent
   
   // Status
-  success: [16, 185, 129] as [number, number, number], // #10B981 - Green
-  warning: [245, 158, 11] as [number, number, number], // #F59E0B - Orange
-  danger: [239, 68, 68] as [number, number, number],   // #EF4444 - Red
+  success: [75, 130, 100] as [number, number, number],  // #4B8264 - Sage Green
+  warning: [217, 119, 6] as [number, number, number],   // #D97706 - Amber
+  danger: [204, 85, 61] as [number, number, number],     // Terracotta
   
   // Neutrals
-  dark: [15, 23, 42] as [number, number, number],      // #0F172A - Slate 900
-  text: [51, 65, 85] as [number, number, number],      // #334155 - Slate 700
-  muted: [100, 116, 139] as [number, number, number],  // #64748B - Slate 500
-  border: [203, 213, 225] as [number, number, number], // #CBD5E1 - Slate 300
-  light: [241, 245, 249] as [number, number, number],  // #F1F5F9 - Slate 100
+  dark: [27, 46, 61] as [number, number, number],
+  text: [51, 65, 85] as [number, number, number],
+  muted: [100, 116, 139] as [number, number, number],
+  border: [203, 213, 225] as [number, number, number],
+  light: [245, 243, 240] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
   
   // Chart colors
-  chart1: [59, 130, 246] as [number, number, number],  // Blue
-  chart2: [16, 185, 129] as [number, number, number],  // Green
-  chart3: [245, 158, 11] as [number, number, number],  // Orange
-  chart4: [139, 92, 246] as [number, number, number],  // Purple
+  chart1: [27, 58, 92] as [number, number, number],     // Navy
+  chart2: [200, 148, 62] as [number, number, number],    // Gold
+  chart3: [75, 130, 100] as [number, number, number],    // Sage
+  chart4: [139, 92, 246] as [number, number, number],    // Purple
 };
 
 // =============================================
