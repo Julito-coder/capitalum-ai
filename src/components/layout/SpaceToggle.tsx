@@ -15,7 +15,7 @@ export const SpaceToggle = () => {
       
       <button
         onClick={toggleSpace}
-        className="w-full relative flex items-center h-12 rounded-xl bg-secondary/50 p-1 transition-all"
+        className="w-full relative flex items-center h-12 rounded-xl bg-muted p-1 transition-all"
       >
         {/* Sliding indicator */}
         <div 

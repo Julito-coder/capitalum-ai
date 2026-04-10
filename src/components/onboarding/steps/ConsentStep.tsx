@@ -62,7 +62,7 @@ export const ConsentStep = ({ data, updateData }: Props) => {
       <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="h-5 w-5 text-primary" />
-          <span className="font-medium">Votre profil CAPITALUM</span>
+          <span className="font-medium">Ton profil Élio</span>
         </div>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">

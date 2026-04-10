@@ -322,14 +322,14 @@ const Dashboard = () => {
         >
           <p className="text-sm text-muted-foreground">
             <Sparkles className="inline h-4 w-4 mr-1 text-primary" />
-            <strong>Capitalum</strong> analyse votre situation pour vous aider à décider sereinement.
+            <strong>Élio</strong> analyse ta situation pour t'aider à décider sereinement.
             {!hasRealData && (
               <span className="block mt-2">
                   <button 
                     onClick={() => navigate(isProfessionalSpace ? '/pro/onboarding' : '/fiscal-profile')}
                     className="text-primary hover:underline font-medium"
                   >
-                  Complétez votre profil
+                  Complète ton profil
                 </button>
                 {' '}pour des recommandations personnalisées.
               </span>

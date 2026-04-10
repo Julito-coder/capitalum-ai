@@ -18,13 +18,13 @@ export const SpaceProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [currentSpace, setCurrentSpaceState] = useState<SpaceType>(() => {
     // Load from localStorage on init
-    const saved = localStorage.getItem('capitalum-space');
+    const saved = localStorage.getItem('elio-space');
     return (saved as SpaceType) || 'personal';
   });
 
   // Persist to localStorage
   useEffect(() => {
-    localStorage.setItem('capitalum-space', currentSpace);
+    localStorage.setItem('elio-space', currentSpace);
   }, [currentSpace]);
 
   const setCurrentSpace = (space: SpaceType) => {
