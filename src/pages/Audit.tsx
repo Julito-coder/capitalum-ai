@@ -43,7 +43,7 @@ const Audit = () => {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl lg:text-3xl font-bold mb-2">Audit fiscal 2024</h1>
+          <h1 className="text-2xl lg:text-3xl font-serif font-bold mb-2">Audit fiscal 2024</h1>
           <p className="text-muted-foreground">Analyse complète de ta situation fiscale</p>
         </div>
 
