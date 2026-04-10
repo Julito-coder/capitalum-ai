@@ -157,7 +157,7 @@ const Dashboard = () => {
               <p className="text-muted-foreground text-sm mb-1">
                 Bonjour, {displayName} 👋
               </p>
-              <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+              <h1 className="text-2xl lg:text-3xl font-serif font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
                 {isProfessionalSpace ? 'Pilotage Pro' : 'Tableau de bord'}
               </h1>
               {metrics && metrics.profileTypes.length > 0 && isPersonalSpace && (
