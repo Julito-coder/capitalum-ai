@@ -159,7 +159,7 @@ class PdfBuilder {
     this.doc.setFont('Helvetica', 'bold');
     const yearText = `${this.taxYear}`;
     const yearW = this.doc.getTextWidth(yearText) + 10;
-    this.doc.setFillColor(...BRAND.cyan);
+    this.doc.setFillColor(...BRAND.gold);
     this.doc.roundedRect(this.pageW - this.marginR - yearW, 28, yearW, 10, 2, 2, 'F');
     this.doc.setTextColor(...BRAND.navy);
     this.doc.text(yearText, this.pageW - this.marginR - yearW / 2, 35, { align: 'center' });
