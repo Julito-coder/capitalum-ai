@@ -25,8 +25,8 @@ interface SimulationResultsProps {
 
 const PROFILE_COLORS: Record<SavingsProfile, string> = {
   prudent: '#94a3b8',
-  equilibre: '#3b82f6',
-  dynamique: '#10b981',
+  equilibre: '#1B3A5C',
+  dynamique: '#4B8264',
 };
 
 export function SimulationResults({ title, simulations, showTaxSavings = false }: SimulationResultsProps) {
@@ -161,12 +161,12 @@ export function SimulationResults({ title, simulations, showTaxSavings = false }
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorCapital" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#1B3A5C" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#1B3A5C" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorInterest" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#4B8264" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#4B8264" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.3} />
@@ -191,14 +191,14 @@ export function SimulationResults({ title, simulations, showTaxSavings = false }
                 <Area
                   type="monotone"
                   dataKey="Capital total"
-                  stroke="#3b82f6"
+                  stroke="#1B3A5C"
                   fill="url(#colorCapital)"
                   strokeWidth={2}
                 />
                 <Area
                   type="monotone"
                   dataKey="Intérêts cumulés"
-                  stroke="#10b981"
+                  stroke="#4B8264"
                   fill="url(#colorInterest)"
                   strokeWidth={2}
                 />
