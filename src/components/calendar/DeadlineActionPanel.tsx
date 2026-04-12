@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { EnrichedDeadline, DeadlineStatus } from '@/lib/deadlinesTypes';
-import { useActionGuide } from '@/components/guides/ActionGuideContext';
+
 import { useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -40,7 +40,7 @@ export const DeadlineActionPanel = ({ deadline, onClose, onStatusChange, profile
   const [showIgnoreForm, setShowIgnoreForm] = useState(false);
   const [showInAppForm, setShowInAppForm] = useState(false);
   const navigate = useNavigate();
-  const { openGuide } = useActionGuide();
+  const openGuide = (_guide: unknown, _profile: unknown) => { /* guides removed in V1 */ };
   const impact = deadline.personalImpact;
 
   // Generate 10-year projection data for chart
