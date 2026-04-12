@@ -5,7 +5,7 @@ import { GainCard } from '@/components/home/GainCard';
 import { ActionCard } from '@/components/home/ActionCard';
 import { CalendarPreview } from '@/components/home/CalendarPreview';
 import { useAuth } from '@/contexts/AuthContext';
-import { loadUserProfile, computeDashboardMetrics } from '@/lib/dashboardService';
+import { loadUserProfile, calculateDashboardMetrics } from '@/lib/dashboardService';
 import { FISCAL_DEADLINES } from '@/lib/deadlinesData';
 import { AlertTriangle, FileSearch, PiggyBank, Shield, Building2, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -36,7 +36,7 @@ const HomePage = () => {
       }
 
       setUserName(profile.fullName?.split(' ')[0] || '');
-      const metrics = computeDashboardMetrics(profile);
+      const metrics = calculateDashboardMetrics(profile);
 
       // Compute score based on profile completeness + optimizations
       const profileFields = [
