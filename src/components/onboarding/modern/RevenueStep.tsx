@@ -1,69 +1,48 @@
 import { motion } from 'framer-motion';
-import { ModernOnboardingData, INCOME_OPTIONS, PATRIMONY_OPTIONS } from '@/data/modernOnboardingTypes';
+import { ModernOnboardingData, IncomeRange } from '@/data/modernOnboardingTypes';
 
 interface Props {
   data: ModernOnboardingData;
-  onChange: (updates: Partial<ModernOnboardingData>) => void;
+  onSelect: (updates: Partial<ModernOnboardingData>) => void;
 }
 
-export const RevenueStep = ({ data, onChange }: Props) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 60 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -60 }}
-      transition={{ duration: 0.35 }}
-      className="space-y-8"
-    >
-      {/* Monthly income */}
-      <div>
-        <h2 className="text-xl font-bold mb-1">Tes finances</h2>
-        <p className="text-sm text-muted-foreground mb-4">Revenus mensuels nets</p>
-        <div className="grid grid-cols-2 gap-3">
-          {INCOME_OPTIONS.map((opt, i) => (
-            <motion.button
-              key={opt.value}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => onChange({ incomeRange: opt.value })}
-              className={`p-4 rounded-2xl border-2 text-sm font-medium transition-all duration-200 ${
-                data.incomeRange === opt.value
-                  ? 'border-primary bg-primary/10 text-primary shadow-md'
-                  : 'border-border/50 bg-card/50 hover:border-primary/30'
-              }`}
-            >
-              {opt.label}
-            </motion.button>
-          ))}
-        </div>
-      </div>
+const OPTIONS: { value: IncomeRange; label: string }[] = [
+  { value: 'less_1000', label: 'Moins de 1 000 €' },
+  { value: '1000_1800', label: '1 000 – 1 800 €' },
+  { value: '1800_3000', label: '1 800 – 3 000 €' },
+  { value: '3000_5000', label: '3 000 – 5 000 €' },
+  { value: 'more_5000', label: 'Plus de 5 000 €' },
+];
 
-      {/* Patrimony */}
+export const RevenueStep = ({ data, onSelect }: Props) => {
+  return (
+    <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-1">Ton épargne totale</h3>
-        <p className="text-xs text-muted-foreground mb-3">Tous comptes confondus (approximatif)</p>
-        <div className="grid grid-cols-2 gap-3">
-          {PATRIMONY_OPTIONS.map((opt, i) => (
+        <h2 className="text-2xl font-bold text-foreground mb-2">Tes revenus nets mensuels ?</h2>
+        <p className="text-base text-muted-foreground">Approximatif, c'est juste pour calibrer ton diagnostic</p>
+      </div>
+      <div className="flex flex-col gap-3">
+        {OPTIONS.map((opt, i) => {
+          const selected = data.incomeRange === opt.value;
+          return (
             <motion.button
               key={opt.value}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.25 + i * 0.06 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => onChange({ patrimonyRange: opt.value })}
-              className={`p-4 rounded-2xl border-2 text-sm font-medium transition-all duration-200 ${
-                data.patrimonyRange === opt.value
-                  ? 'border-primary bg-primary/10 text-primary shadow-md'
-                  : 'border-border/50 bg-card/50 hover:border-primary/30'
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.05 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => onSelect({ incomeRange: opt.value })}
+              className={`p-4 rounded-xl border text-left transition-all duration-200 ${
+                selected
+                  ? 'border-2 border-primary bg-primary/[0.04] shadow-md'
+                  : 'border border-border bg-card shadow-sm hover:border-primary/30'
               }`}
             >
-              {opt.label}
+              <span className="text-base font-semibold text-foreground">{opt.label}</span>
             </motion.button>
-          ))}
-        </div>
+          );
+        })}
       </div>
-    </motion.div>
+    </div>
   );
 };

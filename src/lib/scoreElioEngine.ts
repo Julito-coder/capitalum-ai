@@ -1,120 +1,88 @@
 import { ModernOnboardingData } from '@/data/modernOnboardingTypes';
 
-export interface ScoreBreakdownItem {
-  label: string;
-  amount: number;
-  icon: string;
-}
-
 export interface ElioScoreResult {
   score: number;
   totalLoss: number;
-  breakdown: ScoreBreakdownItem[];
+  breakdown: {
+    aids: number;
+    tax: number;
+    contracts: number;
+  };
 }
 
-/**
- * Calcule le Score Élio et le montant estimé de pertes annuelles
- * basé sur les barèmes réels français.
- */
 export const calculateElioScore = (data: ModernOnboardingData): ElioScoreResult => {
-  const breakdown: ScoreBreakdownItem[] = [];
+  let aidsLoss = 0;
+  let taxLoss = 0;
+  let contractsLoss = 0;
 
-  // 1. Aides non réclamées
-  const aidLoss = estimateUnclaimedAid(data);
-  if (aidLoss > 0) {
-    breakdown.push({ label: 'Aides non réclamées', amount: aidLoss, icon: '🎯' });
+  const { professionalStatus, incomeRange, housingStatus, childrenRange, familyStatus, ageRange } = data;
+
+  // --- AIDES NON RÉCLAMÉES ---
+  if (
+    (professionalStatus === 'employee' || professionalStatus === 'self_employed') &&
+    (incomeRange === 'less_1000' || incomeRange === '1000_1800')
+  ) {
+    aidsLoss += 1440;
   }
 
-  // 2. Erreurs fiscales potentielles
-  const fiscalLoss = estimateFiscalErrors(data);
-  if (fiscalLoss > 0) {
-    breakdown.push({ label: 'Optimisation fiscale', amount: fiscalLoss, icon: '📉' });
+  if (
+    housingStatus === 'tenant' &&
+    (incomeRange === 'less_1000' || incomeRange === '1000_1800' || incomeRange === '1800_3000')
+  ) {
+    aidsLoss += 720;
   }
 
-  // 3. Optimisations patrimoniales manquées
-  const assetLoss = estimateAssetOptimizations(data);
-  if (assetLoss > 0) {
-    breakdown.push({ label: 'Épargne mal placée', amount: assetLoss, icon: '💰' });
+  if (professionalStatus === 'student') {
+    aidsLoss += 1020;
   }
 
-  const totalLoss = breakdown.reduce((sum, item) => sum + item.amount, 0);
+  if (childrenRange === '3_or_more') {
+    aidsLoss += 3000;
+  } else if (childrenRange === '1_or_2') {
+    aidsLoss += 1500;
+  }
 
-  // Score: 100 = parfait, 0 = beaucoup de pertes
-  // Échelle: 0€ perdu = 100, 5000€+ = ~20
-  const rawScore = Math.max(0, 100 - Math.round((totalLoss / 5000) * 80));
-  const score = Math.max(10, Math.min(100, rawScore));
+  if (childrenRange === '3_or_more') {
+    aidsLoss += 1200;
+  } else if (childrenRange === '1_or_2') {
+    aidsLoss += 400;
+  }
 
-  return { score, totalLoss, breakdown };
+  // --- OPTIMISATIONS FISCALES ---
+  if (
+    professionalStatus === 'employee' &&
+    (incomeRange === '1800_3000' || incomeRange === '3000_5000' || incomeRange === 'more_5000')
+  ) {
+    taxLoss += 420;
+  }
+
+  if (
+    (familyStatus === 'couple' || familyStatus === 'married') &&
+    childrenRange !== 'none' &&
+    childrenRange !== null
+  ) {
+    taxLoss += 600;
+  }
+
+  if (
+    (ageRange === '36_50' || ageRange === '51_plus') &&
+    (incomeRange === '3000_5000' || incomeRange === 'more_5000')
+  ) {
+    taxLoss += 840;
+  }
+
+  // --- CONTRATS NON OPTIMISÉS ---
+  contractsLoss += 240;
+  if (housingStatus === 'owner') contractsLoss += 300;
+  if (childrenRange !== 'none' && childrenRange !== null) contractsLoss += 200;
+
+  const totalLoss = aidsLoss + taxLoss + contractsLoss;
+  const maxLoss = 8000;
+  const score = Math.max(5, Math.min(95, Math.round(100 - (totalLoss / maxLoss) * 100)));
+
+  return {
+    score,
+    totalLoss,
+    breakdown: { aids: aidsLoss, tax: taxLoss, contracts: contractsLoss },
+  };
 };
-
-function estimateUnclaimedAid(data: ModernOnboardingData): number {
-  let total = 0;
-  const income = data.incomeRange;
-  const housing = data.housingStatus;
-  const family = data.familySituation;
-  const status = data.professionalStatus;
-
-  // APL: locataire + revenus < 3000€
-  if (housing === 'locataire' && (income === '<1500' || income === '1500-3000')) {
-    total += family === 'avec_enfants' ? 3000 : 2400; // ~200-250€/mois
-  }
-
-  // Prime d'activité: salarié ou indépendant, revenus 1500-3000€
-  if ((status === 'salarie' || status === 'independant') && income === '1500-3000') {
-    total += 1764; // ~147€/mois
-  }
-
-  // CSS (ex-CMU-C): revenus < 1500€
-  if (income === '<1500') {
-    total += 600; // ~50€/mois économie mutuelle
-  }
-
-  // Chèque énergie: revenus < 3000€
-  if (income === '<1500' || income === '1500-3000') {
-    total += 150;
-  }
-
-  return total;
-}
-
-function estimateFiscalErrors(data: ModernOnboardingData): number {
-  let total = 0;
-  const status = data.professionalStatus;
-  const income = data.incomeRange;
-  const bracket = data.taxBracket;
-
-  // Salarié: potentiel frais réels non déclarés
-  if (status === 'salarie' && (income === '3000-5000' || income === '>5000')) {
-    total += bracket === '30-41' || bracket === '41-45' ? 800 : 400;
-  }
-
-  // Indépendant: micro vs réel mal choisi
-  if ((status === 'independant' || status === 'chef_entreprise') && income !== '<1500') {
-    total += 1200;
-  }
-
-  // TMI élevée sans optimisation
-  if (bracket === '30-41' || bracket === '41-45') {
-    total += 600; // PER non ouvert
-  }
-
-  return total;
-}
-
-function estimateAssetOptimizations(data: ModernOnboardingData): number {
-  let total = 0;
-  const patrimony = data.patrimonyRange;
-  const income = data.incomeRange;
-
-  // Patrimoine > 50k sans optimisation estimée
-  if (patrimony === '50000-200000' || patrimony === '>200000') {
-    total += 800; // rendement manqué sur livrets vs assurance-vie
-  }
-
-  // Revenus > 3000€ sans PEA estimé
-  if (income === '3000-5000' || income === '>5000') {
-    total += 500; // fiscalité PEA vs CTO
-  }
-
-  return total;
-}
