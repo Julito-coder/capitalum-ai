@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ReactNode, useCallback } from 'react';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 
 const slideVariants = {
   enter: (direction: number) => ({
@@ -20,9 +20,20 @@ interface QuizStepProps {
   stepKey: string;
   direction: number;
   children: ReactNode;
+  onSwipeLeft?: () => void;
+  onSwipeRight?: () => void;
 }
 
-export const QuizStep = ({ stepKey, direction, children }: QuizStepProps) => {
+export const QuizStep = ({ stepKey, direction, children, onSwipeLeft, onSwipeRight }: QuizStepProps) => {
+  const handleDragEnd = useCallback((_: unknown, info: PanInfo) => {
+    const threshold = 80;
+    if (info.offset.x < -threshold && onSwipeLeft) {
+      onSwipeLeft();
+    } else if (info.offset.x > threshold && onSwipeRight) {
+      onSwipeRight();
+    }
+  }, [onSwipeLeft, onSwipeRight]);
+
   return (
     <AnimatePresence mode="wait" custom={direction}>
       <motion.div
@@ -32,7 +43,15 @@ export const QuizStep = ({ stepKey, direction, children }: QuizStepProps) => {
         initial="enter"
         animate="center"
         exit="exit"
-        transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 30,
+        }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.15}
+        onDragEnd={handleDragEnd}
         className="w-full"
       >
         {children}
