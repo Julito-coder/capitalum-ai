@@ -2,11 +2,9 @@ import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
 import { ModernOnboardingData, DEFAULT_MODERN_ONBOARDING } from '@/data/modernOnboardingTypes';
-import { saveModernOnboarding } from '@/lib/modernOnboardingService';
 import { calculateElioScore, ElioScoreResult } from '@/lib/scoreElioEngine';
+import { storeQuizData } from '@/hooks/usePostAuthQuizSync';
 import { WelcomeStep } from './WelcomeStep';
 import { ProfileStep } from './ProfileStep';
 import { FamilyHousingStep } from './FamilyHousingStep';
@@ -24,16 +22,10 @@ const swipeVariants = {
 };
 
 export const ModernOnboardingWizard = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
-  const [data, setData] = useState<ModernOnboardingData>({
-    ...DEFAULT_MODERN_ONBOARDING,
-    fullName: user?.user_metadata?.full_name || '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [data, setData] = useState<ModernOnboardingData>({ ...DEFAULT_MODERN_ONBOARDING });
 
   const currentStep: StepKey = STEPS[step];
   const totalSteps = STEPS.length - 1; // exclude welcome
@@ -74,27 +66,22 @@ export const ModernOnboardingWizard = () => {
     }
   }, [step]);
 
-  const handleComplete = useCallback(async () => {
-    if (!user) return;
-    setIsSubmitting(true);
-    const result = await saveModernOnboarding(user.id, data, false);
-    setIsSubmitting(false);
+  const saveAndNavigate = useCallback((tab: 'signup' | 'login') => {
+    storeQuizData({
+      data,
+      score: scoreResult.score,
+      totalLoss: scoreResult.totalLoss,
+    });
+    navigate(`/auth?tab=${tab}`);
+  }, [data, scoreResult, navigate]);
 
-    if (result.success) {
-      toast({ title: '✅ Profil configuré !', description: 'Ton tableau de bord est personnalisé.' });
-      navigate('/', { state: { onboardingJustCompleted: true } });
-    } else {
-      toast({ title: 'Erreur', description: result.error || 'Une erreur est survenue', variant: 'destructive' });
-    }
-  }, [user, data, toast, navigate]);
+  const handleCreateAccount = useCallback(() => {
+    saveAndNavigate('signup');
+  }, [saveAndNavigate]);
 
-  const handleSkip = useCallback(async () => {
-    if (!user) return;
-    setIsSubmitting(true);
-    await saveModernOnboarding(user.id, data, true);
-    setIsSubmitting(false);
-    navigate('/', { state: { onboardingJustCompleted: true } });
-  }, [user, data, navigate]);
+  const handleLogin = useCallback(() => {
+    saveAndNavigate('login');
+  }, [saveAndNavigate]);
 
   // Swipe handler
   const handleDragEnd = useCallback(
@@ -114,7 +101,7 @@ export const ModernOnboardingWizard = () => {
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at top, rgba(27,58,92,0.08), transparent 50%)' }} />
 
       <div className="relative max-w-lg mx-auto px-4 py-6 min-h-screen flex flex-col">
-        {/* Header: progress + skip */}
+        {/* Header: progress */}
         {currentStep !== 'welcome' && currentStep !== 'score' && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -125,15 +112,6 @@ export const ModernOnboardingWizard = () => {
               <span className="text-sm font-medium text-muted-foreground">
                 Étape {displayStep} sur {totalSteps - 1}
               </span>
-              {currentStep === 'fiscal' && (
-                <button
-                  onClick={handleSkip}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                >
-                  Passer
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
             </div>
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <motion.div
@@ -171,9 +149,9 @@ export const ModernOnboardingWizard = () => {
               {currentStep === 'score' && (
                 <ScoreResultStep
                   result={scoreResult}
-                  onComplete={handleComplete}
-                  onSkip={handleSkip}
-                  isSubmitting={isSubmitting}
+                  onCreateAccount={handleCreateAccount}
+                  onLogin={handleLogin}
+                  isSubmitting={false}
                 />
               )}
             </motion.div>

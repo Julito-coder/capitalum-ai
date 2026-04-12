@@ -1,18 +1,18 @@
 import { motion } from 'framer-motion';
 import { useCallback } from 'react';
-import { Share2, ArrowRight, Info } from 'lucide-react';
+import { Share2, ArrowRight, LogIn, Info } from 'lucide-react';
 import { ScoreElio } from '@/components/home/ScoreElio';
 import { ElioScoreResult } from '@/lib/scoreElioEngine';
 import { useToast } from '@/hooks/use-toast';
 
 interface Props {
   result: ElioScoreResult;
-  onComplete: () => void;
-  onSkip: () => void;
+  onCreateAccount: () => void;
+  onLogin: () => void;
   isSubmitting: boolean;
 }
 
-export const ScoreResultStep = ({ result, onComplete, onSkip, isSubmitting }: Props) => {
+export const ScoreResultStep = ({ result, onCreateAccount, onLogin, isSubmitting }: Props) => {
   const { toast } = useToast();
 
   const handleShare = useCallback(async () => {
@@ -96,11 +96,11 @@ export const ScoreResultStep = ({ result, onComplete, onSkip, isSubmitting }: Pr
         className="w-full max-w-sm space-y-3"
       >
         <button
-          onClick={onComplete}
+          onClick={onCreateAccount}
           disabled={isSubmitting}
           className="btn-primary w-full py-3.5 rounded-2xl text-base disabled:opacity-50"
         >
-          Découvrir mes actions
+          Créer mon compte gratuitement
           <ArrowRight className="h-5 w-5" />
         </button>
 
@@ -113,12 +113,24 @@ export const ScoreResultStep = ({ result, onComplete, onSkip, isSubmitting }: Pr
         </button>
       </motion.div>
 
+      {/* Login link */}
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.7 }}
+        onClick={onLogin}
+        className="mt-6 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+      >
+        <LogIn className="h-4 w-4" />
+        J'ai déjà un compte
+      </motion.button>
+
       {/* Disclaimer */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.8 }}
-        className="mt-6 text-xs text-muted-foreground max-w-xs flex items-start gap-1.5"
+        className="mt-4 text-xs text-muted-foreground max-w-xs flex items-start gap-1.5"
       >
         <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
         Estimation indicative basée sur les barèmes en vigueur. Affine ton profil pour un diagnostic précis.
