@@ -265,19 +265,37 @@ export const OnboardingQuiz = () => {
 
   const handleFinish = useCallback(() => {
     setIsSubmitting(true);
-    // Store raw answers + result for post-auth sync
     localStorage.setItem('elio_diagnostic', JSON.stringify({ answers, result }));
+
+    const ageMap: Record<string, 'eighteen_25' | '26_35' | '36_50' | '51_plus'> = {
+      '18-24': '18_25' as never, '25-34': '26_35', '35-49': '36_50', '50-64': '51_plus', '65+': '51_plus',
+    };
+    const proMap: Record<string, 'employee' | 'self_employed' | 'student' | 'job_seeker' | 'retired'> = {
+      employee: 'employee', public_employee: 'employee', self_employed: 'self_employed',
+      student: 'student', unemployed: 'job_seeker', retired: 'retired',
+    };
+    const famMap: Record<string, 'single' | 'couple' | 'married' | 'divorced'> = {
+      single: 'single', couple_married: 'married', couple_unmarried: 'couple',
+      divorced: 'divorced', widowed: 'single',
+    };
+    const taxMap: Record<string, 'online_self' | 'accountant' | 'not_yet' | 'unknown'> = {
+      auto_validate: 'online_self', self_check: 'online_self', accountant: 'accountant', never_done: 'not_yet',
+    };
+    const childVal = answers.children ?? '0';
+    const childrenRange = (['3', '4', '5+'].includes(childVal) ? '3_or_more' : childVal === '0' ? 'none' : childVal) as 'none' | '1' | '2' | '3_or_more';
+    const housingVal = answers.housing === 'owner_no_mortgage' ? 'owner_paid' : answers.housing === 'hosted' ? 'hosted' : (answers.housing ?? 'tenant');
+
     storeQuizData({
       data: {
-        ageRange: answers.age ?? '25_35',
-        professionalStatus: (answers.professionalStatus === 'public_employee' ? 'employee' : answers.professionalStatus) ?? 'employee',
-        familyStatus: answers.familySituation === 'couple_married' ? 'married' : answers.familySituation === 'couple_unmarried' ? 'couple' : (answers.familySituation ?? 'single'),
-        childrenRange: (['3', '4', '5+'].includes(answers.children ?? '') ? '3_or_more' : answers.children === '0' ? 'none' : (answers.children ?? 'none')) as 'none' | '1' | '2' | '3_or_more',
-        housingStatus: (answers.housing === 'owner_no_mortgage' ? 'owner_paid' : answers.housing === 'hosted' ? 'hosted' : answers.housing) ?? 'tenant',
+        ageRange: (ageMap[answers.age ?? '25-34'] ?? '26_35') as '18_25' | '26_35' | '36_50' | '51_plus',
+        professionalStatus: proMap[answers.professionalStatus ?? 'employee'] ?? 'employee',
+        familyStatus: famMap[answers.familySituation ?? 'single'] ?? 'single',
+        childrenRange,
+        housingStatus: housingVal as 'tenant' | 'owner_mortgage' | 'owner_paid' | 'hosted',
         incomeRange: 'less_1500',
         savingsRange: 'none',
-        taxDeclarationMode: answers.taxDeclaration ?? 'unknown',
-        fullName: null,
+        taxDeclarationMode: taxMap[answers.taxDeclaration ?? 'auto_validate'] ?? 'unknown',
+        fullName: '',
       },
       score: result.score,
       totalLoss: result.totalLoss,
