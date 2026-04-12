@@ -16,7 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ElioLogo } from './ElioLogo';
 
 const mainNav = [
-  { path: '/', icon: LayoutDashboard, label: 'Accueil' },
+  { path: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
   { path: '/agent', icon: Sparkles, label: 'Élio Agent' },
 ];
 

@@ -30,15 +30,14 @@ const Auth = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
-  const [justSignedUp, setJustSignedUp] = useState(false);
+  const searchParams = new URLSearchParams(location.search);
+  const defaultTab = searchParams.get('tab') === 'signup' ? 'signup' : 'signin';
 
   useEffect(() => {
     if (!loading && user) {
-      // Redirect to onboarding for new users, otherwise to the intended page
-      navigate(justSignedUp ? '/onboarding' : from, { replace: true });
+      navigate('/dashboard', { replace: true });
     }
-  }, [user, loading, navigate, from, justSignedUp]);
+  }, [user, loading, navigate]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -101,7 +100,6 @@ const Auth = () => {
         description: message,
       });
     } else {
-      setJustSignedUp(true);
       toast({
         title: 'Compte créé',
         description: 'Bienvenue sur Élio !',
@@ -183,7 +181,7 @@ const Auth = () => {
           {showForgotPassword ? (
             <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />
           ) : (
-          <Tabs defaultValue="signin" className="w-full">
+          <Tabs defaultValue={defaultTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Connexion</TabsTrigger>
               <TabsTrigger value="signup">Inscription</TabsTrigger>

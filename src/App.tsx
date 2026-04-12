@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
+import Index from "./pages/Index";
 import HomePage from "./pages/Home";
 import AgentPage from "./pages/Agent";
 import OutilsPage from "./pages/Outils";
@@ -20,7 +21,6 @@ import CompareSimulations from "./pages/simulator/CompareSimulations";
 import SavingsSimulator from "./pages/SavingsSimulator";
 import FiscalProfile from "./pages/FiscalProfile";
 import Settings from "./pages/Settings";
-import Onboarding from "./pages/Onboarding";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -35,9 +35,13 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
-            <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+
+            {/* Protected routes */}
+            <Route path="/dashboard" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/agent" element={<ProtectedRoute><AgentPage /></ProtectedRoute>} />
             <Route path="/outils" element={<ProtectedRoute><OutilsPage /></ProtectedRoute>} />
             <Route path="/outils/calendrier" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
@@ -52,7 +56,6 @@ const App = () => (
             <Route path="/profil" element={<ProtectedRoute><ProfilPage /></ProtectedRoute>} />
             <Route path="/profil/fiscal" element={<ProtectedRoute><FiscalProfile /></ProtectedRoute>} />
             <Route path="/profil/parametres" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
