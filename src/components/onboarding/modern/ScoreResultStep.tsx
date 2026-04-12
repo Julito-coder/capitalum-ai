@@ -1,9 +1,7 @@
 import { motion } from 'framer-motion';
-import { useCallback } from 'react';
-import { Share2, ArrowRight, LogIn, Info } from 'lucide-react';
-import { ScoreElio } from '@/components/home/ScoreElio';
+import { useEffect, useState, useCallback } from 'react';
+import { Gift, TrendingUp, FileWarning, Share2 } from 'lucide-react';
 import { ElioScoreResult } from '@/lib/scoreElioEngine';
-import { useToast } from '@/hooks/use-toast';
 
 interface Props {
   result: ElioScoreResult;
@@ -12,129 +10,159 @@ interface Props {
   isSubmitting: boolean;
 }
 
+const useCountUp = (target: number, duration = 1500, delay = 400) => {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const start = performance.now();
+      const tick = (now: number) => {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setValue(Math.round(eased * target));
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, [target, duration, delay]);
+  return value;
+};
+
 export const ScoreResultStep = ({ result, onCreateAccount, onLogin, isSubmitting }: Props) => {
-  const { toast } = useToast();
+  const animatedScore = useCountUp(result.score, 1500, 300);
+  const animatedLoss = useCountUp(result.totalLoss, 1500, 800);
+  const circumference = 2 * Math.PI * 54;
+  const strokeDashoffset = circumference - (animatedScore / 100) * circumference;
+
+  const getScoreColor = () => {
+    if (result.score > 65) return 'hsl(152 35% 45%)';
+    if (result.score >= 40) return 'hsl(37 90% 51%)';
+    return 'hsl(12 65% 50%)';
+  };
 
   const handleShare = useCallback(async () => {
-    const text = `Mon Score Élio : ${result.score}/100 — Je perds environ ${result.totalLoss.toLocaleString('fr-FR')} €/an sans le savoir ! Fais ton diagnostic sur elio.app`;
-
+    const text = `Mon Score Élio : ${result.score}/100 — Je perds environ ${result.totalLoss.toLocaleString('fr-FR')} €/an sans le savoir ! Fais le test 👉`;
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Mon Score Élio', text });
-      } catch {
-        // user cancelled
-      }
+      } catch { /* user cancelled */ }
     } else {
       await navigator.clipboard.writeText(text);
-      toast({ title: 'Copié !', description: 'Lien copié dans le presse-papiers' });
     }
-  }, [result, toast]);
+  }, [result]);
+
+  const breakdownItems = [
+    { label: 'Aides non réclamées', amount: result.breakdown.aids, icon: Gift, bgClass: 'bg-success/10', textClass: 'text-success' },
+    { label: 'Optimisations fiscales', amount: result.breakdown.tax, icon: TrendingUp, bgClass: 'bg-warning/10', textClass: 'text-warning' },
+    { label: 'Contrats non optimisés', amount: result.breakdown.contracts, icon: FileWarning, bgClass: 'bg-destructive/10', textClass: 'text-destructive' },
+  ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="flex flex-col items-center text-center px-4 py-6"
-    >
-      {/* Score circle */}
+    <div className="flex flex-col items-center pt-4 pb-8 px-2">
+      {/* Score gauge */}
       <motion.div
-        initial={{ scale: 0.6, opacity: 0 }}
+        initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.6, type: 'spring' }}
+        transition={{ duration: 0.5 }}
+        className="relative w-36 h-36 mb-4"
       >
-        <ScoreElio score={result.score} label="Ton Score Élio" />
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="54" fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
+          <motion.circle
+            cx="60" cy="60" r="54"
+            fill="none"
+            stroke={getScoreColor()}
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset }}
+            transition={{ duration: 1.5, ease: 'easeOut', delay: 0.3 }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-4xl font-extrabold text-foreground">{animatedScore}</span>
+          <span className="text-xs text-muted-foreground">/100</span>
+        </div>
       </motion.div>
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+        className="text-sm font-medium mb-6"
+        style={{ color: getScoreColor() }}
+      >
+        {result.score > 65 ? 'Bien optimisé' : result.score >= 40 ? 'À améliorer' : 'Action urgente'}
+      </motion.p>
 
       {/* Loss amount */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
-        className="mt-6 mb-6"
+        className="text-center mb-8"
       >
-        <p className="text-sm text-muted-foreground mb-1">Tu perds environ</p>
-        <p className="text-4xl font-extrabold text-destructive">
-          {result.totalLoss.toLocaleString('fr-FR')} €<span className="text-lg font-semibold">/an</span>
+        <p className="text-base text-muted-foreground mb-1">Tu perds environ</p>
+        <p className="text-3xl font-extrabold text-destructive">
+          {animatedLoss.toLocaleString('fr-FR')} €/an
         </p>
       </motion.div>
 
       {/* Breakdown */}
-      {result.breakdown.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.1 }}
-          className="w-full max-w-sm space-y-2 mb-8"
-        >
-          {result.breakdown.map((item, i) => (
-            <motion.div
-              key={item.label}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1.2 + i * 0.15 }}
-              className="flex items-center justify-between p-3 rounded-xl bg-card border border-border/50"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{item.icon}</span>
-                <span className="text-sm font-medium">{item.label}</span>
-              </div>
-              <span className="text-sm font-bold text-destructive">
-                -{item.amount.toLocaleString('fr-FR')} €
-              </span>
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
-
-      {/* Actions */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.5 }}
-        className="w-full max-w-sm space-y-3"
+        transition={{ delay: 1.1 }}
+        className="w-full space-y-3 mb-8"
+      >
+        {breakdownItems.filter(item => item.amount > 0).map((item) => {
+          const Icon = item.icon;
+          return (
+            <div key={item.label} className={`flex items-center gap-3 p-4 rounded-xl ${item.bgClass}`}>
+              <div className={`flex-shrink-0 p-2 rounded-lg ${item.bgClass}`}>
+                <Icon className={`h-5 w-5 ${item.textClass}`} />
+              </div>
+              <span className="flex-1 text-sm font-medium text-foreground">{item.label}</span>
+              <span className={`text-sm font-bold ${item.textClass}`}>
+                {item.amount.toLocaleString('fr-FR')} €/an
+              </span>
+            </div>
+          );
+        })}
+      </motion.div>
+
+      {/* CTAs */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.4 }}
+        className="w-full space-y-3"
       >
         <button
           onClick={onCreateAccount}
           disabled={isSubmitting}
-          className="btn-primary w-full py-3.5 rounded-2xl text-base disabled:opacity-50"
+          className="w-full h-14 bg-primary text-primary-foreground font-semibold text-base rounded-xl shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          Créer mon compte gratuitement
-          <ArrowRight className="h-5 w-5" />
+          {isSubmitting ? 'Chargement…' : 'Récupérer mon argent'}
         </button>
 
         <button
           onClick={handleShare}
-          className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl border-2 border-border/50 text-sm font-medium text-muted-foreground hover:border-primary/30 hover:text-foreground transition-all"
+          className="w-full flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
         >
           <Share2 className="h-4 w-4" />
           Partager mon score
         </button>
+
+        <button
+          onClick={onLogin}
+          className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+        >
+          J'ai déjà un compte
+        </button>
       </motion.div>
-
-      {/* Login link */}
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.7 }}
-        onClick={onLogin}
-        className="mt-6 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-      >
-        <LogIn className="h-4 w-4" />
-        J'ai déjà un compte
-      </motion.button>
-
-      {/* Disclaimer */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.8 }}
-        className="mt-4 text-xs text-muted-foreground max-w-xs flex items-start gap-1.5"
-      >
-        <Info className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-        Estimation indicative basée sur les barèmes en vigueur. Affine ton profil pour un diagnostic précis.
-      </motion.p>
-    </motion.div>
+    </div>
   );
 };
