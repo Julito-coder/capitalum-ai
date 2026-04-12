@@ -2,62 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    /* Fond principal : blanc cassé chaud */
     --background: 40 33% 98%;
     --foreground: 213 37% 20%;
-
-    /* Cards : blanc pur avec légère chaleur */
     --card: 0 0% 100%;
     --card-foreground: 213 37% 20%;
-
-    /* Popovers */
     --popover: 0 0% 100%;
     --popover-foreground: 213 37% 20%;
-
-    /* Primaire : bleu profond #1B3A5C */
     --primary: 210 53% 23%;
     --primary-foreground: 0 0% 100%;
-
-    /* Secondaire : doré/ambre #C8943E */
     --secondary: 37 55% 51%;
     --secondary-foreground: 0 0% 100%;
-
-    /* Muted : gris chaud léger */
     --muted: 220 14% 96%;
     --muted-foreground: 215 16% 47%;
-
-    /* Accent : bleu profond éclairci pour hover/accent */
     --accent: 210 40% 94%;
     --accent-foreground: 210 53% 23%;
-
-    /* Destructive : rouge terracotta doux */
     --destructive: 12 65% 50%;
     --destructive-foreground: 0 0% 100%;
-
-    /* Warning : ambre plus vif */
     --warning: 37 90% 51%;
     --warning-foreground: 213 37% 20%;
-
-    /* Success : vert sauge */
     --success: 152 35% 45%;
     --success-foreground: 0 0% 100%;
-
-    /* Info : bleu moyen */
     --info: 210 55% 50%;
     --info-foreground: 0 0% 100%;
-
-    /* Borders et inputs : gris chaud */
     --border: 220 13% 91%;
     --input: 220 13% 91%;
     --ring: 210 53% 23%;
-
     --radius: 0.75rem;
-
-    /* Sidebar : fond légèrement teinté */
     --sidebar-background: 210 25% 97%;
     --sidebar-foreground: 213 37% 20%;
     --sidebar-primary: 210 53% 23%;
@@ -66,11 +40,6 @@
     --sidebar-accent-foreground: 213 37% 20%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 210 53% 23%;
-
-    /* Gradients Élio */
-    --gradient-primary: linear-gradient(135deg, hsl(210 53% 23%), hsl(37 55% 51%));
-    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(40 33% 98%));
-    --gradient-glow: radial-gradient(ellipse at top, hsl(210 53% 23% / 0.08), transparent 50%);
   }
 }
 
@@ -80,32 +49,15 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'DM Sans', system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Sora', system-ui, sans-serif;
   }
 }
 
 @layer utilities {
   .gradient-text {
     @apply bg-clip-text text-transparent;
-    background-image: var(--gradient-primary);
-  }
-
-  .gradient-border {
-    position: relative;
-  }
-
-  .gradient-border::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: var(--gradient-primary);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+    background-image: linear-gradient(135deg, hsl(210 53% 23%), hsl(37 55% 51%));
   }
 
   .glass-card {
@@ -114,10 +66,6 @@
 
   .glow-sm {
     box-shadow: 0 0 20px -5px hsl(210 53% 23% / 0.15);
-  }
-
-  .glow-md {
-    box-shadow: 0 0 40px -10px hsl(210 53% 23% / 0.2);
   }
 
   .status-critical {
@@ -140,7 +88,7 @@
 @layer components {
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold text-primary-foreground rounded-lg transition-all duration-200;
-    background: var(--gradient-primary);
+    background: linear-gradient(135deg, hsl(210 53% 23%), hsl(37 55% 51%));
   }
 
   .btn-primary:hover {
@@ -153,10 +101,6 @@
   }
 
   .metric-card {
-    @apply glass-card rounded-xl p-6 transition-all duration-300 hover:border-primary/30;
-  }
-
-  .metric-card:hover {
-    @apply glow-sm;
+    @apply bg-card rounded-xl p-6 border border-border transition-all duration-300 hover:border-primary/30 shadow-sm;
   }
 }
