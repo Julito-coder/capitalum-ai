@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout } from '@/components/layout/Layout';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { ScannerQuestionnaire } from '@/components/scanner/ScannerQuestionnaire';
 import { ScannerResults } from '@/components/scanner/ScannerResults';
 import { DocumentUploadScanner } from '@/components/scanner/DocumentUploadScanner';
@@ -85,7 +85,7 @@ const Scanner = () => {
   };
 
   return (
-    <Layout>
+    <AppLayout>
       <div className="max-w-5xl mx-auto">
         {step === 'intro' && (
           <div className="text-center py-12">
@@ -225,7 +225,7 @@ const Scanner = () => {
           />
         )}
       </div>
-    </Layout>
+    </AppLayout>
   );
 };
 
