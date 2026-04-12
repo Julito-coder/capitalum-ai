@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { lovable } from '@/integrations/lovable';
 import { Separator } from '@/components/ui/separator';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
+import { ElioLogo } from '@/components/layout/ElioLogo';
 
 const emailSchema = z.string().email('Adresse email invalide');
 const passwordSchema = z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères');
@@ -171,12 +172,10 @@ const Auth = () => {
       <Card className="w-full max-w-md shadow-xl border-border/50">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="h-14 w-14 rounded-xl bg-primary flex items-center justify-center">
-              <span className="text-2xl font-serif font-bold text-primary-foreground">É</span>
-            </div>
+            <ElioLogo size={48} />
           </div>
           <div>
-            <CardTitle className="text-2xl font-serif font-bold">Élio</CardTitle>
+            <CardTitle className="text-2xl font-bold">Élio</CardTitle>
             <CardDescription>Ne perds plus un euro par manque d'information</CardDescription>
           </div>
         </CardHeader>
