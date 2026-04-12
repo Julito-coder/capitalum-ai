@@ -1,96 +1,82 @@
 
 
-# Plan : Hub central des formulaires avec stockage et suivi des brouillons
+# Plan : Quiz onboarding swipeable avec Score Elio
 
-## Objectif
+## Contexte
 
-Transformer la page Formulaires en hub central ou tous les brouillons et formulaires finalises sont visibles, avec progression detaillee, quel que soit leur point d'origine (calendrier, dashboard, acces direct).
+L'onboarding existant a deja 7 etapes (welcome, profile, objectives, patrimony, risk, fiscal, summary). Il faut le transformer en un quiz rapide et viral qui calcule un Score Elio et un montant de perte annuelle, avec partage natif.
 
-## Constat actuel
+## Corrections prealables
 
-- La page Formulaires charge deja les brouillons depuis `tax_form_2086_drafts`, donc les formulaires demarres depuis le calendrier apparaissent deja (meme table).
-- Mais les informations affichees sont minimales : juste l'annee, le statut et la date de modification.
-- Pas de progression (etape en cours, nombre de transactions, comptes).
-- Pas de separation entre brouillons en cours et formulaires finalises/reportes.
-- Le bouton "Reprendre" pointe vers `/crypto/2086` (le dashboard) au lieu du wizard directement.
+Les erreurs de build viennent du fait que `Layout` est exporte depuis `Layout.tsx` comme alias mais certains fichiers ne l'importent pas. Verification faite : les fichiers utilisent deja `AppLayout` correctement. Il faut simplement s'assurer que le fichier `Layout.tsx` re-exporte bien. Si les erreurs persistent, on ajoutera un import explicite.
 
-## Modifications prevues
+## Modifications
 
-### A. Enrichir les donnees chargees dans Formulaires.tsx
+### 1. Refonte des types onboarding
 
-Charger en plus pour chaque brouillon :
-- `current_step` et `form_data` (pour la progression et le snapshot de calcul)
-- Le nombre de transactions (`crypto_transactions` count par user + tax_year)
-- Le nombre de comptes (`crypto_accounts` count par user + tax_year)
+Fichier `src/data/modernOnboardingTypes.ts` :
+- Ajouter un champ `housingStatus: 'proprietaire' | 'locataire' | null` (cadrage : logement est une question cle pour le calcul des aides APL/taxe fonciere)
+- Supprimer `riskTolerance` (pas pertinent pour le diagnostic, c'est un concept investissement)
+- Les emojis restent autorises dans l'onboarding (exception explicite dans la charte)
 
-### B. Separer les brouillons en deux sections
+### 2. Refonte des etapes (6 ecrans au lieu de 7)
 
-1. **En cours** : status = `draft` ou `review` — avec bouton "Reprendre" qui pointe vers `/crypto/2086/wizard`
-2. **Finalises** : status = `ready`, `reported`, `archived` — avec boutons "Voir" et "Exporter PDF"
+| Ecran | Contenu | Question |
+|-------|---------|----------|
+| 1. Welcome | Logo Elio + "Decouvre combien tu perds chaque annee" + CTA | - |
+| 2. Situation | Statut pro + tranche d'age | Qui es-tu ? |
+| 3. Famille | Situation familiale + logement (proprio/locataire) | Ta situation |
+| 4. Revenus | Revenus mensuels nets + patrimoine | Tes finances |
+| 5. Fiscal | Declares en France + tranche d'imposition | Tes impots |
+| 6. Score | Score Elio anime + montant perdu + breakdown + bouton partage | Resultat |
 
-### C. Carte de brouillon enrichie
+On supprime l'etape Objectifs et Risk (pas necessaires pour le diagnostic initial). On les deplace dans le profil fiscal detaille.
 
-Chaque carte de brouillon affichera :
-- Titre : "2086 — Crypto {annee}"
-- Badge de statut (Brouillon, En revue, Pret, Reporte, Archive)
-- Barre de progression (etape X/6)
-- Compteurs : X comptes, Y transactions
-- Resultat fiscal si disponible (case 3AN / 3BN depuis `form_data.calcSnapshot`)
-- Date de derniere modification
-- Actions : Reprendre (brouillons) / Voir + Exporter (finalises) / Supprimer
+### 3. Algorithme de calcul du Score Elio
 
-### D. Bouton "Reprendre" corrige
+Nouveau fichier `src/lib/scoreElioEngine.ts` :
+- Entree : les donnees onboarding
+- Calcul deterministe base sur les baremes reels :
+  - **Aides non reclamees** : selon revenus, famille, logement (APL ~250EUR/mois si locataire + revenus < 3000EUR, prime d'activite ~147EUR/mois si salarie + revenus 1500-3000EUR, CSS si < 1500EUR, cheque energie ~150EUR/an)
+  - **Erreurs fiscales potentielles** : selon statut pro (frais reels pour salaries, regime reel vs micro pour independants)
+  - **Optimisations manquees** : PER non ouvert, pas de PEA, assurance vie non optimisee
+- Score = 100 - (penalites par categorie)
+- Sortie : `{ score: number, totalLoss: number, breakdown: { label: string, amount: number }[] }`
 
-Pointer vers `/crypto/2086/wizard` au lieu de `/crypto/2086` pour atterrir directement dans le wizard a l'etape en cours.
+### 4. Ecran Score (remplacement du SummaryStep)
 
-## Fichiers modifies
+Nouveau composant `src/components/onboarding/modern/ScoreResultStep.tsx` :
+- Cercle anime Score Elio (reutilise `ScoreElio.tsx`)
+- Montant en gros : "Tu perds environ X EUR/an"
+- Breakdown en 2-3 lignes (aides, fiscal, contrats)
+- Bouton "Partager mon score" (Web Share API avec fallback clipboard)
+- Bouton primaire "Decouvrir mes actions"
+- Disclaimer en footer
 
-| Fichier | Modification |
-|---------|-------------|
-| `src/pages/Formulaires.tsx` | Refonte complete de la section brouillons : enrichissement des donnees, separation en cours/finalises, cartes detaillees avec progression, compteurs et resultat fiscal |
+### 5. Refonte du Wizard
 
-## Detail technique
+`ModernOnboardingWizard.tsx` :
+- 6 etapes au lieu de 7
+- Navigation swipe avec `framer-motion` (drag horizontal, seuil 50px)
+- Transitions x: 100 -> 0 -> -100 pour le swipe feel
+- Progress bar animee
+- Auto-advance quand toutes les selections d'un ecran sont faites (optionnel, delay 400ms)
 
-### Requete enrichie
+### 6. Fix build errors
 
-```text
-// Charger les drafts avec current_step et form_data
-.select('id, tax_year, status, updated_at, regime, notes, current_step, form_data')
+Verifier et corriger tout import `Layout` residuel dans Calendar, FiscalProfile, Scanner, Settings en s'assurant que `AppLayout` est bien importe.
 
-// + compter transactions et comptes par tax_year
-const txCounts = await supabase
-  .from('crypto_transactions')
-  .select('tax_year', { count: 'exact', head: true })
-  .eq('user_id', user.id)
+## Fichiers touches
 
-const accCounts = await supabase
-  .from('crypto_accounts')
-  .select('tax_year', { count: 'exact', head: true })
-  .eq('user_id', user.id)
-```
+- `src/data/modernOnboardingTypes.ts` — ajout housingStatus, suppression risk
+- `src/lib/scoreElioEngine.ts` — nouveau, algorithme de scoring
+- `src/components/onboarding/modern/ModernOnboardingWizard.tsx` — refonte 6 etapes + swipe
+- `src/components/onboarding/modern/WelcomeStep.tsx` — nouveau CTA "Decouvre combien tu perds"
+- `src/components/onboarding/modern/ProfileStep.tsx` — simplifie (situation + age uniquement)
+- `src/components/onboarding/modern/FamilyHousingStep.tsx` — nouveau (famille + logement)
+- `src/components/onboarding/modern/RevenueStep.tsx` — nouveau (revenus + patrimoine, ex PatrimonyStep)
+- `src/components/onboarding/modern/FiscalStep.tsx` — conserve tel quel
+- `src/components/onboarding/modern/ScoreResultStep.tsx` — nouveau (score + partage)
+- Suppression de `ObjectivesStep.tsx`, `RiskStep.tsx`, `SummaryStep.tsx`
+- `src/pages/Calendar.tsx`, `FiscalProfile.tsx`, `Scanner.tsx`, `Settings.tsx` — fix imports si necessaire
 
-### Separation des sections
-
-```text
-const inProgressDrafts = drafts.filter(d => ['draft', 'review'].includes(d.status))
-const completedDrafts = drafts.filter(d => ['ready', 'reported', 'archived'].includes(d.status))
-```
-
-### Carte enrichie
-
-Chaque carte affiche :
-- Barre `Progress` basee sur `(current_step + 1) / 6 * 100`
-- Compteurs de transactions/comptes
-- Si `form_data.calcSnapshot` existe : afficher case3AN et case3BN
-- Bouton principal : "Reprendre l'etape X" pour les brouillons, "Voir le resume" pour les finalises
-
-### Export depuis la page Formulaires
-
-Pour les formulaires finalises, un bouton "Exporter PDF" declenchera le meme code que `CryptoExports.tsx` (appel a `exportCrypto2086Pdf`) directement depuis cette page, sans avoir a naviguer dans le wizard.
-
-## Impact
-
-- Tous les formulaires (peu importe leur origine) sont centralises et visibles
-- L'utilisateur voit clairement ou il en est dans chaque brouillon
-- Les formulaires termines sont archives et re-exportables
-- Navigation directe vers le wizard pour reprendre le travail
