@@ -40,7 +40,7 @@ export const DeadlineActionPanel = ({ deadline, onClose, onStatusChange, profile
   const [showIgnoreForm, setShowIgnoreForm] = useState(false);
   const [showInAppForm, setShowInAppForm] = useState(false);
   const navigate = useNavigate();
-  const { openGuide } = useActionGuide();
+  const openGuide = (_guide: unknown, _profile: unknown) => { /* guides removed in V1 */ };
   const impact = deadline.personalImpact;
 
   // Generate 10-year projection data for chart
