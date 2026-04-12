@@ -93,7 +93,7 @@ const Scanner = () => {
               <FileSearch className="w-10 h-10 text-primary" />
             </div>
             
-            <h1 className="text-3xl lg:text-4xl font-serif font-bold mb-4">
+            <h1 className="text-3xl lg:text-4xl font-bold mb-4">
               Scanner de Déclaration Fiscale
             </h1>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">

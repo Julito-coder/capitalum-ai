@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Clock } from 'lucide-react';
+import { ElioLogo } from '@/components/layout/ElioLogo';
 
 interface Props {
   onStart: () => void;
@@ -19,8 +20,8 @@ export const WelcomeStep = ({ onStart }: Props) => {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.1, duration: 0.5 }}
       >
-        <div className="h-16 w-16 rounded-2xl bg-primary flex items-center justify-center mb-8">
-          <span className="text-3xl font-serif font-bold text-primary-foreground">É</span>
+        <div className="mb-8">
+          <ElioLogo variant="symbol" size={64} />
         </div>
       </motion.div>
 
@@ -28,9 +29,9 @@ export const WelcomeStep = ({ onStart }: Props) => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="text-3xl lg:text-4xl font-serif font-bold mb-4"
+        className="text-3xl lg:text-4xl font-bold mb-4"
       >
-        Bienvenue sur <span className="font-serif">Élio</span> 👋
+        Bienvenue sur <span className="font-extrabold">Élio</span>
       </motion.h1>
 
       <motion.p
