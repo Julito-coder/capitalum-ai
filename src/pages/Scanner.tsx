@@ -85,7 +85,7 @@ const Scanner = () => {
   };
 
   return (
-    <Layout>
+    <AppLayout>
       <div className="max-w-5xl mx-auto">
         {step === 'intro' && (
           <div className="text-center py-12">
@@ -225,7 +225,7 @@ const Scanner = () => {
           />
         )}
       </div>
-    </Layout>
+    </AppLayout>
   );
 };
 

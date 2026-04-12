@@ -149,7 +149,7 @@ const Settings = () => {
   };
 
   return (
-    <Layout>
+    <AppLayout>
       <div className="max-w-3xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Paramètres</h1>
@@ -352,7 +352,7 @@ const Settings = () => {
           </CardContent>
         </Card>
       </div>
-    </Layout>
+    </AppLayout>
   );
 };
 

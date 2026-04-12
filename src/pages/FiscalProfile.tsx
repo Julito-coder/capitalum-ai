@@ -5,7 +5,7 @@ import { UserCircle } from 'lucide-react';
 
 const FiscalProfile = () => {
   return (
-    <Layout>
+    <AppLayout>
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -25,7 +25,7 @@ const FiscalProfile = () => {
 
         <FiscalProfileForm />
       </motion.div>
-    </Layout>
+    </AppLayout>
   );
 };
 

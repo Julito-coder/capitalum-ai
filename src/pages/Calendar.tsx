@@ -114,16 +114,16 @@ const CalendarPage = () => {
 
   if (loading) {
     return (
-      <Layout>
+      <AppLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </Layout>
+      </AppLayout>
     );
   }
 
   return (
-    <Layout>
+    <AppLayout>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
@@ -192,7 +192,7 @@ const CalendarPage = () => {
           />
         )}
       </div>
-    </Layout>
+    </AppLayout>
   );
 };
 
