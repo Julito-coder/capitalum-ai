@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { EnrichedDeadline, DeadlineStatus } from '@/lib/deadlinesTypes';
-import { useActionGuide } from '@/components/guides/ActionGuideContext';
+
 import { useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
