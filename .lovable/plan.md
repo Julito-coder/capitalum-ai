@@ -1,82 +1,94 @@
 
 
-# Plan : Quiz onboarding swipeable avec Score Elio
+# Plan : Onboarding public avant authentification
 
-## Contexte
+## Objectif
 
-L'onboarding existant a deja 7 etapes (welcome, profile, objectives, patrimony, risk, fiscal, summary). Il faut le transformer en un quiz rapide et viral qui calcule un Score Elio et un montant de perte annuelle, avec partage natif.
+Le quiz onboarding devient la landing page (`/`). Tous les visiteurs passent le diagnostic **sans être connectés**. A la fin du quiz (ecran Score), deux options :
+- "Creer mon compte" → redirige vers `/auth` avec les donnees du quiz en memoire
+- "J'ai deja un compte" → lien discret en bas qui mene vers `/auth`
 
-## Corrections prealables
+Apres inscription/connexion, les resultats du quiz sont automatiquement sauvegardes dans le profil.
 
-Les erreurs de build viennent du fait que `Layout` est exporte depuis `Layout.tsx` comme alias mais certains fichiers ne l'importent pas. Verification faite : les fichiers utilisent deja `AppLayout` correctement. Il faut simplement s'assurer que le fichier `Layout.tsx` re-exporte bien. Si les erreurs persistent, on ajoutera un import explicite.
+## Architecture
+
+```text
+Visiteur → / (quiz public, pas d'auth requise)
+         → Score affiché
+         → "Créer mon compte" → /auth (signup)
+         → Après auth → sauvegarde quiz data → /dashboard
+         
+Visiteur → / (quiz)
+         → "J'ai déjà un compte" → /auth (login)
+         → Après auth → sauvegarde quiz data si présente → /dashboard
+```
 
 ## Modifications
 
-### 1. Refonte des types onboarding
+### 1. Stockage temporaire des resultats quiz
 
-Fichier `src/data/modernOnboardingTypes.ts` :
-- Ajouter un champ `housingStatus: 'proprietaire' | 'locataire' | null` (cadrage : logement est une question cle pour le calcul des aides APL/taxe fonciere)
-- Supprimer `riskTolerance` (pas pertinent pour le diagnostic, c'est un concept investissement)
-- Les emojis restent autorises dans l'onboarding (exception explicite dans la charte)
+Les donnees du quiz sont stockees dans `localStorage` sous la cle `elio_quiz_data` (JSON serialise de `ModernOnboardingData` + `ElioScoreResult`). Cela permet de survivre a la navigation vers `/auth` et au reload apres confirmation email.
 
-### 2. Refonte des etapes (6 ecrans au lieu de 7)
+### 2. Refonte du routing (`App.tsx`)
 
-| Ecran | Contenu | Question |
-|-------|---------|----------|
-| 1. Welcome | Logo Elio + "Decouvre combien tu perds chaque annee" + CTA | - |
-| 2. Situation | Statut pro + tranche d'age | Qui es-tu ? |
-| 3. Famille | Situation familiale + logement (proprio/locataire) | Ta situation |
-| 4. Revenus | Revenus mensuels nets + patrimoine | Tes finances |
-| 5. Fiscal | Declares en France + tranche d'imposition | Tes impots |
-| 6. Score | Score Elio anime + montant perdu + breakdown + bouton partage | Resultat |
+- `/` → affiche le quiz public (`ModernOnboardingWizard`) si l'utilisateur n'est **pas** connecte, sinon redirige vers `/dashboard`
+- `/dashboard` → nouvelle route protegee (remplace l'ancien `/` protege) pour la `HomePage`
+- `/onboarding` → supprime (plus necessaire, le quiz est sur `/`)
+- `/auth` → reste public
+- Toutes les autres routes restent protegees avec `ProtectedRoute`
 
-On supprime l'etape Objectifs et Risk (pas necessaires pour le diagnostic initial). On les deplace dans le profil fiscal detaille.
+### 3. Refonte du `ModernOnboardingWizard`
 
-### 3. Algorithme de calcul du Score Elio
+- Supprimer la dependance a `useAuth()` — le wizard fonctionne sans utilisateur connecte
+- Au lieu de `handleComplete` qui sauvegarde en DB, le wizard :
+  1. Stocke les donnees + score dans `localStorage`
+  2. Navigue vers `/auth`
+- Le bouton principal sur l'ecran Score devient "Creer mon compte gratuitement"
+- Ajouter un lien "J'ai deja un compte" en bas de l'ecran Score
 
-Nouveau fichier `src/lib/scoreElioEngine.ts` :
-- Entree : les donnees onboarding
-- Calcul deterministe base sur les baremes reels :
-  - **Aides non reclamees** : selon revenus, famille, logement (APL ~250EUR/mois si locataire + revenus < 3000EUR, prime d'activite ~147EUR/mois si salarie + revenus 1500-3000EUR, CSS si < 1500EUR, cheque energie ~150EUR/an)
-  - **Erreurs fiscales potentielles** : selon statut pro (frais reels pour salaries, regime reel vs micro pour independants)
-  - **Optimisations manquees** : PER non ouvert, pas de PEA, assurance vie non optimisee
-- Score = 100 - (penalites par categorie)
-- Sortie : `{ score: number, totalLoss: number, breakdown: { label: string, amount: number }[] }`
+### 4. Refonte du `ScoreResultStep`
 
-### 4. Ecran Score (remplacement du SummaryStep)
+- Props : `onCreateAccount` (au lieu de `onComplete`) + `onLogin` (au lieu de `onSkip`)
+- Bouton primaire : "Creer mon compte" → stocke dans localStorage puis navigue vers `/auth?tab=signup`
+- Lien secondaire : "J'ai deja un compte" → navigue vers `/auth?tab=login`
+- Garder le bouton "Partager mon score"
 
-Nouveau composant `src/components/onboarding/modern/ScoreResultStep.tsx` :
-- Cercle anime Score Elio (reutilise `ScoreElio.tsx`)
-- Montant en gros : "Tu perds environ X EUR/an"
-- Breakdown en 2-3 lignes (aides, fiscal, contrats)
-- Bouton "Partager mon score" (Web Share API avec fallback clipboard)
-- Bouton primaire "Decouvrir mes actions"
-- Disclaimer en footer
+### 5. Sauvegarde automatique apres auth (`ProtectedRoute` ou `Auth.tsx`)
 
-### 5. Refonte du Wizard
+Apres connexion/inscription reussie :
+1. Verifier si `localStorage` contient `elio_quiz_data`
+2. Si oui, appeler `saveModernOnboarding(user.id, quizData, false)` 
+3. Supprimer `elio_quiz_data` du localStorage
+4. Rediriger vers `/dashboard`
 
-`ModernOnboardingWizard.tsx` :
-- 6 etapes au lieu de 7
-- Navigation swipe avec `framer-motion` (drag horizontal, seuil 50px)
-- Transitions x: 100 -> 0 -> -100 pour le swipe feel
-- Progress bar animee
-- Auto-advance quand toutes les selections d'un ecran sont faites (optionnel, delay 400ms)
+Cette logique sera placee dans un nouveau hook `usePostAuthQuizSync` appele dans `ProtectedRoute`.
 
-### 6. Fix build errors
+### 6. Adaptation du `ProtectedRoute`
 
-Verifier et corriger tout import `Layout` residuel dans Calendar, FiscalProfile, Scanner, Settings en s'assurant que `AppLayout` est bien importe.
+- Ne plus rediriger vers `/onboarding` si onboarding non complete (le quiz est maintenant public)
+- Apres login, si quiz data en localStorage → sauvegarder puis rediriger vers `/dashboard`
+- Si pas de quiz data et onboarding non complete → laisser passer (l'utilisateur a pu creer un compte sans faire le quiz, on ne bloque pas)
+
+### 7. Page `Auth.tsx`
+
+- Lire le query param `?tab=signup|login` pour pre-selectionner l'onglet
+- Apres auth reussie, rediriger vers `/dashboard` (plus vers `/`)
 
 ## Fichiers touches
 
-- `src/data/modernOnboardingTypes.ts` — ajout housingStatus, suppression risk
-- `src/lib/scoreElioEngine.ts` — nouveau, algorithme de scoring
-- `src/components/onboarding/modern/ModernOnboardingWizard.tsx` — refonte 6 etapes + swipe
-- `src/components/onboarding/modern/WelcomeStep.tsx` — nouveau CTA "Decouvre combien tu perds"
-- `src/components/onboarding/modern/ProfileStep.tsx` — simplifie (situation + age uniquement)
-- `src/components/onboarding/modern/FamilyHousingStep.tsx` — nouveau (famille + logement)
-- `src/components/onboarding/modern/RevenueStep.tsx` — nouveau (revenus + patrimoine, ex PatrimonyStep)
-- `src/components/onboarding/modern/FiscalStep.tsx` — conserve tel quel
-- `src/components/onboarding/modern/ScoreResultStep.tsx` — nouveau (score + partage)
-- Suppression de `ObjectivesStep.tsx`, `RiskStep.tsx`, `SummaryStep.tsx`
-- `src/pages/Calendar.tsx`, `FiscalProfile.tsx`, `Scanner.tsx`, `Settings.tsx` — fix imports si necessaire
+| Fichier | Action |
+|---------|--------|
+| `src/App.tsx` | Nouveau routing : `/` public, `/dashboard` protege |
+| `src/components/onboarding/modern/ModernOnboardingWizard.tsx` | Supprimer dependance auth, stocker en localStorage |
+| `src/components/onboarding/modern/ScoreResultStep.tsx` | Nouveaux boutons "Creer compte" + "J'ai un compte" |
+| `src/components/auth/ProtectedRoute.tsx` | Supprimer logique onboarding, ajouter sync quiz post-auth |
+| `src/pages/Auth.tsx` | Lire `?tab`, rediriger vers `/dashboard` |
+| `src/pages/Onboarding.tsx` | Supprime (ou redirige vers `/`) |
+| `src/hooks/usePostAuthQuizSync.ts` | Nouveau hook : sync localStorage → Supabase apres login |
+
+## Securite
+
+- Les donnees du quiz en localStorage sont non sensibles (statut pro, tranche revenus, etc.)
+- La sauvegarde en DB ne se fait qu'apres authentification reelle
+- RLS sur `profiles` reste inchange (user ne peut modifier que son propre profil)
 
