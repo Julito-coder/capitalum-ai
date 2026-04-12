@@ -1,21 +1,153 @@
+import { useState, useCallback, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { FolderLock } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent } from '@/components/ui/card';
+import { FolderLock, Upload, File, Image, FileText, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+interface StoredFile {
+  name: string;
+  created_at: string;
+  metadata: { size: number; mimetype: string };
+}
+
+const getFileIcon = (name: string) => {
+  if (name.match(/\.(jpg|jpeg|png|webp)$/i)) return Image;
+  if (name.match(/\.pdf$/i)) return FileText;
+  return File;
+};
 
 const CoffreFortPage = () => {
+  const { user } = useAuth();
+  const [files, setFiles] = useState<StoredFile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+
+  const loadFiles = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase.storage
+        .from('tax-documents')
+        .list(user.id, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+      if (!error && data) {
+        setFiles(data as unknown as StoredFile[]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => { loadFiles(); }, [loadFiles]);
+
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Le fichier ne doit pas dépasser 10 Mo');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const path = `${user.id}/${Date.now()}_${file.name}`;
+      const { error } = await supabase.storage.from('tax-documents').upload(path, file);
+      if (error) throw error;
+      toast.success('Document ajouté au coffre-fort');
+      loadFiles();
+    } catch {
+      toast.error("Erreur lors de l'envoi du document");
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  }, [user, loadFiles]);
+
   return (
     <AppLayout>
       <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-foreground">Coffre-fort</h1>
-        <p className="text-muted-foreground">
-          Stocke et organise tes documents fiscaux en toute sécurité.
-        </p>
-
-        <div className="bg-card rounded-xl border border-border p-12 shadow-sm text-center space-y-4">
-          <FolderLock className="h-12 w-12 text-muted-foreground mx-auto" />
-          <h2 className="text-xl font-bold text-foreground">Bientôt disponible</h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Le coffre-fort te permettra de stocker tes avis d'imposition, fiches de paie, et autres documents importants.
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-3xl font-bold text-foreground">Coffre-fort</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Tes documents fiscaux en sécurité, accessibles à tout moment.
           </p>
+        </motion.div>
+
+        <Card className="shadow-sm">
+          <CardContent className="p-6">
+            <label className="flex flex-col items-center justify-center gap-3 py-8 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/40 transition-colors">
+              {uploading ? (
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              ) : (
+                <Upload className="h-8 w-8 text-muted-foreground" />
+              )}
+              <div className="text-center">
+                <p className="text-sm font-medium text-foreground">
+                  {uploading ? 'Envoi en cours...' : 'Ajouter un document'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">PDF, image — max 10 Mo</p>
+              </div>
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                onChange={handleUpload}
+                disabled={uploading}
+              />
+            </label>
+          </CardContent>
+        </Card>
+
+        <div>
+          <h2 className="text-lg font-semibold text-foreground mb-3">
+            Tes documents ({files.length})
+          </h2>
+
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : files.length === 0 ? (
+            <Card className="shadow-sm">
+              <CardContent className="p-8 text-center">
+                <FolderLock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  Aucun document pour l'instant. Ajoute ton premier avis d'imposition.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {files.map((file, i) => {
+                const FileIcon = getFileIcon(file.name);
+                return (
+                  <motion.div
+                    key={file.name}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="bg-card rounded-lg border border-border p-4 flex items-center gap-3"
+                  >
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <FileIcon className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {file.name.replace(/^\d+_/, '')}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {file.created_at && format(new Date(file.created_at), 'dd MMM yyyy', { locale: fr })}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>
