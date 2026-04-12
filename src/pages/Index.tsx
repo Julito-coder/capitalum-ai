@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { ModernOnboardingWizard } from '@/components/onboarding/modern/ModernOnboardingWizard';
+import { OnboardingQuiz } from '@/components/onboarding/OnboardingQuiz';
 import { Loader2 } from 'lucide-react';
 
 const Index = () => {
@@ -18,7 +18,7 @@ const Index = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return <ModernOnboardingWizard />;
+  return <OnboardingQuiz />;
 };
 
 export default Index;
