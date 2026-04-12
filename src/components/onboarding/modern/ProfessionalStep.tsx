@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Briefcase, Laptop, GraduationCap, Search, Sun } from 'lucide-react';
+import { Briefcase, Laptop, UserX, Sun } from 'lucide-react';
 import { ModernOnboardingData, ProfessionalStatus } from '@/data/modernOnboardingTypes';
 
 interface Props {
@@ -9,37 +9,35 @@ interface Props {
 
 const OPTIONS: { value: ProfessionalStatus; label: string; icon: React.ElementType }[] = [
   { value: 'employee', label: 'Salarié·e', icon: Briefcase },
-  { value: 'self_employed', label: 'Indépendant·e / Freelance', icon: Laptop },
-  { value: 'student', label: 'Étudiant·e', icon: GraduationCap },
-  { value: 'job_seeker', label: "En recherche d'emploi", icon: Search },
+  { value: 'self_employed', label: 'Indépendant·e', icon: Laptop },
+  { value: 'student', label: 'Étudiant·e / Sans emploi', icon: UserX },
   { value: 'retired', label: 'Retraité·e', icon: Sun },
 ];
 
 export const ProfessionalStep = ({ data, onSelect }: Props) => {
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-foreground">Quelle est ta situation ?</h2>
-
-      <div className="flex flex-col gap-3">
+    <div className="flex flex-col min-h-[calc(100vh-100px)]">
+      <h2 className="text-2xl font-bold text-foreground mb-6">Quelle est ta situation ?</h2>
+      <div className="grid grid-cols-2 gap-3 flex-1">
         {OPTIONS.map((opt, i) => {
           const Icon = opt.icon;
           const selected = data.professionalStatus === opt.value;
           return (
             <motion.button
               key={opt.value}
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.05 }}
-              whileTap={{ scale: 0.97 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.06 }}
+              whileTap={{ scale: 0.96 }}
               onClick={() => onSelect({ professionalStatus: opt.value })}
-              className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 text-left ${
+              className={`flex flex-col items-center justify-center gap-3 rounded-xl border transition-all duration-200 ${
                 selected
-                  ? 'border-2 border-primary bg-primary/[0.04] shadow-md'
+                  ? 'border-2 border-primary bg-primary/[0.04] shadow-md scale-[1.02]'
                   : 'border border-border bg-card shadow-sm hover:border-primary/30'
               }`}
             >
-              <Icon className={`h-5 w-5 flex-shrink-0 ${selected ? 'text-primary' : 'text-muted-foreground'}`} />
-              <span className="text-base font-semibold text-foreground">{opt.label}</span>
+              <Icon className={`h-7 w-7 ${selected ? 'text-primary' : 'text-muted-foreground'}`} />
+              <span className="text-sm font-semibold text-foreground text-center">{opt.label}</span>
             </motion.button>
           );
         })}

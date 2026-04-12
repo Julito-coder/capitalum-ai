@@ -1,27 +1,27 @@
 import { motion } from 'framer-motion';
-import { Key, Home, Landmark, Users } from 'lucide-react';
-import { ModernOnboardingData, HousingStatus } from '@/data/modernOnboardingTypes';
+import { Monitor, Calculator, HelpCircle, XCircle } from 'lucide-react';
+import { ModernOnboardingData, TaxDeclarationMode } from '@/data/modernOnboardingTypes';
 
 interface Props {
   data: ModernOnboardingData;
   onSelect: (updates: Partial<ModernOnboardingData>) => void;
 }
 
-const OPTIONS: { value: HousingStatus; label: string; icon: React.ElementType }[] = [
-  { value: 'tenant', label: 'Locataire', icon: Key },
-  { value: 'owner_mortgage', label: 'Proprio avec crédit', icon: Landmark },
-  { value: 'owner_paid', label: 'Proprio sans crédit', icon: Home },
-  { value: 'hosted', label: 'Hébergé·e', icon: Users },
+const OPTIONS: { value: TaxDeclarationMode; label: string; icon: React.ElementType }[] = [
+  { value: 'online_self', label: 'Seul·e en ligne', icon: Monitor },
+  { value: 'accountant', label: 'Avec un comptable', icon: Calculator },
+  { value: 'not_yet', label: 'Je ne déclare pas encore', icon: XCircle },
+  { value: 'unknown', label: 'Je ne sais pas', icon: HelpCircle },
 ];
 
-export const HousingStep = ({ data, onSelect }: Props) => {
+export const TaxDeclarationStep = ({ data, onSelect }: Props) => {
   return (
     <div className="flex flex-col min-h-[calc(100vh-100px)]">
-      <h2 className="text-2xl font-bold text-foreground mb-6">Tu es…</h2>
+      <h2 className="text-2xl font-bold text-foreground mb-6">Tu déclares tes impôts…</h2>
       <div className="grid grid-cols-2 gap-3 flex-1">
         {OPTIONS.map((opt, i) => {
           const Icon = opt.icon;
-          const selected = data.housingStatus === opt.value;
+          const selected = data.taxDeclarationMode === opt.value;
           return (
             <motion.button
               key={opt.value}
@@ -29,7 +29,7 @@ export const HousingStep = ({ data, onSelect }: Props) => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.06 }}
               whileTap={{ scale: 0.96 }}
-              onClick={() => onSelect({ housingStatus: opt.value })}
+              onClick={() => onSelect({ taxDeclarationMode: opt.value })}
               className={`flex flex-col items-center justify-center gap-3 rounded-xl border transition-all duration-200 ${
                 selected
                   ? 'border-2 border-primary bg-primary/[0.04] shadow-md scale-[1.02]'
