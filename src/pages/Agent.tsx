@@ -18,7 +18,7 @@ const AgentPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
               'Calcule mon impôt 2025',
-              'Vérifie si j'ai droit à des aides',
+              'Vérifie si j\'ai droit à des aides',
               'Quelles sont mes prochaines échéances ?',
               'Compare micro vs SASU',
             ].map((suggestion) => (
