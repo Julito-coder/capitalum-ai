@@ -10,11 +10,9 @@ export const saveModernOnboarding = async (
   isPartial: boolean
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    // Map professional status to profile flags
     const isEmployee = data.professionalStatus === 'salarie';
     const isSelfEmployed = data.professionalStatus === 'independant' || data.professionalStatus === 'chef_entreprise';
 
-    // Map family situation
     let familyStatus = 'single';
     if (data.familySituation === 'en_couple') familyStatus = 'married';
     if (data.familySituation === 'avec_enfants') familyStatus = 'married';
@@ -24,11 +22,11 @@ export const saveModernOnboarding = async (
       professional_status: data.professionalStatus,
       is_employee: isEmployee,
       is_self_employed: isSelfEmployed,
+      is_homeowner: data.housingStatus === 'proprietaire',
       family_status: familyStatus,
       age_range: data.ageRange,
       income_range: data.incomeRange,
       patrimony_range: data.patrimonyRange,
-      risk_tolerance: data.riskTolerance,
       tax_bracket: data.taxBracket,
       financial_objectives: data.financialObjectives,
       declares_in_france: data.declaresInFrance,
@@ -41,16 +39,14 @@ export const saveModernOnboarding = async (
 
     const { error } = await supabase
       .from('profiles')
-      .update(updatePayload as any)
+      .update(updatePayload as Record<string, unknown>)
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error saving modern onboarding:', error);
       return { success: false, error: error.message };
     }
     return { success: true };
-  } catch (err) {
-    console.error('Error saving modern onboarding:', err);
+  } catch {
     return { success: false, error: 'Une erreur est survenue' };
   }
 };
@@ -64,17 +60,16 @@ export const loadOnboardingStatus = async (
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('onboarding_completed, full_name')
+      .select('onboarding_completed, onboarding_partial, full_name')
       .eq('user_id', userId)
       .maybeSingle();
 
     if (error || !data) return { completed: false, partial: false, fullName: null };
 
-    const d = data as any;
     return {
-      completed: d.onboarding_completed || false,
-      partial: d.onboarding_partial || false,
-      fullName: d.full_name || null,
+      completed: data.onboarding_completed || false,
+      partial: data.onboarding_partial || false,
+      fullName: data.full_name || null,
     };
   } catch {
     return { completed: false, partial: false, fullName: null };
