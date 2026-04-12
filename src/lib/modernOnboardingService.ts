@@ -10,27 +10,21 @@ export const saveModernOnboarding = async (
   isPartial: boolean
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    const isEmployee = data.professionalStatus === 'salarie';
-    const isSelfEmployed = data.professionalStatus === 'independant' || data.professionalStatus === 'chef_entreprise';
-
-    let familyStatus = 'single';
-    if (data.familySituation === 'en_couple') familyStatus = 'married';
-    if (data.familySituation === 'avec_enfants') familyStatus = 'married';
+    const isEmployee = data.professionalStatus === 'employee';
+    const isSelfEmployed = data.professionalStatus === 'self_employed';
+    const isRetired = data.professionalStatus === 'retired';
 
     const updatePayload: Record<string, unknown> = {
       full_name: data.fullName || null,
       professional_status: data.professionalStatus,
       is_employee: isEmployee,
       is_self_employed: isSelfEmployed,
-      is_homeowner: data.housingStatus === 'proprietaire',
-      family_status: familyStatus,
+      is_retired: isRetired,
+      is_homeowner: data.housingStatus === 'owner',
+      family_status: data.familyStatus || 'single',
       age_range: data.ageRange,
       income_range: data.incomeRange,
-      patrimony_range: data.patrimonyRange,
-      tax_bracket: data.taxBracket,
-      financial_objectives: data.financialObjectives,
-      declares_in_france: data.declaresInFrance,
-      primary_objective: data.financialObjectives[0] === 'impots' ? 'reduce_ir' : 'treasury',
+      children_count: data.childrenRange === '3_or_more' ? 3 : data.childrenRange === '1_or_2' ? 1 : 0,
       onboarding_completed: true,
       onboarding_partial: isPartial,
       onboarding_completed_at: new Date().toISOString(),
