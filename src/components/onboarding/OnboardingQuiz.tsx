@@ -263,20 +263,22 @@ export const OnboardingQuiz = () => {
     }
   }, [stepIndex]);
 
-  const handleFinish = useCallback(async () => {
+  const handleFinish = useCallback(() => {
     setIsSubmitting(true);
+    // Store raw answers + result for post-auth sync
+    localStorage.setItem('elio_diagnostic', JSON.stringify({ answers, result }));
     storeQuizData({
       data: {
-        ageRange: answers.age,
-        professionalStatus: answers.professionalStatus === 'public_employee' ? 'employee' : answers.professionalStatus,
-        familyStatus: answers.familySituation === 'couple_married' ? 'married' : answers.familySituation === 'couple_unmarried' ? 'couple' : answers.familySituation,
-        childrenRange: answers.children === '5+' ? '3_or_more' : answers.children === '4' ? '3_or_more' : answers.children === '3' ? '3_or_more' : answers.children === '0' ? 'none' : answers.children,
-        housingStatus: answers.housing === 'owner_no_mortgage' ? 'owner_paid' : answers.housing === 'hosted' ? 'hosted' : answers.housing,
-        incomeRange: null,
-        savingsRange: null,
-        taxDeclarationMode: answers.taxDeclaration,
+        ageRange: answers.age ?? '25_35',
+        professionalStatus: (answers.professionalStatus === 'public_employee' ? 'employee' : answers.professionalStatus) ?? 'employee',
+        familyStatus: answers.familySituation === 'couple_married' ? 'married' : answers.familySituation === 'couple_unmarried' ? 'couple' : (answers.familySituation ?? 'single'),
+        childrenRange: (['3', '4', '5+'].includes(answers.children ?? '') ? '3_or_more' : answers.children === '0' ? 'none' : (answers.children ?? 'none')) as 'none' | '1' | '2' | '3_or_more',
+        housingStatus: (answers.housing === 'owner_no_mortgage' ? 'owner_paid' : answers.housing === 'hosted' ? 'hosted' : answers.housing) ?? 'tenant',
+        incomeRange: 'less_1500',
+        savingsRange: 'none',
+        taxDeclarationMode: answers.taxDeclaration ?? 'unknown',
         fullName: null,
-      } as never,
+      },
       score: result.score,
       totalLoss: result.totalLoss,
     });
