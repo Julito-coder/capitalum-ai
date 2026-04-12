@@ -31,7 +31,9 @@ export const WelcomeStep = ({ onStart }: Props) => {
         transition={{ delay: 0.2 }}
         className="text-3xl lg:text-4xl font-bold mb-4"
       >
-        Bienvenue sur <span className="font-extrabold">Élio</span>
+        Découvre combien tu{' '}
+        <span className="text-destructive font-extrabold">perds</span>{' '}
+        chaque année
       </motion.h1>
 
       <motion.p
@@ -40,9 +42,8 @@ export const WelcomeStep = ({ onStart }: Props) => {
         transition={{ delay: 0.3 }}
         className="text-lg text-muted-foreground max-w-md mb-2"
       >
-        En 2 minutes, on personnalise ton tableau de bord pour te faire{' '}
-        <span className="text-primary font-semibold">gagner du temps</span> et de l'
-        <span className="text-success font-semibold">argent</span>.
+        En 2 minutes, Élio analyse ta situation et te montre les{' '}
+        <span className="text-success font-semibold">euros que tu laisses sur la table</span>.
       </motion.p>
 
       <motion.div
@@ -52,7 +53,7 @@ export const WelcomeStep = ({ onStart }: Props) => {
         className="flex items-center gap-2 text-sm text-muted-foreground mb-10"
       >
         <Clock className="h-4 w-4" />
-        <span>6 étapes rapides • ~2 min</span>
+        <span>5 questions rapides • ~2 min</span>
       </motion.div>
 
       <motion.button
@@ -65,7 +66,7 @@ export const WelcomeStep = ({ onStart }: Props) => {
         className="btn-primary text-lg px-8 py-4 rounded-2xl shadow-lg"
       >
         <Sparkles className="h-5 w-5" />
-        Commencer
+        Faire mon diagnostic
         <ArrowRight className="h-5 w-5" />
       </motion.button>
     </motion.div>

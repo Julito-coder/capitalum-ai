@@ -3,20 +3,20 @@
 export type ProfessionalStatus = 'salarie' | 'independant' | 'chef_entreprise' | 'etudiant' | 'autre';
 export type AgeRange = '18-24' | '25-34' | '35-44' | '45-54' | '55+';
 export type FamilySituation = 'celibataire' | 'en_couple' | 'avec_enfants';
+export type HousingStatus = 'proprietaire' | 'locataire';
 export type FinancialObjective = 'retraite' | 'impots' | 'cash' | 'bourse' | 'famille';
 export type IncomeRange = '<1500' | '1500-3000' | '3000-5000' | '>5000';
 export type PatrimonyRange = '<10000' | '10000-50000' | '50000-200000' | '>200000';
-export type RiskTolerance = 'tres_prudent' | 'prudent' | 'equilibre' | 'dynamique' | 'tres_dynamique';
 export type TaxBracket = '0' | '0-11' | '11-30' | '30-41' | '41-45' | 'unknown';
 
 export interface ModernOnboardingData {
   professionalStatus: ProfessionalStatus | null;
   ageRange: AgeRange | null;
   familySituation: FamilySituation | null;
+  housingStatus: HousingStatus | null;
   financialObjectives: FinancialObjective[];
   incomeRange: IncomeRange | null;
   patrimonyRange: PatrimonyRange | null;
-  riskTolerance: RiskTolerance | null;
   declaresInFrance: boolean | null;
   taxBracket: TaxBracket | null;
   fullName: string;
@@ -26,10 +26,10 @@ export const DEFAULT_MODERN_ONBOARDING: ModernOnboardingData = {
   professionalStatus: null,
   ageRange: null,
   familySituation: null,
+  housingStatus: null,
   financialObjectives: [],
   incomeRange: null,
   patrimonyRange: null,
-  riskTolerance: null,
   declaresInFrance: null,
   taxBracket: null,
   fullName: '',
@@ -57,12 +57,9 @@ export const FAMILY_OPTIONS: { value: FamilySituation; label: string; emoji: str
   { value: 'avec_enfants', label: 'Avec enfants', emoji: '👨‍👩‍👧‍👦' },
 ];
 
-export const OBJECTIVE_OPTIONS: { value: FinancialObjective; label: string; emoji: string; description: string }[] = [
-  { value: 'retraite', label: 'Préparer ma retraite', emoji: '🏖️', description: 'PER, assurance vie, épargne long terme' },
-  { value: 'impots', label: 'Optimiser mes impôts', emoji: '📉', description: 'Réductions, crédits, niches fiscales' },
-  { value: 'cash', label: 'Piloter mon cash', emoji: '💰', description: 'Budget, dépenses, trésorerie' },
-  { value: 'bourse', label: 'Investir en bourse', emoji: '📈', description: 'ETF, actions, PEA, CTO' },
-  { value: 'famille', label: 'Sécuriser ma famille', emoji: '🛡️', description: 'Assurance, prévoyance, succession' },
+export const HOUSING_OPTIONS: { value: HousingStatus; label: string; emoji: string }[] = [
+  { value: 'locataire', label: 'Locataire', emoji: '🏠' },
+  { value: 'proprietaire', label: 'Propriétaire', emoji: '🏡' },
 ];
 
 export const INCOME_OPTIONS: { value: IncomeRange; label: string }[] = [
@@ -77,14 +74,6 @@ export const PATRIMONY_OPTIONS: { value: PatrimonyRange; label: string }[] = [
   { value: '10000-50000', label: '10 000 – 50 000 €' },
   { value: '50000-200000', label: '50 000 – 200 000 €' },
   { value: '>200000', label: 'Plus de 200 000 €' },
-];
-
-export const RISK_OPTIONS: { value: RiskTolerance; label: string; emoji: string }[] = [
-  { value: 'tres_prudent', label: 'Très prudent', emoji: '🐢' },
-  { value: 'prudent', label: 'Prudent', emoji: '🦔' },
-  { value: 'equilibre', label: 'Équilibré', emoji: '⚖️' },
-  { value: 'dynamique', label: 'Dynamique', emoji: '🚀' },
-  { value: 'tres_dynamique', label: 'Très dynamique', emoji: '🔥' },
 ];
 
 export const TAX_BRACKET_OPTIONS: { value: TaxBracket; label: string }[] = [
