@@ -31,7 +31,7 @@ export const WelcomeStep = ({ onStart }: Props) => {
         transition={{ delay: 0.2 }}
         className="text-3xl lg:text-4xl font-bold mb-4"
       >
-        Bienvenue sur <span className="font-serif">Élio</span> 👋
+        Bienvenue sur <span className="font-extrabold">Élio</span>
       </motion.h1>
 
       <motion.p
