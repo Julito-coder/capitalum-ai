@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Layout } from '@/components/layout/Layout';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { DeadlineCard } from '@/components/calendar/DeadlineCard';
 import { DeadlineActionPanel } from '@/components/calendar/DeadlineActionPanel';

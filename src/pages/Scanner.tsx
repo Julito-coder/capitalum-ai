@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout } from '@/components/layout/Layout';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { ScannerQuestionnaire } from '@/components/scanner/ScannerQuestionnaire';
 import { ScannerResults } from '@/components/scanner/ScannerResults';
 import { DocumentUploadScanner } from '@/components/scanner/DocumentUploadScanner';

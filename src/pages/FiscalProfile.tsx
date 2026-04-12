@@ -1,4 +1,4 @@
-import { Layout } from '@/components/layout/Layout';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { FiscalProfileForm } from '@/components/fiscal-profile/FiscalProfileForm';
 import { motion } from 'framer-motion';
 import { UserCircle } from 'lucide-react';
