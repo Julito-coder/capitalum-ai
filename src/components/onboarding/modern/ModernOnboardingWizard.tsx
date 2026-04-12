@@ -1,18 +1,20 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, X } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ModernOnboardingData, DEFAULT_MODERN_ONBOARDING } from '@/data/modernOnboardingTypes';
 import { calculateElioScore, ElioScoreResult } from '@/lib/scoreElioEngine';
 import { storeQuizData } from '@/hooks/usePostAuthQuizSync';
 import { WelcomeStep } from './WelcomeStep';
 import { ProfileStep } from './ProfileStep';
+import { ProfessionalStep } from './ProfessionalStep';
 import { FamilyHousingStep } from './FamilyHousingStep';
+import { ChildrenStep } from './ChildrenStep';
+import { HousingStep } from './HousingStep';
 import { RevenueStep } from './RevenueStep';
-import { FiscalStep } from './FiscalStep';
 import { ScoreResultStep } from './ScoreResultStep';
 
-const STEPS = ['welcome', 'profile', 'family', 'revenue', 'fiscal', 'score'] as const;
+const STEPS = ['welcome', 'age', 'professional', 'family', 'children', 'housing', 'revenue', 'score'] as const;
 type StepKey = (typeof STEPS)[number];
 
 const swipeVariants = {
@@ -26,29 +28,10 @@ export const ModernOnboardingWizard = () => {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<ModernOnboardingData>({ ...DEFAULT_MODERN_ONBOARDING });
+  const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentStep: StepKey = STEPS[step];
-  const totalSteps = STEPS.length - 1; // exclude welcome
-  const displayStep = step;
-
-  const handleChange = useCallback((updates: Partial<ModernOnboardingData>) => {
-    setData((prev) => ({ ...prev, ...updates }));
-  }, []);
-
-  const canProceed = useCallback((): boolean => {
-    switch (currentStep) {
-      case 'profile':
-        return data.professionalStatus !== null;
-      case 'family':
-        return data.familySituation !== null;
-      case 'revenue':
-        return data.incomeRange !== null;
-      case 'fiscal':
-        return data.declaresInFrance !== null;
-      default:
-        return true;
-    }
-  }, [currentStep, data]);
+  const questionSteps = STEPS.length - 2; // exclude welcome & score
 
   const scoreResult: ElioScoreResult = useMemo(() => calculateElioScore(data), [data]);
 
@@ -66,6 +49,21 @@ export const ModernOnboardingWizard = () => {
     }
   }, [step]);
 
+  // Auto-advance after selection
+  const handleSelect = useCallback((updates: Partial<ModernOnboardingData>) => {
+    setData((prev) => ({ ...prev, ...updates }));
+    if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+    autoAdvanceTimer.current = setTimeout(() => {
+      next();
+    }, 300);
+  }, [next]);
+
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+    };
+  }, []);
+
   const saveAndNavigate = useCallback((tab: 'signup' | 'login') => {
     storeQuizData({
       data,
@@ -75,57 +73,61 @@ export const ModernOnboardingWizard = () => {
     navigate(`/auth?tab=${tab}`);
   }, [data, scoreResult, navigate]);
 
-  const handleCreateAccount = useCallback(() => {
-    saveAndNavigate('signup');
-  }, [saveAndNavigate]);
-
-  const handleLogin = useCallback(() => {
-    saveAndNavigate('login');
-  }, [saveAndNavigate]);
+  const handleCreateAccount = useCallback(() => saveAndNavigate('signup'), [saveAndNavigate]);
+  const handleLogin = useCallback(() => saveAndNavigate('login'), [saveAndNavigate]);
 
   // Swipe handler
   const handleDragEnd = useCallback(
     (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
       const threshold = 50;
-      if (info.offset.x < -threshold && canProceed() && step < STEPS.length - 1) {
+      if (info.offset.x < -threshold && step < STEPS.length - 1) {
         next();
       } else if (info.offset.x > threshold && step > 0) {
         prev();
       }
     },
-    [canProceed, step, next, prev]
+    [step, next, prev]
   );
+
+  // Progress: question index (1-based), only for question steps
+  const questionIndex = step - 1; // 0 = first question (age)
+  const showProgress = currentStep !== 'welcome' && currentStep !== 'score';
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at top, rgba(27,58,92,0.08), transparent 50%)' }} />
 
       <div className="relative max-w-lg mx-auto px-4 py-6 min-h-screen flex flex-col">
-        {/* Header: progress */}
-        {currentStep !== 'welcome' && currentStep !== 'score' && (
+        {/* Header */}
+        {showProgress && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3 mb-3">
+              <button
+                onClick={prev}
+                className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+              </button>
               <span className="text-sm font-medium text-muted-foreground">
-                Étape {displayStep} sur {totalSteps - 1}
+                {questionIndex + 1} sur {questionSteps}
               </span>
             </div>
-            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div className="h-1 bg-muted rounded-full overflow-hidden">
               <motion.div
-                className="h-full rounded-full"
-                style={{ background: 'linear-gradient(135deg, hsl(210 53% 23%), hsl(37 55% 51%))' }}
+                className="h-full rounded-full bg-primary"
                 initial={{ width: 0 }}
-                animate={{ width: `${(displayStep / (totalSteps - 1)) * 100}%` }}
+                animate={{ width: `${((questionIndex + 1) / questionSteps) * 100}%` }}
                 transition={{ duration: 0.4, ease: 'easeOut' }}
               />
             </div>
           </motion.div>
         )}
 
-        {/* Step content with swipe */}
+        {/* Step content */}
         <div className="flex-1">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
@@ -136,16 +138,18 @@ export const ModernOnboardingWizard = () => {
               animate="center"
               exit="exit"
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              drag={currentStep !== 'welcome' && currentStep !== 'score' ? 'x' : false}
+              drag={showProgress ? 'x' : false}
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.15}
               onDragEnd={handleDragEnd}
             >
               {currentStep === 'welcome' && <WelcomeStep onStart={next} />}
-              {currentStep === 'profile' && <ProfileStep data={data} onChange={handleChange} />}
-              {currentStep === 'family' && <FamilyHousingStep data={data} onChange={handleChange} />}
-              {currentStep === 'revenue' && <RevenueStep data={data} onChange={handleChange} />}
-              {currentStep === 'fiscal' && <FiscalStep data={data} onChange={handleChange} />}
+              {currentStep === 'age' && <ProfileStep data={data} onSelect={handleSelect} />}
+              {currentStep === 'professional' && <ProfessionalStep data={data} onSelect={handleSelect} />}
+              {currentStep === 'family' && <FamilyHousingStep data={data} onSelect={handleSelect} />}
+              {currentStep === 'children' && <ChildrenStep data={data} onSelect={handleSelect} />}
+              {currentStep === 'housing' && <HousingStep data={data} onSelect={handleSelect} />}
+              {currentStep === 'revenue' && <RevenueStep data={data} onSelect={handleSelect} />}
               {currentStep === 'score' && (
                 <ScoreResultStep
                   result={scoreResult}
@@ -157,31 +161,6 @@ export const ModernOnboardingWizard = () => {
             </motion.div>
           </AnimatePresence>
         </div>
-
-        {/* Navigation buttons */}
-        {currentStep !== 'welcome' && currentStep !== 'score' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-between items-center pt-6 pb-4"
-          >
-            <button
-              onClick={prev}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Retour
-            </button>
-            <button
-              onClick={next}
-              disabled={!canProceed()}
-              className="btn-primary px-6 py-2.5 rounded-xl text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Continuer
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </motion.div>
-        )}
       </div>
     </div>
   );
