@@ -4,9 +4,10 @@ import { ElioLogo } from '@/components/layout/ElioLogo';
 
 interface Props {
   onStart: () => void;
+  onLogin: () => void;
 }
 
-export const WelcomeStep = ({ onStart }: Props) => {
+export const WelcomeStep = ({ onStart, onLogin }: Props) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -53,7 +54,7 @@ export const WelcomeStep = ({ onStart }: Props) => {
         className="flex items-center gap-2 text-sm text-muted-foreground mb-10"
       >
         <Clock className="h-4 w-4" />
-        <span>5 questions rapides • ~2 min</span>
+        <span>8 questions rapides • ~2 min</span>
       </motion.div>
 
       <motion.button
@@ -68,6 +69,16 @@ export const WelcomeStep = ({ onStart }: Props) => {
         <Sparkles className="h-5 w-5" />
         Faire mon diagnostic
         <ArrowRight className="h-5 w-5" />
+      </motion.button>
+
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.7 }}
+        onClick={onLogin}
+        className="mt-6 text-sm text-muted-foreground hover:text-primary transition-colors underline underline-offset-4"
+      >
+        J'ai déjà un compte
       </motion.button>
     </motion.div>
   );

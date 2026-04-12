@@ -6,39 +6,39 @@ interface Props {
   onSelect: (updates: Partial<ModernOnboardingData>) => void;
 }
 
-const OPTIONS: { value: IncomeRange; label: string }[] = [
-  { value: 'less_1000', label: 'Moins de 1 000 €' },
-  { value: '1000_1800', label: '1 000 – 1 800 €' },
-  { value: '1800_3000', label: '1 800 – 3 000 €' },
-  { value: '3000_5000', label: '3 000 – 5 000 €' },
-  { value: 'more_5000', label: 'Plus de 5 000 €' },
+const OPTIONS: { value: IncomeRange; label: string; emoji: string }[] = [
+  { value: 'less_1500', label: 'Moins de 1 500 €', emoji: '💰' },
+  { value: '1500_2500', label: '1 500 – 2 500 €', emoji: '💵' },
+  { value: '2500_4000', label: '2 500 – 4 000 €', emoji: '💳' },
+  { value: 'more_4000', label: 'Plus de 4 000 €', emoji: '🏦' },
 ];
 
 export const RevenueStep = ({ data, onSelect }: Props) => {
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="flex flex-col min-h-[calc(100vh-100px)]">
+      <div className="mb-6">
         <h2 className="text-2xl font-bold text-foreground mb-2">Tes revenus nets mensuels ?</h2>
-        <p className="text-base text-muted-foreground">Approximatif, c'est juste pour calibrer ton diagnostic</p>
+        <p className="text-sm text-muted-foreground">Approximatif, c'est juste pour calibrer</p>
       </div>
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-2 gap-3 flex-1">
         {OPTIONS.map((opt, i) => {
           const selected = data.incomeRange === opt.value;
           return (
             <motion.button
               key={opt.value}
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.05 }}
-              whileTap={{ scale: 0.97 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.06 }}
+              whileTap={{ scale: 0.96 }}
               onClick={() => onSelect({ incomeRange: opt.value })}
-              className={`p-4 rounded-xl border text-left transition-all duration-200 ${
+              className={`flex flex-col items-center justify-center gap-3 rounded-xl border transition-all duration-200 ${
                 selected
-                  ? 'border-2 border-primary bg-primary/[0.04] shadow-md'
+                  ? 'border-2 border-primary bg-primary/[0.04] shadow-md scale-[1.02]'
                   : 'border border-border bg-card shadow-sm hover:border-primary/30'
               }`}
             >
-              <span className="text-base font-semibold text-foreground">{opt.label}</span>
+              <span className="text-3xl">{opt.emoji}</span>
+              <span className="text-sm font-semibold text-foreground">{opt.label}</span>
             </motion.button>
           );
         })}

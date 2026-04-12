@@ -6,35 +6,36 @@ interface Props {
   onSelect: (updates: Partial<ModernOnboardingData>) => void;
 }
 
-const OPTIONS: { value: ChildrenRange; label: string }[] = [
-  { value: 'none', label: 'Aucun' },
-  { value: '1_or_2', label: '1 ou 2' },
-  { value: '3_or_more', label: '3 ou plus' },
+const OPTIONS: { value: ChildrenRange; label: string; emoji: string }[] = [
+  { value: 'none', label: 'Aucun', emoji: '🚫' },
+  { value: '1', label: '1 enfant', emoji: '👶' },
+  { value: '2', label: '2 enfants', emoji: '👧👦' },
+  { value: '3_or_more', label: '3 ou plus', emoji: '👨‍👩‍👧‍👦' },
 ];
 
 export const ChildrenStep = ({ data, onSelect }: Props) => {
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-foreground">Tu as des enfants à charge ?</h2>
-
-      <div className="flex flex-col gap-3">
+    <div className="flex flex-col min-h-[calc(100vh-100px)]">
+      <h2 className="text-2xl font-bold text-foreground mb-6">Tu as des enfants à charge ?</h2>
+      <div className="grid grid-cols-2 gap-3 flex-1">
         {OPTIONS.map((opt, i) => {
           const selected = data.childrenRange === opt.value;
           return (
             <motion.button
               key={opt.value}
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.06 }}
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 0.96 }}
               onClick={() => onSelect({ childrenRange: opt.value })}
-              className={`p-4 rounded-xl border text-left transition-all duration-200 ${
+              className={`flex flex-col items-center justify-center gap-3 rounded-xl border transition-all duration-200 ${
                 selected
-                  ? 'border-2 border-primary bg-primary/[0.04] shadow-md'
+                  ? 'border-2 border-primary bg-primary/[0.04] shadow-md scale-[1.02]'
                   : 'border border-border bg-card shadow-sm hover:border-primary/30'
               }`}
             >
-              <span className="text-base font-semibold text-foreground">{opt.label}</span>
+              <span className="text-3xl">{opt.emoji}</span>
+              <span className="text-sm font-semibold text-foreground">{opt.label}</span>
             </motion.button>
           );
         })}

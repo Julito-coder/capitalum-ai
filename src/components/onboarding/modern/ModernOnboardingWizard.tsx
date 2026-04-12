@@ -12,9 +12,11 @@ import { FamilyHousingStep } from './FamilyHousingStep';
 import { ChildrenStep } from './ChildrenStep';
 import { HousingStep } from './HousingStep';
 import { RevenueStep } from './RevenueStep';
+import { SavingsStep } from './SavingsStep';
+import { TaxDeclarationStep } from './TaxDeclarationStep';
 import { ScoreResultStep } from './ScoreResultStep';
 
-const STEPS = ['welcome', 'age', 'professional', 'family', 'children', 'housing', 'revenue', 'score'] as const;
+const STEPS = ['welcome', 'age', 'professional', 'family', 'children', 'housing', 'revenue', 'savings', 'tax', 'score'] as const;
 type StepKey = (typeof STEPS)[number];
 
 const swipeVariants = {
@@ -49,7 +51,6 @@ export const ModernOnboardingWizard = () => {
     }
   }, [step]);
 
-  // Auto-advance after selection
   const handleSelect = useCallback((updates: Partial<ModernOnboardingData>) => {
     setData((prev) => ({ ...prev, ...updates }));
     if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
@@ -76,7 +77,6 @@ export const ModernOnboardingWizard = () => {
   const handleCreateAccount = useCallback(() => saveAndNavigate('signup'), [saveAndNavigate]);
   const handleLogin = useCallback(() => saveAndNavigate('login'), [saveAndNavigate]);
 
-  // Swipe handler
   const handleDragEnd = useCallback(
     (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
       const threshold = 50;
@@ -89,8 +89,7 @@ export const ModernOnboardingWizard = () => {
     [step, next, prev]
   );
 
-  // Progress: question index (1-based), only for question steps
-  const questionIndex = step - 1; // 0 = first question (age)
+  const questionIndex = step - 1;
   const showProgress = currentStep !== 'welcome' && currentStep !== 'score';
 
   return (
@@ -98,12 +97,11 @@ export const ModernOnboardingWizard = () => {
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at top, rgba(27,58,92,0.08), transparent 50%)' }} />
 
       <div className="relative max-w-lg mx-auto px-4 py-6 min-h-screen flex flex-col">
-        {/* Header */}
         {showProgress && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
+            className="mb-4"
           >
             <div className="flex items-center gap-3 mb-3">
               <button
@@ -127,7 +125,6 @@ export const ModernOnboardingWizard = () => {
           </motion.div>
         )}
 
-        {/* Step content */}
         <div className="flex-1">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
@@ -143,13 +140,15 @@ export const ModernOnboardingWizard = () => {
               dragElastic={0.15}
               onDragEnd={handleDragEnd}
             >
-              {currentStep === 'welcome' && <WelcomeStep onStart={next} />}
+              {currentStep === 'welcome' && <WelcomeStep onStart={next} onLogin={handleLogin} />}
               {currentStep === 'age' && <ProfileStep data={data} onSelect={handleSelect} />}
               {currentStep === 'professional' && <ProfessionalStep data={data} onSelect={handleSelect} />}
               {currentStep === 'family' && <FamilyHousingStep data={data} onSelect={handleSelect} />}
               {currentStep === 'children' && <ChildrenStep data={data} onSelect={handleSelect} />}
               {currentStep === 'housing' && <HousingStep data={data} onSelect={handleSelect} />}
               {currentStep === 'revenue' && <RevenueStep data={data} onSelect={handleSelect} />}
+              {currentStep === 'savings' && <SavingsStep data={data} onSelect={handleSelect} />}
+              {currentStep === 'tax' && <TaxDeclarationStep data={data} onSelect={handleSelect} />}
               {currentStep === 'score' && (
                 <ScoreResultStep
                   result={scoreResult}
