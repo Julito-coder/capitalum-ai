@@ -392,4 +392,350 @@ export const FISCAL_DEADLINES: FiscalDeadline[] = [
     ],
     tags: ['propriétaire', 'locatif', 'annuel'],
   },
+
+  // ===== PROPRIÉTAIRE RÉSIDENCE PRINCIPALE =====
+  {
+    key: `taxe-habitation-${currentYear}`,
+    title: 'Taxe d\'habitation (résidences secondaires)',
+    shortDescription: 'Paiement de la taxe d\'habitation sur résidences secondaires',
+    explanation: `Depuis 2023, la taxe d'habitation ne concerne plus les résidences principales. Mais si tu possèdes une résidence secondaire, elle reste due. Le paiement est à effectuer avant mi-décembre.`,
+    consequences: `Majoration de 10% en cas de retard de paiement.`,
+    category: 'fiscalite',
+    date: new Date(currentYear, 11, 15),
+    impactScore: 2,
+    estimatedImpact: 0,
+    relevanceCondition: (p) => p.isHomeowner && p.hasRentalIncome,
+    computePersonalImpact: () => ({
+      ...defaultImpact(),
+      explanation: `Si tu as une résidence secondaire, vérifie ton avis de taxe d'habitation sur impots.gouv.fr.`,
+    }),
+    actions: [
+      { id: 'external', label: 'Vérifier sur impots.gouv', icon: 'ExternalLink', type: 'external', target: 'https://www.impots.gouv.fr/accueil' },
+    ],
+    tags: ['propriétaire', 'annuel'],
+  },
+  {
+    key: `assurance-habitation-revision-${currentYear}`,
+    title: 'Révision assurance habitation',
+    shortDescription: 'Compare et optimise ton contrat d\'assurance habitation',
+    explanation: `L'assurance habitation augmente en moyenne de 3-5% par an. Comparer les offres chaque année peut faire économiser 100 à 300 €. C'est aussi l'occasion de vérifier que ta couverture correspond à ta situation.`,
+    consequences: `Surcoût annuel cumulé. Risque de sous-assurance si ta situation a changé (travaux, valeur mobilier).`,
+    category: 'administratif',
+    date: new Date(currentYear, 0, 31),
+    impactScore: 2,
+    estimatedImpact: 200,
+    relevanceCondition: (p) => p.isHomeowner,
+    computePersonalImpact: () => ({
+      estimatedGain: 200,
+      riskIfNoAction: 0,
+      patrimonialEffect10y: 2000,
+      explanation: `En comparant chaque année, tu peux économiser ~200 €/an sur ton assurance habitation.`,
+    }),
+    actions: [],
+    tags: ['propriétaire', 'annuel', 'optimisation'],
+  },
+  {
+    key: `declaration-biens-immobiliers-${currentYear}`,
+    title: 'Déclaration d\'occupation des biens immobiliers',
+    shortDescription: 'Déclarer l\'occupation de tes biens sur impots.gouv.fr',
+    explanation: `Depuis 2023, tous les propriétaires doivent déclarer l'occupation de leurs biens immobiliers (résidence principale, secondaire, locations) sur impots.gouv.fr avant le 1er juillet.`,
+    consequences: `Amende de 150 € par local non déclaré ou mal déclaré.`,
+    category: 'fiscalite',
+    date: new Date(currentYear, 5, 30),
+    impactScore: 3,
+    estimatedImpact: 0,
+    relevanceCondition: (p) => p.isHomeowner || p.hasRentalIncome,
+    computePersonalImpact: () => ({
+      estimatedGain: 0,
+      riskIfNoAction: 150,
+      patrimonialEffect10y: 0,
+      explanation: `Tu dois indiquer qui occupe chacun de tes biens. Non-déclaration = 150 € d'amende par local.`,
+    }),
+    actions: [
+      { id: 'external', label: 'Déclarer sur impots.gouv', icon: 'ExternalLink', type: 'external', target: 'https://www.impots.gouv.fr/biens-immobiliers' },
+    ],
+    tags: ['propriétaire', 'obligatoire', 'annuel'],
+  },
+
+  // ===== ENFANTS / FAMILLE =====
+  {
+    key: `allocation-rentree-scolaire-${currentYear}`,
+    title: 'Allocation de rentrée scolaire (ARS)',
+    shortDescription: 'Vérifie ton éligibilité à l\'ARS pour tes enfants',
+    explanation: `L'ARS est versée mi-août par la CAF aux familles ayant des enfants de 6 à 18 ans scolarisés. Le montant varie de 398 € à 434 € par enfant selon l'âge (2025). Sous conditions de ressources.`,
+    consequences: `Non-demande = perte de 398 à 434 € par enfant. L'aide n'est pas rétroactive.`,
+    category: 'administratif',
+    date: new Date(currentYear, 6, 15),
+    impactScore: 4,
+    estimatedImpact: 400,
+    relevanceCondition: (p) => p.childrenCount > 0,
+    computePersonalImpact: (p) => {
+      const gain = p.childrenCount * 416;
+      return {
+        estimatedGain: gain,
+        riskIfNoAction: gain,
+        patrimonialEffect10y: gain * 10,
+        explanation: `Avec ${p.childrenCount} enfant(s), tu peux recevoir jusqu'à ${gain} € pour la rentrée scolaire.`,
+      };
+    },
+    actions: [
+      { id: 'external', label: 'Vérifier sur caf.fr', icon: 'ExternalLink', type: 'external', target: 'https://www.caf.fr/allocataires/droits-et-prestations/s-informer-sur-les-aides/enfance-et-jeunesse/l-allocation-de-rentree-scolaire-ars' },
+    ],
+    tags: ['famille', 'annuel', 'aide'],
+  },
+  {
+    key: `declaration-garde-enfant-${currentYear}`,
+    title: 'Crédit d\'impôt frais de garde',
+    shortDescription: 'Déclare les frais de garde pour récupérer 50% en crédit d\'impôt',
+    explanation: `Si tu fais garder tes enfants de moins de 6 ans (crèche, nounou, centre de loisirs), tu bénéficies d'un crédit d'impôt de 50% des dépenses, plafonné à 3 500 € par enfant (soit 1 750 € de crédit max).`,
+    consequences: `Oubli de déclaration = perte de 1 750 € de crédit d'impôt par enfant de moins de 6 ans.`,
+    category: 'fiscalite',
+    date: new Date(currentYear, 4, 22),
+    impactScore: 5,
+    estimatedImpact: 1750,
+    relevanceCondition: (p) => p.childrenCount > 0,
+    computePersonalImpact: (p) => {
+      const credit = p.childrenCount * 1750;
+      return {
+        estimatedGain: credit,
+        riskIfNoAction: credit,
+        patrimonialEffect10y: credit * 6,
+        explanation: `Avec ${p.childrenCount} enfant(s), tu peux récupérer jusqu'à ${credit} € de crédit d'impôt pour frais de garde.`,
+      };
+    },
+    actions: [
+      { id: 'scan', label: 'Scanner ma déclaration', icon: 'Search', type: 'guide', target: '/scanner' },
+    ],
+    tags: ['famille', 'crédit impôt', 'annuel'],
+  },
+  {
+    key: `allocations-familiales-${currentYear}`,
+    title: 'Allocations familiales — mise à jour',
+    shortDescription: 'Mets à jour ta situation familiale sur caf.fr',
+    explanation: `Les allocations familiales sont versées dès le 2ème enfant. Tu dois déclarer chaque changement de situation (naissance, déménagement, changement de revenus) pour ne pas perdre tes droits. La CAF effectue un recalcul en janvier.`,
+    consequences: `Trop-perçus à rembourser ou droits non versés en cas de situation non actualisée.`,
+    category: 'administratif',
+    date: new Date(currentYear, 0, 15),
+    impactScore: 3,
+    estimatedImpact: 0,
+    relevanceCondition: (p) => p.childrenCount >= 2,
+    computePersonalImpact: (p) => {
+      const monthlyAF = p.childrenCount === 2 ? 141 : p.childrenCount === 3 ? 322 : p.childrenCount >= 4 ? 503 : 0;
+      return {
+        estimatedGain: monthlyAF * 12,
+        riskIfNoAction: monthlyAF * 3,
+        patrimonialEffect10y: 0,
+        explanation: `Tes allocations familiales estimées : ~${monthlyAF} €/mois. Vérifie que ta situation est à jour.`,
+      };
+    },
+    actions: [
+      { id: 'external', label: 'Mettre à jour sur caf.fr', icon: 'ExternalLink', type: 'external', target: 'https://www.caf.fr/' },
+    ],
+    tags: ['famille', 'mensuel'],
+  },
+  {
+    key: `prime-naissance-${currentYear}`,
+    title: 'Prime à la naissance / adoption',
+    shortDescription: 'Demande la prime de naissance (1 003,95 €) avant le 7ème mois',
+    explanation: `La prime à la naissance est versée au 7ème mois de grossesse (1 003,95 € en 2025). Pour l'adoption, elle est de 2 007,90 €. La demande doit être faite avant la fin du 6ème mois de grossesse via la CAF.`,
+    consequences: `Si la déclaration de grossesse n'est pas faite à temps, le versement peut être retardé ou perdu.`,
+    category: 'administratif',
+    date: new Date(currentYear, 5, 1),
+    impactScore: 4,
+    estimatedImpact: 1004,
+    relevanceCondition: (p) => p.childrenCount > 0 && p.familyStatus !== 'single',
+    computePersonalImpact: () => ({
+      estimatedGain: 1004,
+      riskIfNoAction: 1004,
+      patrimonialEffect10y: 0,
+      explanation: `Si tu attends un enfant, pense à déclarer ta grossesse avant le 6ème mois pour recevoir la prime de 1 003,95 €.`,
+    }),
+    actions: [
+      { id: 'external', label: 'Demander sur caf.fr', icon: 'ExternalLink', type: 'external', target: 'https://www.caf.fr/' },
+    ],
+    tags: ['famille', 'naissance', 'aide'],
+  },
+
+  // ===== COUPLE / MARIAGE / PACS =====
+  {
+    key: `declaration-commune-${currentYear}`,
+    title: 'Déclaration commune (couple marié/pacsé)',
+    shortDescription: 'Optimise ta déclaration en couple pour réduire ton impôt',
+    explanation: `Si tu es marié(e) ou pacsé(e), la déclaration commune peut réduire ton impôt grâce au quotient conjugal (2 parts au lieu d'une). L'avantage est maximal quand les revenus sont déséquilibrés dans le couple.`,
+    consequences: `Déclaration séparée quand la commune est plus avantageuse = surcoût fiscal potentiel de plusieurs centaines à milliers d'euros.`,
+    category: 'fiscalite',
+    date: new Date(currentYear, 4, 22),
+    impactScore: 4,
+    estimatedImpact: 1500,
+    relevanceCondition: (p) => ['married', 'pacs'].includes(p.familyStatus),
+    computePersonalImpact: (p) => {
+      const totalIncome = (p.netMonthlySalary + p.spouseIncome) * 12;
+      const diff = Math.abs(p.netMonthlySalary - p.spouseIncome) * 12;
+      const gain = Math.round(diff * 0.05);
+      return {
+        estimatedGain: gain,
+        riskIfNoAction: 0,
+        patrimonialEffect10y: gain * 10,
+        explanation: totalIncome > 0 
+          ? `L'écart de revenus dans ton couple (${diff.toLocaleString('fr-FR')} €/an) peut générer une économie de ~${gain} € via la déclaration commune.`
+          : `La déclaration commune permet de bénéficier du quotient conjugal.`,
+      };
+    },
+    actions: [
+      { id: 'optimize', label: 'Simuler l\'avantage', icon: 'Calculator', type: 'simulation', target: '/simulator' },
+    ],
+    tags: ['couple', 'annuel', 'optimisation'],
+  },
+
+  // ===== RETRAITE =====
+  {
+    key: `verification-releve-carriere-${currentYear}`,
+    title: 'Vérification relevé de carrière',
+    shortDescription: 'Vérifie tes trimestres validés sur info-retraite.fr',
+    explanation: `Des trimestres manquants ou mal enregistrés peuvent réduire ta pension de retraite. Plus tu vérifies tôt, plus c'est facile à corriger. Un trimestre manquant peut coûter jusqu'à 1,25% de pension en moins.`,
+    consequences: `Pension de retraite diminuée définitivement. Les corrections sont plus difficiles après la liquidation.`,
+    category: 'administratif',
+    date: new Date(currentYear, 2, 31),
+    impactScore: 4,
+    estimatedImpact: 2000,
+    relevanceCondition: (p) => p.isRetired || (p.isEmployee && estimateTMI(p) >= 30),
+    computePersonalImpact: () => ({
+      estimatedGain: 2000,
+      riskIfNoAction: 5000,
+      patrimonialEffect10y: 20000,
+      explanation: `Chaque trimestre manquant peut réduire ta pension. Vérifie ton relevé de carrière chaque année.`,
+    }),
+    actions: [
+      { id: 'external', label: 'Consulter info-retraite.fr', icon: 'ExternalLink', type: 'external', target: 'https://www.info-retraite.fr/' },
+    ],
+    tags: ['retraite', 'annuel'],
+  },
+
+  // ===== OPTIMISATIONS PROACTIVES =====
+  {
+    key: `cheque-energie-${currentYear}`,
+    title: 'Chèque énergie',
+    shortDescription: 'Vérifie si tu es éligible au chèque énergie (48 à 277 €)',
+    explanation: `Le chèque énergie est envoyé automatiquement aux foyers éligibles (sous conditions de revenus). Il peut être utilisé pour payer les factures d'énergie ou financer des travaux de rénovation. Si tu ne l'as pas reçu, tu peux vérifier ton éligibilité.`,
+    consequences: `Aide non réclamée = perte de 48 à 277 € par an.`,
+    category: 'administratif',
+    date: new Date(currentYear, 3, 30),
+    impactScore: 3,
+    estimatedImpact: 150,
+    relevanceCondition: (p) => {
+      const annualIncome = p.netMonthlySalary * 12 || p.annualRevenueHt * 0.66;
+      return annualIncome < 11000 || (annualIncome < 17400 && p.childrenCount > 0);
+    },
+    computePersonalImpact: () => ({
+      estimatedGain: 150,
+      riskIfNoAction: 150,
+      patrimonialEffect10y: 1500,
+      explanation: `Tu es potentiellement éligible au chèque énergie. Vérifie sur chequeenergie.gouv.fr.`,
+    }),
+    actions: [
+      { id: 'external', label: 'Vérifier l\'éligibilité', icon: 'ExternalLink', type: 'external', target: 'https://chequeenergie.gouv.fr/' },
+    ],
+    tags: ['aide', 'annuel'],
+  },
+  {
+    key: `maprimerennov-${currentYear}`,
+    title: 'MaPrimeRénov\'',
+    shortDescription: 'Aide pour les travaux de rénovation énergétique',
+    explanation: `MaPrimeRénov' finance les travaux de rénovation énergétique (isolation, chauffage, ventilation). Le montant dépend de tes revenus et du type de travaux. Jusqu'à 20 000 € d'aide possible.`,
+    consequences: `Travaux plus chers si non financés par l'aide. DPE bas = moins-value immobilière.`,
+    category: 'immobilier',
+    date: new Date(currentYear, 2, 31),
+    impactScore: 4,
+    estimatedImpact: 5000,
+    relevanceCondition: (p) => p.isHomeowner,
+    computePersonalImpact: () => ({
+      estimatedGain: 5000,
+      riskIfNoAction: 0,
+      patrimonialEffect10y: 15000,
+      explanation: `En tant que propriétaire, tu peux bénéficier de MaPrimeRénov' pour tes travaux de rénovation énergétique (jusqu'à 20 000 €).`,
+    }),
+    actions: [
+      { id: 'external', label: 'Simuler sur maprimerenov.gouv.fr', icon: 'ExternalLink', type: 'external', target: 'https://www.maprimerenov.gouv.fr/' },
+    ],
+    tags: ['propriétaire', 'aide', 'rénovation'],
+  },
+  {
+    key: `prime-activite-${currentYear}`,
+    title: 'Prime d\'activité',
+    shortDescription: 'Complément de revenus pour les travailleurs modestes',
+    explanation: `La prime d'activité est versée par la CAF aux salariés, indépendants ou étudiants salariés gagnant plus de 1 047 € net/mois. Le montant dépend de la composition du foyer et des revenus. Elle se demande tous les 3 mois.`,
+    consequences: `En moyenne 180 €/mois non réclamés. L'aide n'est pas rétroactive au-delà de 3 mois.`,
+    category: 'administratif',
+    date: new Date(currentYear, 0, 5),
+    impactScore: 5,
+    estimatedImpact: 2160,
+    relevanceCondition: (p) => {
+      const monthlyIncome = p.netMonthlySalary || p.annualRevenueHt / 12 * 0.66;
+      return monthlyIncome > 1047 && monthlyIncome < 1900;
+    },
+    computePersonalImpact: (p) => {
+      const monthlyIncome = p.netMonthlySalary || p.annualRevenueHt / 12 * 0.66;
+      const estimatedPrime = Math.max(0, Math.round((1900 - monthlyIncome) * 0.5));
+      return {
+        estimatedGain: estimatedPrime * 12,
+        riskIfNoAction: estimatedPrime * 3,
+        patrimonialEffect10y: estimatedPrime * 120,
+        explanation: `Avec tes revenus, tu pourrais recevoir ~${estimatedPrime} €/mois de prime d'activité. Pense à renouveler la demande tous les 3 mois.`,
+      };
+    },
+    actions: [
+      { id: 'external', label: 'Demander sur caf.fr', icon: 'ExternalLink', type: 'external', target: 'https://www.caf.fr/allocataires/droits-et-prestations/s-informer-sur-les-aides/solidarite-et-insertion/la-prime-d-activite' },
+    ],
+    tags: ['aide', 'trimestriel'],
+  },
+  {
+    key: `declaration-revenus-locatifs-${currentYear}`,
+    title: 'Déclaration revenus locatifs (2044)',
+    shortDescription: 'Déclare tes revenus fonciers et déduis tes charges',
+    explanation: `Si tu perçois des revenus locatifs, tu dois les déclarer via le formulaire 2044 (régime réel) ou directement sur la 2042 (micro-foncier < 15 000 €/an). Le régime réel permet de déduire travaux, intérêts d'emprunt, assurances.`,
+    consequences: `Non-déclaration = redressement fiscal avec majoration. En régime réel, les charges non déduites = impôt payé en trop.`,
+    category: 'fiscalite',
+    date: new Date(currentYear, 4, 22),
+    impactScore: 5,
+    estimatedImpact: 2000,
+    relevanceCondition: (p) => p.hasRentalIncome,
+    computePersonalImpact: (p) => {
+      const tmi = estimateTMI(p);
+      const deductible = p.mortgageRemaining > 0 ? 3000 : 1000;
+      const gain = Math.round(deductible * tmi / 100);
+      return {
+        estimatedGain: gain,
+        riskIfNoAction: Math.round(deductible * tmi / 100 * 0.1),
+        patrimonialEffect10y: gain * 10,
+        explanation: `En déclarant correctement tes revenus locatifs et charges déductibles, tu peux économiser ~${gain} €/an.`,
+      };
+    },
+    actions: [
+      { id: 'scan', label: 'Scanner ma déclaration', icon: 'Search', type: 'guide', target: '/scanner' },
+      { id: 'simulate', label: 'Simuler l\'impact', icon: 'Calculator', type: 'simulation', target: '/simulator' },
+    ],
+    tags: ['locatif', 'obligatoire', 'annuel'],
+  },
+  {
+    key: `dons-deduction-${currentYear}`,
+    title: 'Déduction dons et mécénat',
+    shortDescription: 'Déclare tes dons pour bénéficier de 66% à 75% de réduction',
+    explanation: `Les dons aux associations reconnues d'utilité publique ouvrent droit à une réduction d'impôt de 66% (dans la limite de 20% du revenu imposable). Pour les associations d'aide aux personnes en difficulté, c'est 75% jusqu'à 1 000 €.`,
+    consequences: `Ne pas déclarer tes dons = perdre 66 à 75% de leur valeur en réduction d'impôt.`,
+    category: 'fiscalite',
+    date: new Date(currentYear, 4, 22),
+    impactScore: 3,
+    estimatedImpact: 500,
+    relevanceCondition: () => true,
+    computePersonalImpact: () => ({
+      estimatedGain: 500,
+      riskIfNoAction: 0,
+      patrimonialEffect10y: 5000,
+      explanation: `Si tu as fait des dons cette année, pense à les déclarer pour récupérer 66 à 75% en réduction d'impôt.`,
+    }),
+    actions: [
+      { id: 'scan', label: 'Vérifier ma déclaration', icon: 'Search', type: 'guide', target: '/scanner' },
+    ],
+    tags: ['déduction', 'annuel'],
+  },
 ];
