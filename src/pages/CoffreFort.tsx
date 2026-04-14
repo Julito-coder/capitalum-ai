@@ -226,7 +226,7 @@ const CoffreFortPage = () => {
                       </p>
                     </div>
                     {isAnalyzed ? (
-                      <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                      <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
                     ) : (
                       <button
                         onClick={() => handleAnalyzeExisting(file.name)}
