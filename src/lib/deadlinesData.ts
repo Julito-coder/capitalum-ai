@@ -67,7 +67,7 @@ export const FISCAL_DEADLINES: FiscalDeadline[] = [
     date: new Date(currentYear, 9, 15), // 15 octobre
     impactScore: 3,
     estimatedImpact: 0,
-    relevanceCondition: (p) => p.hasRentalIncome || p.isInvestor,
+    relevanceCondition: (p) => p.isHomeowner || p.hasRentalIncome || p.isInvestor,
     computePersonalImpact: () => ({
       ...defaultImpact(),
       explanation: `Pense à vérifier le montant et à mensualiser si nécessaire pour lisser ta trésorerie.`,
