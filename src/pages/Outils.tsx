@@ -1,6 +1,6 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, ScanSearch, Building2, PiggyBank, FolderLock } from 'lucide-react';
+import { Calendar, ScanSearch, Building2, PiggyBank, FolderLock, HandCoins } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const tools = [
@@ -38,6 +38,13 @@ const tools = [
     title: 'Coffre-fort',
     description: 'Tes documents fiscaux en sécurité',
     color: 'bg-secondary/10 text-secondary',
+  },
+  {
+    path: '/outils/aides',
+    icon: HandCoins,
+    title: 'Détecteur d\'aides',
+    description: 'Découvre les aides auxquelles tu as droit',
+    color: 'bg-success/10 text-success',
   },
 ];
 
