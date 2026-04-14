@@ -42,6 +42,7 @@ export function toDeadlineProfile(p: UserProfile): DeadlineUserProfile {
     percoAmount: p.percoAmount,
     spouseIncome: p.spouseIncome,
     mortgageRemaining: p.mortgageRemaining,
+    isStudent: p.fiscalStatus === 'student' || p.fiscalStatus === 'étudiant',
   };
 }
 

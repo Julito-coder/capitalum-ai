@@ -88,6 +88,7 @@ export interface DeadlineUserProfile {
   percoAmount: number;
   spouseIncome: number;
   mortgageRemaining: number;
+  isStudent: boolean;
 }
 
 export interface UserDeadlineTracking {
