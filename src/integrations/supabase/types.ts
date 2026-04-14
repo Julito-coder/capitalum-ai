@@ -1501,6 +1501,60 @@ export type Database = {
         }
         Relationships: []
       }
+      user_recurring_deadlines: {
+        Row: {
+          amount: number | null
+          category: string
+          contract_ref: string | null
+          created_at: string
+          frequency: string
+          id: string
+          is_active: boolean
+          next_date: string
+          notes: string | null
+          provider: string | null
+          source: string
+          source_document_path: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          category?: string
+          contract_ref?: string | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          next_date: string
+          notes?: string | null
+          provider?: string | null
+          source?: string
+          source_document_path?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          category?: string
+          contract_ref?: string | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          next_date?: string
+          notes?: string | null
+          provider?: string | null
+          source?: string
+          source_document_path?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       zone_data: {
         Row: {
           charges_estimate: number | null
