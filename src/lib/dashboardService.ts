@@ -6,6 +6,7 @@ export interface UserProfile {
   isSelfEmployed: boolean;
   isRetired: boolean;
   isInvestor: boolean;
+  isHomeowner: boolean;
   onboardingCompleted: boolean;
   // Employee
   grossMonthlySalary: number;
@@ -97,6 +98,7 @@ export const loadUserProfile = async (userId: string): Promise<UserProfile | nul
     isSelfEmployed: d.is_self_employed || false,
     isRetired: d.is_retired || false,
     isInvestor: d.is_investor || false,
+    isHomeowner: d.is_homeowner || false,
     onboardingCompleted: d.onboarding_completed || false,
     grossMonthlySalary: d.gross_monthly_salary || 0,
     netMonthlySalary: d.net_monthly_salary || 0,

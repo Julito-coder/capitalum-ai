@@ -68,6 +68,7 @@ export interface DeadlineUserProfile {
   isSelfEmployed: boolean;
   isRetired: boolean;
   isInvestor: boolean;
+  isHomeowner: boolean;
   hasRentalIncome: boolean;
   hasCrypto: boolean;
   grossMonthlySalary: number;
@@ -85,6 +86,8 @@ export interface DeadlineUserProfile {
   hasRealExpenses: boolean;
   peeAmount: number;
   percoAmount: number;
+  spouseIncome: number;
+  mortgageRemaining: number;
 }
 
 export interface UserDeadlineTracking {

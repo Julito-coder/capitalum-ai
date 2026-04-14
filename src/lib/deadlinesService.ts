@@ -22,6 +22,7 @@ export function toDeadlineProfile(p: UserProfile): DeadlineUserProfile {
     isSelfEmployed: p.isSelfEmployed,
     isRetired: p.isRetired,
     isInvestor: p.isInvestor,
+    isHomeowner: p.isHomeowner,
     hasRentalIncome: p.rentalPropertiesCount > 0,
     hasCrypto: p.cryptoPnl2025 !== 0,
     grossMonthlySalary: p.grossMonthlySalary,
@@ -34,11 +35,13 @@ export function toDeadlineProfile(p: UserProfile): DeadlineUserProfile {
     scpiInvestments: p.scpiInvestments,
     childrenCount: p.childrenCount,
     familyStatus: p.familyStatus,
-    fiscalStatus: '',
+    fiscalStatus: p.fiscalStatus,
     tmi: 0,
     hasRealExpenses: p.hasRealExpenses,
     peeAmount: p.peeAmount,
     percoAmount: p.percoAmount,
+    spouseIncome: p.spouseIncome,
+    mortgageRemaining: p.mortgageRemaining,
   };
 }
 
