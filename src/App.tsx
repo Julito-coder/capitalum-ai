@@ -19,6 +19,7 @@ import NewSimulation from "./pages/simulator/NewSimulation";
 import SimulationDetails from "./pages/simulator/SimulationDetails";
 import CompareSimulations from "./pages/simulator/CompareSimulations";
 import SavingsSimulator from "./pages/SavingsSimulator";
+import AidesDetector from "./pages/AidesDetector";
 import FiscalProfile from "./pages/FiscalProfile";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/outils/simulateur/compare" element={<ProtectedRoute><CompareSimulations /></ProtectedRoute>} />
             <Route path="/outils/simulateur/:id" element={<ProtectedRoute><SimulationDetails /></ProtectedRoute>} />
             <Route path="/outils/epargne" element={<ProtectedRoute><SavingsSimulator /></ProtectedRoute>} />
+            <Route path="/outils/aides" element={<ProtectedRoute><AidesDetector /></ProtectedRoute>} />
             <Route path="/outils/coffre" element={<ProtectedRoute><CoffreFortPage /></ProtectedRoute>} />
             <Route path="/profil" element={<ProtectedRoute><ProfilPage /></ProtectedRoute>} />
             <Route path="/profil/fiscal" element={<ProtectedRoute><FiscalProfile /></ProtectedRoute>} />
