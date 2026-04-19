@@ -7,6 +7,8 @@ export type RichViewType =
   | 'real_estate_cashflow'
   | 'deadlines_list'
   | 'recommendations_list'
+  | 'aids_eligibility'
+  | 'fiscal_concept'
   | null;
 
 export interface RichView {
