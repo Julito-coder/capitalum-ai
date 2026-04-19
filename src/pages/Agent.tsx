@@ -122,7 +122,42 @@ const AgentPage = () => {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { messages, isLoading, remainingToday, sendMessage, startNewConversation, confirmProfileUpdates } = useElioAgent();
+  const { messages, isLoading, remainingToday, sendMessage, startNewConversation, confirmProfileUpdates, loadExistingConversation } = useElioAgent();
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const refreshConversations = async () => {
+    if (!user) return;
+    setHistoryLoading(true);
+    const list = await listConversations(user.id);
+    setConversations(list);
+    setHistoryLoading(false);
+  };
+
+  const openHistory = async () => {
+    setHistoryOpen(true);
+    await refreshConversations();
+  };
+
+  const handleOpenConversation = async (id: string) => {
+    const detail = await loadConversation(id);
+    if (detail) {
+      loadExistingConversation(detail.id, detail.messages);
+      setHistoryOpen(false);
+    }
+  };
+
+  const handleTogglePin = async (id: string, currentlyPinned: boolean) => {
+    await togglePin(id, !currentlyPinned);
+    await refreshConversations();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Supprimer cette conversation ?')) return;
+    await deleteConversation(id);
+    await refreshConversations();
+  };
 
   useEffect(() => {
     if (!user) return;
