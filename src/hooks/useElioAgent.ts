@@ -223,6 +223,10 @@ export const useElioAgent = () => {
     sendMessage,
     confirmProfileUpdates,
     startNewConversation,
+    loadExistingConversation,
+    notifyProfileUpdated,
+  };
+};
     notifyProfileUpdated,
   };
 };
