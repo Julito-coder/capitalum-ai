@@ -86,9 +86,12 @@ export type Database = {
           id: string
           is_pinned: boolean
           messages: Json
+          model_used: string | null
           summary: string | null
           tags: string[] | null
+          tool_calls: Json | null
           topic: string | null
+          total_tokens: number | null
           updated_at: string
           user_id: string
         }
@@ -98,9 +101,12 @@ export type Database = {
           id?: string
           is_pinned?: boolean
           messages?: Json
+          model_used?: string | null
           summary?: string | null
           tags?: string[] | null
+          tool_calls?: Json | null
           topic?: string | null
+          total_tokens?: number | null
           updated_at?: string
           user_id: string
         }
@@ -110,9 +116,12 @@ export type Database = {
           id?: string
           is_pinned?: boolean
           messages?: Json
+          model_used?: string | null
           summary?: string | null
           tags?: string[] | null
+          tool_calls?: Json | null
           topic?: string | null
+          total_tokens?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -332,6 +341,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      elio_agent_usage: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          last_message_at: string | null
+          messages_count: number
+          tokens_used: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          last_message_at?: string | null
+          messages_count?: number
+          tokens_used?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          last_message_at?: string | null
+          messages_count?: number
+          tokens_used?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       financing_data: {
         Row: {
