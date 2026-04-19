@@ -111,9 +111,3 @@ const OutilsPage = () => {
 };
 
 export default OutilsPage;
-      </div>
-    </AppLayout>
-  );
-};
-
-export default OutilsPage;
