@@ -1,72 +1,58 @@
 
+## Plan : Hub Simulateurs de vie enrichi + lien vers Simulateur Immo
 
-# Plan : F5 — Hub Simulateurs de vie (PACS, Freelance, Immo)
+### Contexte
+- Le hub `/simulateurs` existe déjà avec 3 cards : PACS, Freelance, Immobilier (déjà lié à `/simulator`).
+- Le simulateur immo (15k+ lignes, route `/simulator`) est fonctionnel mais peu mis en avant.
+- L'utilisateur demande d'élargir l'inventaire des événements de vie couverts dans le hub, sans recoder les moteurs existants.
 
-## Contexte
+### Approche : pas de nouveaux moteurs, on enrichit le hub
 
-Le simulateur immobilier (`/simulator`) et le simulateur d'épargne (`/savings-simulator`) existent déjà avec des moteurs matures (`simulationEngine.ts` 643L, `statusCalculations.ts` 436L). Il manque :
-1. Un **hub unifié** `/simulateurs` qui regroupe les simulateurs de vie
-2. Un simulateur **PACS/Mariage** (n'existe pas)
-3. Un simulateur **Passage freelance** (le moteur `statusCalculations.ts` existe mais aucune UI dédiée — uniquement `Simulator.tsx` qui est un mini-comparateur d'optimisation)
+Je ne vais PAS coder 50 nouveaux simulateurs (hors scope V1, casse la règle "max 3 changements"). Je vais :
 
-V1 = ces 3 simulateurs. Reste du backlog (succession, expatriation, retraite…) → V2.
+1. **Restructurer `/simulateurs`** en 5 catégories visuelles claires (Famille, Pro, Immo, Épargne, Retraite) avec sous-cards
+2. **Mettre en avant le simulateur immo existant** comme card hero (premier bloc, badge "Complet")
+3. **Marquer chaque sous-thème** : `Disponible` (lien direct), `Via Élio Agent` (ouvre `/agent` avec prompt pré-rempli), `Bientôt`
 
-## Architecture
+### Changements (3 max)
 
-```text
-/simulateurs                    → Hub avec 3 cards
-  ├─ /simulateurs/pacs          → PACS / Mariage (nouveau)
-  ├─ /simulateurs/freelance     → CDI vs Freelance (nouveau, consomme statusCalculations)
-  └─ /simulator                 → Immobilier (existant, juste relié)
+**1. `src/pages/Simulateurs.tsx` — refonte du hub**
+- Section "Hero" : card immo plein largeur avec CTA "Lancer le simulateur" → `/simulator`
+- 5 sections accordéons/grilles :
+  - **Famille & Couple** : PACS/Mariage (✓ dispo), Naissance/QF, Garde alternée, Pension, Donation → tous via Agent
+  - **Vie professionnelle** : Freelance (✓ dispo), Dividendes vs salaire, Rupture conv., Stock-options → via Agent
+  - **Immobilier** : RP vs location, Locatif nu/meublé, SCI, Travaux/déficit foncier → tous routent vers `/simulator`
+  - **Épargne** : PER, AV, PEA, SCPI, Crypto 2086 (✓ scanner) → via Agent ou outils dédiés
+  - **Retraite** : Rachat trimestres, Départ optimal, Sortie PER → via Agent
+- Chaque sous-item = bouton compact qui soit navigue vers une route existante, soit ouvre `/agent` avec `state.initialPrompt`
+
+**2. `src/pages/Outils.tsx` — réactiver/mettre en avant le simulateur immo**
+- Vérifier que la card "Simulateur immobilier" pointe bien vers `/simulator` et est visible
+- Ajouter un badge "Outil complet" pour le différencier
+
+**3. Vérifier le routing dans `src/App.tsx`**
+- Confirmer que `/simulator` (immo) est bien actif et protégé
+- S'assurer que `/simulateurs` (hub) coexiste sans conflit
+
+### Pattern technique pour les sous-items "via Agent"
+
+```tsx
+<button onClick={() => navigate('/agent', { 
+  state: { initialPrompt: "Explique-moi l'impact fiscal d'un PACS dans ma situation" }
+})}>
+  PACS / Mariage
+</button>
 ```
 
-## Fichiers à créer / modifier
+Le hook `useElioAgent` consomme déjà `location.state.initialPrompt` (mis en place au prompt précédent).
 
-### 1. Moteur PACS — `src/lib/pacsCalculations.ts` (nouveau)
-Fonctions pures :
-- `calculateIR(income, parts)` — barème 2025 progressif
-- `calculateParts(status, children, parentIsole)` — quotient familial
-- `applyDecote(ir, status)` — décote 2025
-- `applyQFCeiling(irBefore, irAfter, parts)` — plafonnement QF
-- `compareSeparateVsJoint(input)` → `{ separateIR, jointIR, savings, recommendation }`
+### Design
+- Sora, palette stricte (#1B3A5C, #C8943E, #F8F5F0)
+- Cards `rounded-xl border border-[#E5E7EB]`, mobile-first 1 colonne → md:2 cols → lg:3 cols
+- Badges : `Disponible` (vert sauge #4B8264), `Via Élio` (doré #C8943E), `Bientôt` (gris)
+- Disclaimer en bas
 
-Inputs : `revenuA`, `revenuB`, `enfants`, `parentIsoleAvant`, `pensionVersee`, `pensionRecue`.
-
-### 2. Page PACS — `src/pages/simulators/PacsSimulator.tsx` (nouveau)
-Form mobile-first 1 colonne :
-- 2 sliders revenus (A et B), nombre enfants, toggle parent isolé, pensions
-- Card résultat : IR séparé / IR commun / **économie en €** (gros chiffre vert)
-- Recommandation textuelle ("Le PACS te ferait gagner 1 240€/an")
-- Note année N (option déclaration séparée la 1re année)
-- Disclaimer
-
-### 3. Page Freelance — `src/pages/simulators/FreelanceSimulator.tsx` (nouveau)
-Consomme `calculateAllStatuses` existant. UI :
-- Inputs : CA prévisionnel, type activité (BIC vente/service/BNC), charges, TMI, ACRE, situation famille
-- Toggle "Comparer avec mon CDI actuel" → input salaire brut → calcul net après IR via barème
-- Tableau comparatif : **CDI / Micro / EURL-IR / SASU** avec net après impôts, charges sociales, points forts/faibles
-- Alerte coûts cachés (comptable, CFE, RC pro, perte ARE)
-- CTA "Voir le détail" par statut → expand card
-
-### 4. Hub — `src/pages/Simulateurs.tsx` (nouveau)
-3 cards (PACS, Freelance, Immo) avec icône, baseline, gain potentiel type, CTA.
-
-### 5. Routing & nav
-- `src/App.tsx` : ajouter `/simulateurs`, `/simulateurs/pacs`, `/simulateurs/freelance`
-- `src/pages/Outils.tsx` : remplacer la card "Simulateur immobilier" par une card unique "Simulateurs de vie" → `/simulateurs`
-
-## Détails techniques
-
-- **Réutilisation** : `calculateAllStatuses` (statusCalculations.ts), `formatCurrency` (mockData)
-- **Barème IR 2025** : tranches 0 / 11 294 / 28 797 / 82 341 / 177 106 (déjà dans `coachService` et `statusCalculations`, on extrait dans `pacsCalculations`)
-- **Pas de DB** : simulateurs stateless, pas de persistance V1 (résultats live)
-- **Design system strict** : Sora, couleurs Élio, cards radius 12, p-4
-- **Mobile-first** : sliders tactiles, résultat sticky en bas sur mobile
-- **Disclaimer** obligatoire en bas de chaque page
-- **Tutoiement** systématique
-- **Vocabulaire grand public** : "ta tranche d'imposition" pas "TMI", "tes cotisations" pas "charges TNS"
-
-## Hors scope (V2)
-
-Succession/donation, expatriation, retraite/rachat trimestres, stock-options/BSPCE, démembrement, dispositifs Pinel/Malraux. Le simulateur immo n'est PAS modifié — juste relié au hub.
-
+### Hors scope
+- Pas de nouveaux moteurs de calcul (succession, donation, expatriation, stock-options... → V2)
+- Pas de modification du simulateur immo existant
+- Pas de nouvelle table DB
