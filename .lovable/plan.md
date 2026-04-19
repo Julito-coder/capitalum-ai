@@ -1,88 +1,91 @@
 
 
-# Plan : Detecteur d'aides non reclamees — Vue Kanban
+# Plan : Coach fiscal — Feed proactif de recommandations (F11)
 
 ## Objectif
 
-Creer une page dediee `/outils/aides` qui affiche toutes les aides sociales et fiscales francaises sous forme de **tableau Kanban** avec 3 colonnes : "Eligible", "A verifier", "Non concerne". Les aides sont filtrees automatiquement en fonction du profil fiscal de l'utilisateur. Chaque carte d'aide affiche le montant estimable, les conditions d'eligibilite, et un CTA pour demarrer les demarches.
+Creer une page `/coach` (et un onglet/section dans Home) qui affiche un **feed vertical de recommandations fiscales personnalisees**, chacune avec un gain estime en euros, un effort, une deadline, et un CTA vers une action concrete. Persistance du statut (acceptee, ignoree, faite) en DB pour mesurer la valeur recuperee dans le temps — c'est le hook qui justifie le premium ("Elio m'a fait gagner 800€/an").
 
 ## Architecture
 
 ```text
-┌─────────────────────────────────────────────────────┐
-│  Detecteur d'aides        [Profil incomplet? Banner]│
-├──────────────┬──────────────┬───────────────────────┤
-│  Eligible    │  A verifier  │  Non concerne         │
-│  (vert)      │  (orange)    │  (gris, collapsed)    │
-├──────────────┼──────────────┼───────────────────────┤
-│ ┌──────────┐ │ ┌──────────┐ │ ┌──────────┐          │
-│ │ APL      │ │ │ CSS      │ │ │ RSA      │          │
-│ │ ~3600€/an│ │ │ Verifier │ │ │ Non elig.│          │
-│ │ [Faire]  │ │ │ [Profil] │ │ └──────────┘          │
-│ └──────────┘ │ └──────────┘ │                       │
-└──────────────┴──────────────┴───────────────────────┘
+┌─────────────────────────────────────────┐
+│ Coach fiscal                            │
+│ "Elio te fait gagner 1 240€/an"         │← compteur viral
+├─────────────────────────────────────────┤
+│ [Tab: A faire] [Faites] [Ignorees]      │
+├─────────────────────────────────────────┤
+│ ┌─────────────────────────────────────┐ │
+│ │ 🔥 PER avant 31/12  +420€/an        │ │
+│ │ Verse 2 000€ avant fin d'annee...   │ │
+│ │ [Voir le guide] [Plus tard] [✕]     │ │
+│ └─────────────────────────────────────┘ │
+│ ┌─────────────────────────────────────┐ │
+│ │ 💼 Frais reels  +180€/an            │ │
+│ │ ...                                 │ │
+│ └─────────────────────────────────────┘ │
+└─────────────────────────────────────────┘
 ```
 
 ## Fichiers a creer/modifier
 
-### 1. `src/lib/aidesData.ts` — Catalogue des aides
-Liste exhaustive des aides nationales avec pour chaque aide :
-- `key`, `title`, `description`, `category` (logement, famille, emploi, sante, energie, education, investissement)
-- `estimateAmount(profile)` — calcul du montant estime
-- `eligibilityCheck(profile)` — retourne `'eligible' | 'to_verify' | 'not_eligible'`
-- `conditions` — texte lisible des criteres
-- `applicationUrl` — lien officiel (caf.fr, ameli.fr, etc.)
-- `applicationSteps` — etapes pour s'inscrire
+### 1. Migration DB — `user_recommendations`
+Nouvelle table pour persister le statut de chaque reco par utilisateur :
+- `id`, `user_id`, `recommendation_key` (string stable, ex: `pee-perco`)
+- `status` : `pending | accepted | dismissed | completed`
+- `estimated_gain` (numeric), `accepted_at`, `completed_at`, `dismissed_reason`
+- RLS : user owns rows. Realtime active.
 
-Aides codees (basees sur le diagnosticEngine existant + extensions) :
-- **Logement** : APL, aide demenagement
-- **Famille** : Allocations familiales, ARS, CMG (garde enfants), prime naissance
-- **Emploi** : Prime d'activite, RSA, aide retour emploi
-- **Sante** : CSS (Complementaire sante solidaire)
-- **Energie** : Cheque energie, MaPrimeRenov'
-- **Education** : Bourse CROUS, aide au permis
-- **Investissement** : PER deduction, credit impot emploi domicile
+### 2. `src/lib/coachService.ts` — Moteur du coach
+- Reutilise `calculateDashboardMetrics` pour generer les recos.
+- **Etend** la liste de recos (plus exhaustive que les 3 actuelles) :
+  - PER avant 31/12 (basee sur TMI estimee)
+  - Frais reels vs 10%
+  - PEE/PERCO abondement
+  - Transfert CTO → PEA
+  - Declaration crypto 2086
+  - Passage micro → reel
+  - Quotient familial PACS/mariage si couple non declare
+  - Garde d'enfants (CMG / credit impot 50%)
+  - Don deductible (66%)
+  - Investissement PME/FCPI (reduction IR)
+- Croise chaque reco avec la table `user_recommendations` pour determiner le statut.
+- `getCoachFeed(userId)` retourne `{ totalAnnualGain, pending[], completed[], dismissed[] }`.
+- `acceptRecommendation`, `dismissRecommendation`, `markCompleted`.
 
-### 2. `src/lib/aidesService.ts` — Moteur de detection
-- `loadAidesForUser(userId)` — charge le profil depuis Supabase, croise avec le catalogue, retourne les aides classees en 3 colonnes
-- Reutilise `loadUserProfile` de `dashboardService.ts` + les champs du profil fiscal
-- Gere le cas profil incomplet (champs manquants → colonne "A verifier")
+### 3. `src/pages/Coach.tsx` — Page feed
+- Header : "Elio te fait gagner X €/an" (somme des recos `pending` + `accepted`)
+- 3 tabs : **A faire** (pending+accepted) / **Faites** / **Ignorees**
+- Liste verticale de `RecommendationCard` (composant existant, deja tres bien)
+- Empty state : "Profil complet, aucune optimisation detectee. Reviens dans 1 mois."
+- Banner si profil incomplet → CTA `/profil/fiscal`
 
-### 3. `src/pages/AidesDetector.tsx` — Page Kanban
-- 3 colonnes responsive (mobile : tabs horizontaux, desktop : 3 colonnes cote a cote)
-- Chaque carte d'aide : titre, montant estime, badge categorie, conditions resumees, CTA principal
-- Banner en haut si profil incomplet avec lien vers `/profil/fiscal`
-- Total des aides eligibles affiche en gros en haut (hook viral)
-- Animation Framer Motion sur les cartes
+### 4. `src/components/coach/CoachRecoCard.tsx` — Carte enrichie
+- Reutilise le visuel de `RecommendationCard` existant, ajoute :
+  - Bouton `Voir le guide` → ouvre le `ActionGuideModal` existant si guide dispo, sinon lien externe
+  - Bouton `Plus tard` (snooze 30j)
+  - Bouton `✕` Ignorer (avec micro-form raison optionnelle)
+  - Badge urgence si deadline < 30j (rouge) ou < 90j (orange)
+  - Badge "Premium" sur les recos > €500/an si user gratuit (via `PremiumGate`)
 
-### 4. `src/components/aides/AideCard.tsx` — Composant carte
-- Affiche : icone categorie, titre, montant, conditions, statut
-- CTA : "Faire ma demande" (lien externe) ou "Completer mon profil" (navigation interne)
-- Design system strict : couleurs Elio, border-radius 12px, shadow-sm
+### 5. Integration Home (`src/pages/Home.tsx`)
+- Remplacer la section `actions` par un teaser : 3 premieres recos + CTA "Voir le coach (12 actions)".
 
-### 5. Modifications existantes
-- `src/App.tsx` : ajouter route `/outils/aides`
-- `src/pages/Outils.tsx` : ajouter la carte "Detecteur d'aides" avec icone `HandCoins`
+### 6. Navigation
+- `src/App.tsx` : ajouter route `/coach`
+- `src/pages/Outils.tsx` : ajouter carte "Coach fiscal" avec icone `Sparkles`
+- Optionnel : badge sur le tab Outils (BottomNav) avec le nombre de recos pending
+
+### 7. Notifications (lien feature persistante existante)
+- A chaque generation de recos, syncroniser via `syncDashboardAlerts` deja existant pour les recos urgentes (deadline < 30j).
+- Les notifications pointent vers `/coach`.
 
 ## Details techniques
 
-- **Pas de nouvelle table DB** : les aides sont calculees a la volee depuis le profil existant. Le profil est deja dans `profiles`.
-- **Mobile-first** : sur mobile, les 3 colonnes deviennent des tabs swipables (Eligible / A verifier / Non concerne)
-- **Lien coffre-fort** : si un document dans le coffre-fort mentionne une aide (ex: attestation CAF), on peut afficher un badge "Document trouve"
-- **Reactif au profil** : comme le calendrier, la page se rafraichit si le profil change (realtime Supabase deja configure)
-
-## Aides a coder en V1 (10 aides nationales)
-
-| Aide | Critere principal | Montant type |
-|---|---|---|
-| APL | Locataire + revenu < seuil | 200-400€/mois |
-| Prime d'activite | Salarie/independant + revenu 1000-1800€/mois | 100-250€/mois |
-| CSS | Revenu < 12000€ (seul) | ~600€/an |
-| ARS | Enfants 6-18 ans + revenu < seuil | 400-450€/enfant |
-| Cheque energie | Revenu < 11000€ (seul) | 48-277€/an |
-| Allocations familiales | 2+ enfants | 141-322€/mois |
-| Bourse CROUS | Etudiant + revenu < seuil | 100-500€/mois |
-| MaPrimeRenov' | Proprietaire | 2000-10000€ |
-| RSA | Sans emploi + revenu < 7000€ | ~600€/mois |
-| Credit impot emploi domicile | Revenu > 26000€ | 50% depenses |
+- **Pas de mock** : tout vient du profil reel + `user_recommendations` table.
+- **Mobile-first** : feed vertical 1 colonne, cards `p-4`, Sora, design system Elio.
+- **Disclaimer obligatoire** en bas de page.
+- **Realtime** : sub Supabase sur `profiles` + `user_recommendations` pour rafraichir le feed.
+- **Tracking gain recupere** : la somme des recos `completed` sera affichee plus tard sur le dashboard ("Tu as recupere 640€ avec Elio").
+- **Pas de reecriture** des moteurs `dashboardService.ts`, `taxOptimizationEngine.ts` — on les consomme.
 
