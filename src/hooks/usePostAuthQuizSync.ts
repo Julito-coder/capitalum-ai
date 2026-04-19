@@ -47,10 +47,14 @@ export const usePostAuthQuizSync = (userId: string | undefined): boolean => {
 
     syncing.current = true;
 
-    saveModernOnboarding(userId, quizData.data, false).then(() => {
+    saveModernOnboarding(userId, quizData.data, false).then((result) => {
       clearStoredQuizData();
       synced.current = true;
       syncing.current = false;
+      if (result.success) {
+        // Notifie l'agent Élio que le profil vient d'être rempli via le quiz
+        window.dispatchEvent(new CustomEvent('elio:profile-updated', { detail: { source: 'modern_onboarding' } }));
+      }
     });
   }, [userId]);
 
