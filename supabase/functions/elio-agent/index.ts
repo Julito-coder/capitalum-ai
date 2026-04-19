@@ -333,14 +333,12 @@ serve(async (req) => {
     const currentCount = usageRow?.messages_count || 0;
     // Pas de limite quotidienne — usage tracké pour stats uniquement.
 
-    // --- Load profile ---
+    // --- Load profile (frais) ---
     const { data: profile } = await adminClient
       .from('profiles')
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
-    const profileSummary = buildProfileSummary(profile);
-    const systemPrompt = buildSystemPrompt(profileSummary);
 
     // --- Load conversation history ---
     let conversation: any = null;
@@ -353,6 +351,16 @@ serve(async (req) => {
         .maybeSingle();
       conversation = data;
     }
+
+    // --- Compute profile freshness flag ---
+    const profileUpdatedAt = profile?.updated_at ? new Date(profile.updated_at).getTime() : 0;
+    const lastSnapshot = conversation?.last_profile_snapshot_at
+      ? new Date(conversation.last_profile_snapshot_at).getTime()
+      : 0;
+    const profileChangedSinceLastTurn = !!(conversation && profileUpdatedAt > lastSnapshot);
+
+    const profileSummary = buildProfileSummary(profile);
+    const systemPrompt = buildSystemPrompt(profileSummary, profileChangedSinceLastTurn);
 
     const previousMessages: any[] = Array.isArray(conversation?.messages) ? conversation.messages : [];
     const recentHistory = previousMessages
