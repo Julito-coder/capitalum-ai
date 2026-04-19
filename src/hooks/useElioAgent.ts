@@ -195,6 +195,14 @@ export const useElioAgent = () => {
     });
   }, []);
 
+  // Écoute les sauvegardes manuelles de profil (FiscalProfileForm, onboarding sync)
+  // pour notifier l'agent automatiquement.
+  useEffect(() => {
+    const handler = () => notifyProfileUpdated();
+    window.addEventListener('elio:profile-updated', handler);
+    return () => window.removeEventListener('elio:profile-updated', handler);
+  }, [notifyProfileUpdated]);
+
   return {
     messages,
     isLoading,
