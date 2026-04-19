@@ -224,7 +224,85 @@ const AgentPage = () => {
               )}
             </>
           )}
+          <button
+            onClick={openHistory}
+            className={`${isWelcome ? '' : 'ml-auto'} flex items-center gap-1.5 text-sm font-medium text-[#1B3A5C] hover:text-[#C8943E] transition-colors`}
+            title="Historique des conversations"
+          >
+            <History className="w-4 h-4" />
+            <span className="hidden sm:inline">Historique</span>
+          </button>
         </div>
+
+        {/* History drawer */}
+        {historyOpen && (
+          <>
+            <div
+              onClick={() => setHistoryOpen(false)}
+              className="fixed inset-0 bg-black/30 z-40"
+            />
+            <div className="fixed top-0 right-0 bottom-0 w-full sm:w-[380px] bg-white z-50 shadow-xl flex flex-col" style={{ fontFamily: 'Sora' }}>
+              <div className="flex items-center justify-between px-4 py-4 border-b border-[#E5DED3]">
+                <h2 className="text-lg font-semibold text-[#1B3A5C]">Tes conversations</h2>
+                <button onClick={() => setHistoryOpen(false)} className="text-[#6B7A8D] hover:text-[#1B3A5C]">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {historyLoading && (
+                  <p className="text-center text-sm text-[#6B7A8D] py-8">Chargement…</p>
+                )}
+                {!historyLoading && conversations.length === 0 && (
+                  <p className="text-center text-sm text-[#6B7A8D] py-8 px-4">
+                    Aucune conversation enregistrée pour l'instant. Tes échanges avec Élio seront sauvegardés automatiquement.
+                  </p>
+                )}
+                {!historyLoading && conversations.map((c) => (
+                  <div
+                    key={c.id}
+                    className="group border-b border-[#F0EBE2] hover:bg-[#FAF7F1] transition-colors"
+                  >
+                    <button
+                      onClick={() => handleOpenConversation(c.id)}
+                      className="w-full text-left px-4 py-3"
+                    >
+                      <div className="flex items-start gap-2">
+                        {c.is_pinned && <Pin className="w-3.5 h-3.5 text-[#C8943E] mt-1 shrink-0 fill-[#C8943E]" />}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-[#1F3347] line-clamp-2">
+                            {c.summary || c.topic || 'Conversation'}
+                          </p>
+                          <p className="text-xs text-[#6B7A8D] mt-1">
+                            {new Date(c.updated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                    <div className="flex gap-2 px-4 pb-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleTogglePin(c.id, c.is_pinned)}
+                        className="text-xs text-[#6B7A8D] hover:text-[#C8943E] flex items-center gap-1"
+                      >
+                        <Pin className="w-3 h-3" />
+                        {c.is_pinned ? 'Désépingler' : 'Épingler'}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        className="text-xs text-[#6B7A8D] hover:text-[#C9432E] flex items-center gap-1 ml-auto"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-[#6B7A8D] text-center px-4 py-3 border-t border-[#E5DED3]">
+                Conversations conservées 30 jours. Épingle celles que tu veux garder.
+              </p>
+            </div>
+          </>
+        )}
 
         {/* Welcome state */}
         {isWelcome ? (
