@@ -1,9 +1,9 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Sparkles, Wrench, UserCircle } from 'lucide-react';
+import { LayoutDashboard, MessageCircle, Wrench, UserCircle } from 'lucide-react';
 
 const tabs = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
-  { path: '/agent', icon: Sparkles, label: 'Élio Agent' },
+  { path: '/agent', icon: MessageCircle, label: 'Élio Agent' },
   { path: '/outils', icon: Wrench, label: 'Outils' },
   { path: '/profil', icon: UserCircle, label: 'Profil' },
 ];
