@@ -156,42 +156,42 @@ const TOOLS = [
 // ---------- Helpers ----------
 
 function buildProfileSummary(profile: any): string {
-  if (!profile) return 'Profil fiscal non renseigné. Tu peux demander à l\'utilisateur de compléter son profil.';
+  if (!profile) return "Profil fiscal non renseigné. Demande à l'utilisateur de compléter son profil.";
 
-  const lines: string[] = [];
-  const familyMap: Record<string, string> = { single: 'célibataire', married: 'marié(e)', pacs: 'pacsé(e)', divorced: 'divorcé(e)', widowed: 'veuf/veuve' };
-  lines.push(`- Situation familiale : ${familyMap[profile.family_status] || profile.family_status || 'non renseignée'}`);
-  if (profile.children_count != null) lines.push(`- Enfants à charge : ${profile.children_count}`);
-  if (profile.birth_year) lines.push(`- Année de naissance : ${profile.birth_year}`);
-  if (profile.address_city) lines.push(`- Ville : ${profile.address_city}`);
+  const familyMap: Record<string, string> = {
+    single: 'célibataire', married: 'marié(e)', pacs: 'pacsé(e)', divorced: 'divorcé(e)', widowed: 'veuf/veuve',
+  };
+  const profStatus: string[] = [];
+  if (profile.is_employee) profStatus.push('salarié');
+  if (profile.is_self_employed) profStatus.push('indépendant');
+  if (profile.is_retired) profStatus.push('retraité');
+  if (profile.is_investor) profStatus.push('investisseur');
 
-  const statuts: string[] = [];
-  if (profile.is_employee) statuts.push('salarié');
-  if (profile.is_self_employed) statuts.push('indépendant');
-  if (profile.is_retired) statuts.push('retraité');
-  if (profile.is_investor) statuts.push('investisseur');
-  if (statuts.length) lines.push(`- Statut professionnel : ${statuts.join(', ')}`);
+  const firstName = (profile.full_name || '').split(' ')[0] || "l'utilisateur";
+  const hasCrypto = !!(profile.crypto_pnl_2025 || profile.crypto_wallet_address);
+  const updatedAt = profile.updated_at
+    ? new Date(profile.updated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+    : 'inconnu';
 
-  if (profile.gross_monthly_salary > 0) lines.push(`- Salaire brut mensuel : ${profile.gross_monthly_salary} €`);
-  if (profile.net_monthly_salary > 0) lines.push(`- Salaire net mensuel : ${profile.net_monthly_salary} €`);
-  if (profile.annual_revenue_ht > 0) lines.push(`- CA annuel HT (indépendant) : ${profile.annual_revenue_ht} €`);
-  if (profile.main_pension_annual > 0) lines.push(`- Pension annuelle : ${profile.main_pension_annual} €`);
-
-  if (profile.has_rental_income) lines.push('- Possède des revenus locatifs');
-  if (profile.is_homeowner) lines.push('- Propriétaire');
-  if (profile.has_investments) lines.push('- A des placements financiers');
-  if (profile.crypto_pnl_2025 || profile.crypto_wallet_address) lines.push('- A de la crypto');
-  if (profile.pea_balance > 0) lines.push(`- PEA : ${profile.pea_balance} €`);
-  if (profile.life_insurance_balance > 0) lines.push(`- Assurance-vie : ${profile.life_insurance_balance} €`);
-
-  if (profile.tax_bracket) lines.push(`- Tranche d'imposition déclarée : ${profile.tax_bracket}`);
-  if (profile.primary_objective) lines.push(`- Objectif principal : ${profile.primary_objective}`);
-
-  return lines.join('\n');
+  return [
+    `- Prénom : ${firstName}`,
+    `- Situation familiale : ${familyMap[profile.family_status] || 'non renseignée'}`,
+    `- Nombre d'enfants : ${profile.children_count ?? 'non renseigné'}`,
+    `- Statut professionnel : ${profStatus.length ? profStatus.join(', ') : 'non renseigné'}`,
+    `- A des revenus fonciers : ${profile.has_rental_income ? 'oui' : 'non'}`,
+    `- A des investissements : ${profile.has_investments ? 'oui' : 'non'}`,
+    `- A de la crypto : ${hasCrypto ? 'oui' : 'non'}`,
+    `- Onboarding complet : ${profile.onboarding_completed ? 'oui' : 'non — certaines infos manquent'}`,
+    `- Profil mis à jour le : ${updatedAt}`,
+  ].join('\n');
 }
 
-function buildSystemPrompt(profileSummary: string): string {
+function buildSystemPrompt(profileSummary: string, profileChangedSinceLastTurn: boolean): string {
   const today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const freshnessNotice = profileChangedSinceLastTurn
+    ? "\n\n⚠️ L'utilisateur a mis à jour son profil depuis ton dernier message. Prends en compte les nouvelles infos. Si tu as des données chiffrées en mémoire qui pourraient être obsolètes, re-vérifie via get_user_profile."
+    : '';
+
   return `Tu es Élio, l'agent IA fiscal et administratif de l'app Élio. Tu aides les particuliers français à comprendre, anticiper et optimiser leur situation fiscale et administrative.
 
 PERSONNALITÉ
@@ -214,6 +214,13 @@ RÈGLE CRITIQUE : TU UTILISES LES TOOLS POUR TOUT ÉLÉMENT FACTUEL
 - Échéances / recommandations → get_deadlines, get_recommendations
 - Si aucun tool ne couvre la question : dis honnêtement que tu ne peux pas y répondre pour l'instant, et propose une piste alternative ou un lien officiel. NE JAMAIS INVENTER de barème, seuil ou montant.
 
+PROFIL ESSENTIEL DE L'UTILISATEUR (toujours à jour)
+${profileSummary}
+
+POUR TOUT DÉTAIL CHIFFRÉ (revenus annuels, montants épargnés, PEA, assurance-vie, frais réels, pension, CA freelance, etc.) → utilise OBLIGATOIREMENT le tool get_user_profile avec les champs voulus. Ne jamais deviner un chiffre.
+SI L'UTILISATEUR DIT "j'ai changé X dans mon profil" → re-appelle get_user_profile pour re-vérifier.
+SI un champ revient avec status='not_filled' → demande à l'utilisateur de compléter, ne fabrique pas de valeur.${freshnessNotice}
+
 LIMITES DE V1
 - Pas de soumission directe à impots.gouv
 - Pas de connexion aux comptes bancaires
@@ -228,10 +235,8 @@ Quand tu utilises un tool, termine ta réponse par UNE SEULE balise <rich_view t
 - "recommendations_list" après get_recommendations
 - "aids_eligibility" après detect_aids
 - "fiscal_concept" après get_fiscal_concept
+(get_user_profile n'a pas de rich_view, juste un texte concis.)
 Ne mets jamais les chiffres bruts complets dans ton texte si un rich_view les affichera. Reste concis : 1-2 phrases d'analyse + la balise.
-
-PROFIL DE L'UTILISATEUR
-${profileSummary}
 
 DATE DU JOUR : ${today}`;
 }
