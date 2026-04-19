@@ -7,8 +7,9 @@ import { CalendarPreview } from '@/components/home/CalendarPreview';
 import { useAuth } from '@/contexts/AuthContext';
 import { loadUserProfile, calculateDashboardMetrics } from '@/lib/dashboardService';
 import { FISCAL_DEADLINES } from '@/lib/deadlinesData';
-import { AlertTriangle, FileSearch, PiggyBank, Shield, Building2, Loader2 } from 'lucide-react';
+import { AlertTriangle, FileSearch, PiggyBank, Shield, Building2, Loader2, Sparkles, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const HomePage = () => {
   const { user } = useAuth();
@@ -132,8 +133,15 @@ const HomePage = () => {
 
         {actions.length > 0 && (
           <div className="space-y-3">
-            <h2 className="text-lg font-semibold text-foreground">Actions recommandées</h2>
-            {actions.map((action, i) => (
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-secondary" /> Coach fiscal
+              </h2>
+              <Link to="/coach" className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
+                Voir tout ({actions.length}) <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            {actions.slice(0, 3).map((action, i) => (
               <ActionCard key={i} {...action} index={i} />
             ))}
           </div>
