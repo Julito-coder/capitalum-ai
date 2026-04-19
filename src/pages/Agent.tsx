@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import {
   Send,
@@ -106,6 +106,7 @@ const buildSuggestions = (profile: any): Suggestion[] => {
 const AgentPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState<any>(null);
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -121,6 +122,16 @@ const AgentPage = () => {
       .maybeSingle()
       .then(({ data }) => setProfile(data));
   }, [user]);
+
+  // Auto-send prompt si arrivé via feed proactif
+  useEffect(() => {
+    const initial = (location.state as any)?.initialPrompt;
+    if (initial && messages.length === 0 && !isLoading) {
+      sendMessage(initial);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   useEffect(() => {
     if (scrollRef.current) {
