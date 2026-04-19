@@ -55,7 +55,7 @@ const NewSimulation = () => {
       const fullData = await fetchFullProject(projectId);
       if (!fullData) {
         toast.error("Projet introuvable");
-        navigate("/simulator");
+        navigate("/outils/simulateur");
         return;
       }
       
@@ -363,7 +363,7 @@ const NewSimulation = () => {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/simulator")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/outils/simulateur")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">

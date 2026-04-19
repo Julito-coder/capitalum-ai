@@ -213,7 +213,7 @@ const SimulationDetails = () => {
       <Layout>
         <div className="text-center py-12">
           <p className="text-muted-foreground">Projet introuvable</p>
-          <Button variant="link" onClick={() => navigate("/simulator")}>Retour à la liste</Button>
+          <Button variant="link" onClick={() => navigate("/outils/simulateur")}>Retour à la liste</Button>
         </div>
       </Layout>
     );
@@ -229,7 +229,7 @@ const SimulationDetails = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/simulator")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/outils/simulateur")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
