@@ -494,6 +494,8 @@ serve(async (req) => {
     const previousToolCalls = Array.isArray(conversation?.tool_calls) ? conversation.tool_calls : [];
     const allToolCalls = [...previousToolCalls, ...toolCallsLog];
 
+    const snapshotIso = profile?.updated_at || new Date().toISOString();
+
     let savedConversationId = conversationId;
     if (conversationId && conversation) {
       await adminClient
@@ -504,6 +506,7 @@ serve(async (req) => {
           total_tokens: (conversation.total_tokens || 0) + totalTokens,
           model_used: MODEL,
           updated_at: new Date().toISOString(),
+          last_profile_snapshot_at: snapshotIso,
         })
         .eq('id', conversationId);
     } else {
@@ -516,6 +519,7 @@ serve(async (req) => {
           total_tokens: totalTokens,
           model_used: MODEL,
           topic: userMessage.slice(0, 80),
+          last_profile_snapshot_at: snapshotIso,
         })
         .select('id')
         .single();
