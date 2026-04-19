@@ -102,6 +102,62 @@ async function processDeadlines(supa: SupaClient, userId: string): Promise<numbe
   return created;
 }
 
+async function processWeeklyInsight(supa: SupaClient, userId: string, profile: any): Promise<number> {
+  // Bilan hebdo : compte les optimisations actives (notifications type 'optimization' non dismissed)
+  // + somme des estimated_gain. Crée un insight par semaine (dédoublonnage par titre daté).
+  const weekLabel = (() => {
+    const d = new Date();
+    const onejan = new Date(d.getFullYear(), 0, 1);
+    const week = Math.ceil(((d.getTime() - onejan.getTime()) / 86400000 + onejan.getDay() + 1) / 7);
+    return `S${week}-${d.getFullYear()}`;
+  })();
+  const title = `Bilan de la semaine (${weekLabel})`;
+  if (await existsNotification(supa, userId, 'insight', title)) return 0;
+
+  const { data: activeOpts } = await supa
+    .from('notifications')
+    .select('data')
+    .eq('user_id', userId)
+    .eq('type', 'optimization')
+    .eq('is_dismissed', false);
+
+  const count = activeOpts?.length ?? 0;
+  const totalGain = (activeOpts ?? []).reduce((sum: number, n: any) => {
+    const g = Number(n?.data?.estimated_gain ?? 0);
+    return sum + (isFinite(g) ? g : 0);
+  }, 0);
+
+  let message: string;
+  let actionPrompt: string;
+  if (count === 0) {
+    message = `Cette semaine, aucune optimisation active. Veux-tu qu'on en cherche ensemble ?`;
+    actionPrompt = `Trouve-moi des optimisations fiscales pour ma situation.`;
+  } else {
+    message = `Cette semaine, tu as ${count} optimisation${count > 1 ? 's' : ''} active${count > 1 ? 's' : ''}${totalGain > 0 ? ` valant ${Math.round(totalGain)}€` : ''}. On s'en occupe ?`;
+    actionPrompt = `Fais-moi le bilan de mes optimisations actives et dis-moi par laquelle commencer.`;
+  }
+
+  const expires = new Date();
+  expires.setDate(expires.getDate() + 7);
+
+  const { error } = await supa.from('notifications').insert({
+    user_id: userId,
+    type: 'insight',
+    category: 'agent_proactive',
+    title,
+    message,
+    priority: 4,
+    expires_at: expires.toISOString(),
+    data: {
+      action_label: count > 0 ? 'Faire le point' : 'Chercher',
+      action_prompt: actionPrompt,
+      estimated_gain: Math.round(totalGain),
+      active_count: count,
+    },
+  });
+  return error ? 0 : 1;
+}
+
 async function processOptimizations(supa: SupaClient, userId: string, profile: any): Promise<number> {
   // Mensuel : seulement le premier lundi du mois
   const today = new Date();
