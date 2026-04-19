@@ -225,7 +225,8 @@ Deno.serve(async (req) => {
         const userId = profile.user_id;
         const dl = await processDeadlines(supa, userId);
         const opt = await processOptimizations(supa, userId, profile);
-        itemsCreated += dl + opt;
+        const ins = await processWeeklyInsight(supa, userId, profile);
+        itemsCreated += dl + opt + ins;
         usersProcessed++;
       } catch (e) {
         console.error('[elio-agent-proactive] user error', profile.user_id, e);
