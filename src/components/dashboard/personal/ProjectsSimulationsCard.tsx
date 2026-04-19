@@ -63,7 +63,7 @@ const ProjectItem = ({ project }: { project: ProjectSummary }) => {
   const statusBadge = getStatusBadge(project.status);
   
   const handleClick = () => {
-    navigate(project.type === 'immobilier' ? '/simulator' : '/savings');
+    navigate(project.type === 'immobilier' ? '/outils/simulateur' : '/savings');
   };
 
   return (
@@ -150,7 +150,7 @@ export const ProjectsSimulationsCard = () => {
               <Button 
                 variant="ghost" 
                 className="justify-start text-muted-foreground hover:text-foreground h-11 px-3"
-                onClick={() => navigate('/simulator')}
+                onClick={() => navigate('/outils/simulateur')}
               >
                 <Building2 className="h-4 w-4 mr-2 shrink-0" />
                 <span className="truncate">Immo</span>
