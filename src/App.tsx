@@ -57,6 +57,9 @@ const App = () => (
             <Route path="/outils/simulateur/compare" element={<ProtectedRoute><CompareSimulations /></ProtectedRoute>} />
             <Route path="/outils/simulateur/:id" element={<ProtectedRoute><SimulationDetails /></ProtectedRoute>} />
             <Route path="/outils/epargne" element={<ProtectedRoute><SavingsSimulator /></ProtectedRoute>} />
+            <Route path="/simulateurs" element={<ProtectedRoute><Simulateurs /></ProtectedRoute>} />
+            <Route path="/simulateurs/pacs" element={<ProtectedRoute><PacsSimulator /></ProtectedRoute>} />
+            <Route path="/simulateurs/freelance" element={<ProtectedRoute><FreelanceSimulator /></ProtectedRoute>} />
             <Route path="/outils/aides" element={<ProtectedRoute><AidesDetector /></ProtectedRoute>} />
             <Route path="/coach" element={<ProtectedRoute><Coach /></ProtectedRoute>} />
             <Route path="/outils/coffre" element={<ProtectedRoute><CoffreFortPage /></ProtectedRoute>} />
