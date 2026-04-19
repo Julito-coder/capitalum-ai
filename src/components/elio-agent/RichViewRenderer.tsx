@@ -2,6 +2,8 @@ import { TaxBreakdown } from './rich-views/TaxBreakdown';
 import { RealEstateCashflow } from './rich-views/RealEstateCashflow';
 import { DeadlinesList } from './rich-views/DeadlinesList';
 import { RecommendationsList } from './rich-views/RecommendationsList';
+import { AidsEligibility } from './rich-views/AidsEligibility';
+import { FiscalConcept } from './rich-views/FiscalConcept';
 import type { RichView } from '@/hooks/useElioAgent';
 
 interface Props {
@@ -21,6 +23,10 @@ export const RichViewRenderer = ({ rich_view, onRunPrompt }: Props) => {
       return <DeadlinesList data={rich_view.data} />;
     case 'recommendations_list':
       return <RecommendationsList data={rich_view.data} onRunPrompt={onRunPrompt} />;
+    case 'aids_eligibility':
+      return <AidsEligibility data={rich_view.data} />;
+    case 'fiscal_concept':
+      return <FiscalConcept data={rich_view.data} />;
     default:
       return null;
   }

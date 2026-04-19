@@ -9,6 +9,9 @@ import { calculateTax } from './tools/calculateTax.ts';
 import { simulateRealEstate } from './tools/simulateRealEstate.ts';
 import { getDeadlines } from './tools/getDeadlines.ts';
 import { getRecommendations } from './tools/getRecommendations.ts';
+import { detectAids } from './tools/detectAids.ts';
+import { getFiscalConcept } from './tools/getFiscalConcept.ts';
+import { FISCAL_CONCEPT_IDS } from './knowledge/fiscal-concepts.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -83,6 +86,32 @@ const TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'detect_aids',
+      description: 'Analyse l\'éligibilité de l\'utilisateur aux 10 principales aides nationales françaises (APL, Prime d\'activité, CSS, ARS, Chèque énergie, Bourse CROUS, MaPrimeRénov\', RSA, AAH, Allocations familiales) en fonction de son profil fiscal. Retourne la liste des aides éligibles, non éligibles, et celles nécessitant des infos complémentaires.',
+      parameters: { type: 'object', properties: {}, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_fiscal_concept',
+      description: 'Récupère des informations structurées sur un concept fiscal ou un dispositif (tranches IR, PER, PEA, micro-entrepreneur, SASU, EURL, PFU, LMNP, SCPI, déficit foncier, etc.). À utiliser quand l\'utilisateur demande une explication ou veut comprendre un mécanisme fiscal.',
+      parameters: {
+        type: 'object',
+        properties: {
+          concept_id: {
+            type: 'string',
+            enum: FISCAL_CONCEPT_IDS,
+            description: 'Identifiant du concept à expliquer',
+          },
+        },
+        required: ['concept_id'],
+      },
+    },
+  },
 ];
 
 // ---------- Helpers ----------
@@ -139,10 +168,12 @@ VOCABULAIRE ÉLIO (obligatoire)
 - "tes cotisations sociales" (pas "charges TNS")
 - "impôt sur les dividendes (30%)" (pas "PFU" ni "flat tax")
 
-RÈGLE CRITIQUE : TU NE CALCULES JAMAIS DE CHIFFRES FISCAUX TOI-MÊME
-- Pour tout calcul d'impôt, simulation, comparaison : appelle le tool correspondant
-- Si tu n'as pas de tool adapté, dis honnêtement que tu ne peux pas et renvoie vers un professionnel
-- Ne jamais inventer un barème, un seuil, ou un montant
+RÈGLE CRITIQUE : TU UTILISES LES TOOLS POUR TOUT ÉLÉMENT FACTUEL
+- Calculs (impôt, immo) → calculate_tax, simulate_real_estate
+- Éligibilité à une aide (APL, Prime d'activité, CSS, RSA, ARS, AAH, etc.) → detect_aids
+- Explication d'un dispositif fiscal (PER, PEA, LMNP, SASU, tranches IR, PFU…) → get_fiscal_concept
+- Échéances / recommandations → get_deadlines, get_recommendations
+- Si aucun tool ne couvre la question : dis honnêtement que tu ne peux pas y répondre pour l'instant, et propose une piste alternative ou un lien officiel. NE JAMAIS INVENTER de barème, seuil ou montant.
 
 LIMITES DE V1
 - Pas de soumission directe à impots.gouv
@@ -156,6 +187,8 @@ Quand tu utilises un tool, termine ta réponse par UNE SEULE balise <rich_view t
 - "real_estate_cashflow" après simulate_real_estate
 - "deadlines_list" après get_deadlines
 - "recommendations_list" après get_recommendations
+- "aids_eligibility" après detect_aids
+- "fiscal_concept" après get_fiscal_concept
 Ne mets jamais les chiffres bruts complets dans ton texte si un rich_view les affichera. Reste concis : 1-2 phrases d'analyse + la balise.
 
 PROFIL DE L'UTILISATEUR
@@ -197,6 +230,10 @@ async function executeTool(
       return getDeadlines({ months_ahead: Number(args.months_ahead) || 3 });
     case 'get_recommendations':
       return await getRecommendations(userId, SUPABASE_URL, SERVICE_ROLE_KEY);
+    case 'detect_aids':
+      return await detectAids(userId, SUPABASE_URL, SERVICE_ROLE_KEY);
+    case 'get_fiscal_concept':
+      return getFiscalConcept({ concept_id: String(args?.concept_id || '') });
     default:
       return { error: `Unknown tool: ${name}` };
   }
@@ -386,6 +423,8 @@ serve(async (req) => {
         simulate_real_estate: 'real_estate_cashflow',
         get_deadlines: 'deadlines_list',
         get_recommendations: 'recommendations_list',
+        detect_aids: 'aids_eligibility',
+        get_fiscal_concept: 'fiscal_concept',
       };
       const inferred = inferMap[lastToolName];
       if (inferred) finalRichView = { type: inferred, data: lastToolResultData };
