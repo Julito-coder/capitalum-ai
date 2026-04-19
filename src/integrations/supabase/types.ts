@@ -85,6 +85,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_pinned: boolean
+          last_profile_snapshot_at: string | null
           messages: Json
           model_used: string | null
           summary: string | null
@@ -100,6 +101,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_pinned?: boolean
+          last_profile_snapshot_at?: string | null
           messages?: Json
           model_used?: string | null
           summary?: string | null
@@ -115,6 +117,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_pinned?: boolean
+          last_profile_snapshot_at?: string | null
           messages?: Json
           model_used?: string | null
           summary?: string | null
