@@ -111,7 +111,7 @@ const AgentPage = () => {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { messages, isLoading, remainingToday, sendMessage, startNewConversation } = useElioAgent();
+  const { messages, isLoading, remainingToday, sendMessage, startNewConversation, confirmProfileUpdates } = useElioAgent();
 
   useEffect(() => {
     if (!user) return;
