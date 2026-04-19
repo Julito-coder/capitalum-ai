@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { Building2, RefreshCw, Plug, Trash2, ArrowLeft, Loader2, Landmark } from 'lucide-react';
+import { Building2, RefreshCw, Plug, Trash2, ArrowLeft, Loader2, Landmark, Sparkles } from 'lucide-react';
 import {
   getConnectionStatus,
   listAccounts,
@@ -15,6 +15,7 @@ import {
   startWebview,
   syncBankData,
   disconnectBank,
+  detectRecurringFromBank,
   type BankAccount,
   type BankTransaction,
   type PowensConnectionStatus,
@@ -25,7 +26,7 @@ const BanquesPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<'connect' | 'sync' | 'disconnect' | null>(null);
+  const [busy, setBusy] = useState<'connect' | 'sync' | 'disconnect' | 'detect' | null>(null);
   const [status, setStatus] = useState<PowensConnectionStatus>({ connected: false, last_sync_at: null });
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
@@ -74,11 +75,34 @@ const BanquesPage = () => {
     setBusy('sync');
     try {
       const r = await syncBankData();
-      toast.success(`${r.accounts_synced} compte(s) et ${r.transactions_synced} opération(s) synchronisé(s).`);
+      const extra = r.recurring_detected
+        ? ` ${r.recurring_detected} prélèvement(s) récurrent(s) ajouté(s) au calendrier.`
+        : '';
+      const urssaf = r.urssaf_marked ? ` ${r.urssaf_marked} cotisation(s) URSSAF marquée(s) payée(s).` : '';
+      toast.success(`${r.accounts_synced} compte(s) et ${r.transactions_synced} opération(s) synchronisé(s).${extra}${urssaf}`);
       await refresh();
     } catch (e) {
       console.error(e);
       toast.error('La synchronisation a échoué.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleDetectRecurring = async () => {
+    setBusy('detect');
+    try {
+      const r = await detectRecurringFromBank();
+      if (r.detected === 0 && r.urssaf_marked === 0) {
+        toast.info('Aucun nouveau prélèvement récurrent détecté.');
+      } else {
+        toast.success(
+          `${r.detected} prélèvement(s) récurrent(s) ajouté(s)${r.urssaf_marked ? ` · ${r.urssaf_marked} URSSAF` : ''}.`,
+        );
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Détection impossible.');
     } finally {
       setBusy(null);
     }
@@ -162,6 +186,10 @@ const BanquesPage = () => {
                   <Button variant="outline" onClick={handleSync} disabled={busy === 'sync'}>
                     {busy === 'sync' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
                     Synchroniser
+                  </Button>
+                  <Button variant="outline" onClick={handleDetectRecurring} disabled={busy === 'detect'}>
+                    {busy === 'detect' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                    Détecter mes prélèvements
                   </Button>
                   <Button variant="outline" onClick={handleConnect} disabled={busy === 'connect'}>
                     <Plug className="h-4 w-4 mr-2" /> Ajouter une banque
