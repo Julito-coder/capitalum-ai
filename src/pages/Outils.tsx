@@ -1,6 +1,6 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, ScanSearch, Building2, PiggyBank, FolderLock, HandCoins, Sparkles } from 'lucide-react';
+import { Calendar, ScanSearch, Building2, PiggyBank, FolderLock, HandCoins, Sparkles, Landmark } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const tools = [
@@ -60,6 +60,14 @@ const tools = [
     title: 'Détecteur d\'aides',
     description: 'Découvre les aides auxquelles tu as droit',
     color: 'bg-success/10 text-success',
+  },
+  {
+    path: '/outils/banques',
+    icon: Landmark,
+    title: 'Mes comptes bancaires',
+    description: 'Connecte ta banque (DSP2) pour qu\'Élio analyse tes flux',
+    color: 'bg-primary/10 text-primary',
+    badge: 'Nouveau',
   },
 ];
 

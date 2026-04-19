@@ -23,6 +23,7 @@ import Simulateurs from "./pages/Simulateurs";
 import PacsSimulator from "./pages/simulators/PacsSimulator";
 import FreelanceSimulator from "./pages/simulators/FreelanceSimulator";
 import AidesDetector from "./pages/AidesDetector";
+import Banques from "./pages/Banques";
 import Coach from "./pages/Coach";
 import FiscalProfile from "./pages/FiscalProfile";
 import Settings from "./pages/Settings";
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/simulateurs/pacs" element={<ProtectedRoute><PacsSimulator /></ProtectedRoute>} />
             <Route path="/simulateurs/freelance" element={<ProtectedRoute><FreelanceSimulator /></ProtectedRoute>} />
             <Route path="/outils/aides" element={<ProtectedRoute><AidesDetector /></ProtectedRoute>} />
+            <Route path="/outils/banques" element={<ProtectedRoute><Banques /></ProtectedRoute>} />
             <Route path="/coach" element={<ProtectedRoute><Coach /></ProtectedRoute>} />
             <Route path="/outils/coffre" element={<ProtectedRoute><CoffreFortPage /></ProtectedRoute>} />
             <Route path="/profil" element={<ProtectedRoute><ProfilPage /></ProtectedRoute>} />
