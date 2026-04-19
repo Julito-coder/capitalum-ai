@@ -188,6 +188,18 @@ export const useElioAgent = () => {
     setConversationId(null);
   }, []);
 
+  /**
+   * Recharge une conversation existante depuis la base
+   * (sans appeler l'agent — juste pour reprendre la lecture / continuer plus tard).
+   */
+  const loadExistingConversation = useCallback(
+    (id: string, loadedMessages: AgentMessage[]) => {
+      setConversationId(id);
+      setMessages(loadedMessages);
+    },
+    [],
+  );
+
   const notifyProfileUpdated = useCallback(() => {
     toast({
       title: 'Profil mis à jour',
