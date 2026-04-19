@@ -33,6 +33,14 @@ const tools = [
     color: 'bg-info/10 text-info',
   },
   {
+    path: '/outils/simulateur',
+    icon: Building2,
+    title: 'Simulateur immobilier',
+    description: 'Outil complet : amortissement, cashflow, patrimoine, dossier banque',
+    color: 'bg-primary/10 text-primary',
+    badge: 'Outil complet',
+  },
+  {
     path: '/outils/epargne',
     icon: PiggyBank,
     title: 'Simulateur épargne',
