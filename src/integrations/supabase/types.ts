@@ -130,6 +130,119 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_accounts: {
+        Row: {
+          account_name: string | null
+          account_type: string | null
+          balance: number
+          bank_name: string | null
+          created_at: string
+          currency: string
+          iban_masked: string | null
+          id: string
+          is_active: boolean
+          last_update: string | null
+          powens_account_id: number
+          powens_connection_id: number | null
+          raw: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_type?: string | null
+          balance?: number
+          bank_name?: string | null
+          created_at?: string
+          currency?: string
+          iban_masked?: string | null
+          id?: string
+          is_active?: boolean
+          last_update?: string | null
+          powens_account_id: number
+          powens_connection_id?: number | null
+          raw?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_name?: string | null
+          account_type?: string | null
+          balance?: number
+          bank_name?: string | null
+          created_at?: string
+          currency?: string
+          iban_masked?: string | null
+          id?: string
+          is_active?: boolean
+          last_update?: string | null
+          powens_account_id?: number
+          powens_connection_id?: number | null
+          raw?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bank_transactions: {
+        Row: {
+          account_id: string
+          amount: number
+          category: string | null
+          created_at: string
+          currency: string
+          id: string
+          label: string | null
+          original_label: string | null
+          powens_transaction_id: number
+          raw: Json | null
+          tx_date: string
+          type: string | null
+          user_id: string
+          value_date: string | null
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          category?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          label?: string | null
+          original_label?: string | null
+          powens_transaction_id: number
+          raw?: Json | null
+          tx_date: string
+          type?: string | null
+          user_id: string
+          value_date?: string | null
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          category?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          label?: string | null
+          original_label?: string | null
+          powens_transaction_id?: number
+          raw?: Json | null
+          tx_date?: string
+          type?: string | null
+          user_id?: string
+          value_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crypto_accounts: {
         Row: {
           account_type: string
@@ -722,6 +835,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      powens_connections: {
+        Row: {
+          auth_token: string
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          powens_user_id: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth_token: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          powens_user_id: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth_token?: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          powens_user_id?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
