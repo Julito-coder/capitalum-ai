@@ -126,11 +126,30 @@ Deno.serve(async (req) => {
 
     await admin.from('powens_connections').update({ last_sync_at: new Date().toISOString() }).eq('user_id', userId);
 
+    // 3. Détection des prélèvements récurrents (best-effort, ne bloque pas la sync)
+    let recurringDetected = 0;
+    let urssafMarked = 0;
+    try {
+      const detectRes = await fetch(`${SUPABASE_URL}/functions/v1/detect-recurring-from-bank`, {
+        method: 'POST',
+        headers: { Authorization: authHeader, 'Content-Type': 'application/json' },
+      });
+      if (detectRes.ok) {
+        const d = await detectRes.json();
+        recurringDetected = d.detected ?? 0;
+        urssafMarked = d.urssaf_marked ?? 0;
+      }
+    } catch (e) {
+      console.error('detect-recurring call failed', e);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         accounts_synced: accountsUpserted,
         transactions_synced: txInserted,
+        recurring_detected: recurringDetected,
+        urssaf_marked: urssafMarked,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );

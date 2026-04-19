@@ -64,8 +64,19 @@ export async function startWebview(redirectUri: string): Promise<{ webview_url: 
   return data;
 }
 
-export async function syncBankData(): Promise<{ accounts_synced: number; transactions_synced: number }> {
+export async function syncBankData(): Promise<{
+  accounts_synced: number;
+  transactions_synced: number;
+  recurring_detected?: number;
+  urssaf_marked?: number;
+}> {
   const { data, error } = await supabase.functions.invoke('powens-sync', { body: {} });
+  if (error) throw error;
+  return data;
+}
+
+export async function detectRecurringFromBank(): Promise<{ detected: number; urssaf_marked: number }> {
+  const { data, error } = await supabase.functions.invoke('detect-recurring-from-bank', { body: {} });
   if (error) throw error;
   return data;
 }
