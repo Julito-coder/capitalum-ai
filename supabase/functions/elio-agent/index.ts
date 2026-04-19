@@ -11,6 +11,7 @@ import { getDeadlines } from './tools/getDeadlines.ts';
 import { getRecommendations } from './tools/getRecommendations.ts';
 import { detectAids } from './tools/detectAids.ts';
 import { getFiscalConcept } from './tools/getFiscalConcept.ts';
+import { getUserProfile } from './tools/getUserProfile.ts';
 import { FISCAL_CONCEPT_IDS } from './knowledge/fiscal-concepts.ts';
 
 const corsHeaders = {
@@ -109,6 +110,44 @@ const TOOLS = [
           },
         },
         required: ['concept_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_user_profile',
+      description: "Récupère les détails chiffrés et précis du profil fiscal de l'utilisateur connecté (revenus, montants, valeurs). À utiliser dès que tu as besoin d'un chiffre précis sur sa situation. Retourne {value, status} pour chaque champ — si status='not_filled', demande à l'utilisateur de compléter plutôt que d'inventer.",
+      parameters: {
+        type: 'object',
+        properties: {
+          fields: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: [
+                'annual_net_income',
+                'reference_tax_income',
+                'main_pension',
+                'pea_balance',
+                'life_insurance_balance',
+                'has_real_expenses',
+                'real_expenses_amount',
+                'housing_status',
+                'monthly_rent',
+                'housing_zone',
+                'siret',
+                'company_name',
+                'monthly_revenue_freelance',
+                'primary_objective',
+                'birth_year',
+                'all',
+              ],
+            },
+            description: "Liste des champs à récupérer. Utilise 'all' pour tout récupérer.",
+          },
+        },
+        required: ['fields'],
       },
     },
   },
