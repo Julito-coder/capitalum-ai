@@ -93,6 +93,19 @@ export const useElioAgent = () => {
     setConversationId(null);
   }, []);
 
+  /**
+   * À appeler depuis les pages où l'utilisateur modifie son profil
+   * (FiscalProfile, onboarding, etc.). N'envoie rien au serveur :
+   * l'edge function relit `profiles` à chaque message et détecte
+   * la mise à jour via `updated_at` vs `last_profile_snapshot_at`.
+   */
+  const notifyProfileUpdated = useCallback(() => {
+    toast({
+      title: 'Profil mis à jour',
+      description: 'Élio prend en compte tes nouvelles infos au prochain message 🌤️',
+    });
+  }, []);
+
   return {
     messages,
     isLoading,
@@ -100,5 +113,6 @@ export const useElioAgent = () => {
     remainingToday,
     sendMessage,
     startNewConversation,
+    notifyProfileUpdated,
   };
 };
