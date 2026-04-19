@@ -1,91 +1,72 @@
 
 
-# Plan : Coach fiscal — Feed proactif de recommandations (F11)
+# Plan : F5 — Hub Simulateurs de vie (PACS, Freelance, Immo)
 
-## Objectif
+## Contexte
 
-Creer une page `/coach` (et un onglet/section dans Home) qui affiche un **feed vertical de recommandations fiscales personnalisees**, chacune avec un gain estime en euros, un effort, une deadline, et un CTA vers une action concrete. Persistance du statut (acceptee, ignoree, faite) en DB pour mesurer la valeur recuperee dans le temps — c'est le hook qui justifie le premium ("Elio m'a fait gagner 800€/an").
+Le simulateur immobilier (`/simulator`) et le simulateur d'épargne (`/savings-simulator`) existent déjà avec des moteurs matures (`simulationEngine.ts` 643L, `statusCalculations.ts` 436L). Il manque :
+1. Un **hub unifié** `/simulateurs` qui regroupe les simulateurs de vie
+2. Un simulateur **PACS/Mariage** (n'existe pas)
+3. Un simulateur **Passage freelance** (le moteur `statusCalculations.ts` existe mais aucune UI dédiée — uniquement `Simulator.tsx` qui est un mini-comparateur d'optimisation)
+
+V1 = ces 3 simulateurs. Reste du backlog (succession, expatriation, retraite…) → V2.
 
 ## Architecture
 
 ```text
-┌─────────────────────────────────────────┐
-│ Coach fiscal                            │
-│ "Elio te fait gagner 1 240€/an"         │← compteur viral
-├─────────────────────────────────────────┤
-│ [Tab: A faire] [Faites] [Ignorees]      │
-├─────────────────────────────────────────┤
-│ ┌─────────────────────────────────────┐ │
-│ │ 🔥 PER avant 31/12  +420€/an        │ │
-│ │ Verse 2 000€ avant fin d'annee...   │ │
-│ │ [Voir le guide] [Plus tard] [✕]     │ │
-│ └─────────────────────────────────────┘ │
-│ ┌─────────────────────────────────────┐ │
-│ │ 💼 Frais reels  +180€/an            │ │
-│ │ ...                                 │ │
-│ └─────────────────────────────────────┘ │
-└─────────────────────────────────────────┘
+/simulateurs                    → Hub avec 3 cards
+  ├─ /simulateurs/pacs          → PACS / Mariage (nouveau)
+  ├─ /simulateurs/freelance     → CDI vs Freelance (nouveau, consomme statusCalculations)
+  └─ /simulator                 → Immobilier (existant, juste relié)
 ```
 
-## Fichiers a creer/modifier
+## Fichiers à créer / modifier
 
-### 1. Migration DB — `user_recommendations`
-Nouvelle table pour persister le statut de chaque reco par utilisateur :
-- `id`, `user_id`, `recommendation_key` (string stable, ex: `pee-perco`)
-- `status` : `pending | accepted | dismissed | completed`
-- `estimated_gain` (numeric), `accepted_at`, `completed_at`, `dismissed_reason`
-- RLS : user owns rows. Realtime active.
+### 1. Moteur PACS — `src/lib/pacsCalculations.ts` (nouveau)
+Fonctions pures :
+- `calculateIR(income, parts)` — barème 2025 progressif
+- `calculateParts(status, children, parentIsole)` — quotient familial
+- `applyDecote(ir, status)` — décote 2025
+- `applyQFCeiling(irBefore, irAfter, parts)` — plafonnement QF
+- `compareSeparateVsJoint(input)` → `{ separateIR, jointIR, savings, recommendation }`
 
-### 2. `src/lib/coachService.ts` — Moteur du coach
-- Reutilise `calculateDashboardMetrics` pour generer les recos.
-- **Etend** la liste de recos (plus exhaustive que les 3 actuelles) :
-  - PER avant 31/12 (basee sur TMI estimee)
-  - Frais reels vs 10%
-  - PEE/PERCO abondement
-  - Transfert CTO → PEA
-  - Declaration crypto 2086
-  - Passage micro → reel
-  - Quotient familial PACS/mariage si couple non declare
-  - Garde d'enfants (CMG / credit impot 50%)
-  - Don deductible (66%)
-  - Investissement PME/FCPI (reduction IR)
-- Croise chaque reco avec la table `user_recommendations` pour determiner le statut.
-- `getCoachFeed(userId)` retourne `{ totalAnnualGain, pending[], completed[], dismissed[] }`.
-- `acceptRecommendation`, `dismissRecommendation`, `markCompleted`.
+Inputs : `revenuA`, `revenuB`, `enfants`, `parentIsoleAvant`, `pensionVersee`, `pensionRecue`.
 
-### 3. `src/pages/Coach.tsx` — Page feed
-- Header : "Elio te fait gagner X €/an" (somme des recos `pending` + `accepted`)
-- 3 tabs : **A faire** (pending+accepted) / **Faites** / **Ignorees**
-- Liste verticale de `RecommendationCard` (composant existant, deja tres bien)
-- Empty state : "Profil complet, aucune optimisation detectee. Reviens dans 1 mois."
-- Banner si profil incomplet → CTA `/profil/fiscal`
+### 2. Page PACS — `src/pages/simulators/PacsSimulator.tsx` (nouveau)
+Form mobile-first 1 colonne :
+- 2 sliders revenus (A et B), nombre enfants, toggle parent isolé, pensions
+- Card résultat : IR séparé / IR commun / **économie en €** (gros chiffre vert)
+- Recommandation textuelle ("Le PACS te ferait gagner 1 240€/an")
+- Note année N (option déclaration séparée la 1re année)
+- Disclaimer
 
-### 4. `src/components/coach/CoachRecoCard.tsx` — Carte enrichie
-- Reutilise le visuel de `RecommendationCard` existant, ajoute :
-  - Bouton `Voir le guide` → ouvre le `ActionGuideModal` existant si guide dispo, sinon lien externe
-  - Bouton `Plus tard` (snooze 30j)
-  - Bouton `✕` Ignorer (avec micro-form raison optionnelle)
-  - Badge urgence si deadline < 30j (rouge) ou < 90j (orange)
-  - Badge "Premium" sur les recos > €500/an si user gratuit (via `PremiumGate`)
+### 3. Page Freelance — `src/pages/simulators/FreelanceSimulator.tsx` (nouveau)
+Consomme `calculateAllStatuses` existant. UI :
+- Inputs : CA prévisionnel, type activité (BIC vente/service/BNC), charges, TMI, ACRE, situation famille
+- Toggle "Comparer avec mon CDI actuel" → input salaire brut → calcul net après IR via barème
+- Tableau comparatif : **CDI / Micro / EURL-IR / SASU** avec net après impôts, charges sociales, points forts/faibles
+- Alerte coûts cachés (comptable, CFE, RC pro, perte ARE)
+- CTA "Voir le détail" par statut → expand card
 
-### 5. Integration Home (`src/pages/Home.tsx`)
-- Remplacer la section `actions` par un teaser : 3 premieres recos + CTA "Voir le coach (12 actions)".
+### 4. Hub — `src/pages/Simulateurs.tsx` (nouveau)
+3 cards (PACS, Freelance, Immo) avec icône, baseline, gain potentiel type, CTA.
 
-### 6. Navigation
-- `src/App.tsx` : ajouter route `/coach`
-- `src/pages/Outils.tsx` : ajouter carte "Coach fiscal" avec icone `Sparkles`
-- Optionnel : badge sur le tab Outils (BottomNav) avec le nombre de recos pending
+### 5. Routing & nav
+- `src/App.tsx` : ajouter `/simulateurs`, `/simulateurs/pacs`, `/simulateurs/freelance`
+- `src/pages/Outils.tsx` : remplacer la card "Simulateur immobilier" par une card unique "Simulateurs de vie" → `/simulateurs`
 
-### 7. Notifications (lien feature persistante existante)
-- A chaque generation de recos, syncroniser via `syncDashboardAlerts` deja existant pour les recos urgentes (deadline < 30j).
-- Les notifications pointent vers `/coach`.
+## Détails techniques
 
-## Details techniques
+- **Réutilisation** : `calculateAllStatuses` (statusCalculations.ts), `formatCurrency` (mockData)
+- **Barème IR 2025** : tranches 0 / 11 294 / 28 797 / 82 341 / 177 106 (déjà dans `coachService` et `statusCalculations`, on extrait dans `pacsCalculations`)
+- **Pas de DB** : simulateurs stateless, pas de persistance V1 (résultats live)
+- **Design system strict** : Sora, couleurs Élio, cards radius 12, p-4
+- **Mobile-first** : sliders tactiles, résultat sticky en bas sur mobile
+- **Disclaimer** obligatoire en bas de chaque page
+- **Tutoiement** systématique
+- **Vocabulaire grand public** : "ta tranche d'imposition" pas "TMI", "tes cotisations" pas "charges TNS"
 
-- **Pas de mock** : tout vient du profil reel + `user_recommendations` table.
-- **Mobile-first** : feed vertical 1 colonne, cards `p-4`, Sora, design system Elio.
-- **Disclaimer obligatoire** en bas de page.
-- **Realtime** : sub Supabase sur `profiles` + `user_recommendations` pour rafraichir le feed.
-- **Tracking gain recupere** : la somme des recos `completed` sera affichee plus tard sur le dashboard ("Tu as recupere 640€ avec Elio").
-- **Pas de reecriture** des moteurs `dashboardService.ts`, `taxOptimizationEngine.ts` — on les consomme.
+## Hors scope (V2)
+
+Succession/donation, expatriation, retraite/rachat trimestres, stock-options/BSPCE, démembrement, dispositifs Pinel/Malraux. Le simulateur immo n'est PAS modifié — juste relié au hub.
 
