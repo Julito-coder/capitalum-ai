@@ -1,58 +1,30 @@
 
-## Plan : Hub Simulateurs de vie enrichi + lien vers Simulateur Immo
+## Plan : ajouter 2 tools à l'agent Élio (`detect_aids` + `get_fiscal_concept`)
 
 ### Contexte
-- Le hub `/simulateurs` existe déjà avec 3 cards : PACS, Freelance, Immobilier (déjà lié à `/simulator`).
-- Le simulateur immo (15k+ lignes, route `/simulator`) est fonctionnel mais peu mis en avant.
-- L'utilisateur demande d'élargir l'inventaire des événements de vie couverts dans le hub, sans recoder les moteurs existants.
+- L'agent Élio actuel a 4 tools dans `supabase/functions/elio-agent/tools/` : calculateTax, getDeadlines, getRecommendations, simulateRealEstate.
+- Le RichViewRenderer route déjà des `view_type` vers des composants. Il faut ajouter 2 nouveaux types : `aids_eligibility` et `fiscal_concept`.
+- L'espace agent vit dans `src/pages/Agent.tsx` (pas `ElioAgent.tsx` — la mémoire confirme la nav 4 tabs avec Agent en 2e). Je vérifierai le nom exact avant édit.
 
-### Approche : pas de nouveaux moteurs, on enrichit le hub
+### Changements (≤3 logiques)
 
-Je ne vais PAS coder 50 nouveaux simulateurs (hors scope V1, casse la règle "max 3 changements"). Je vais :
+**1. Backend — knowledge + tools + déclaration + system prompt**
+- `supabase/functions/elio-agent/knowledge/aids-rules.ts` : 10 aides (APL, Prime activité, CSS, ARS, Chèque énergie, Bourse CROUS, MaPrimeRénov', RSA, AAH, AF) avec `check(profile)` retournant `{status, reason, estimated_amount?, missing_fields?}`. Seuils 2025 simplifiés, biais "uncertain" plutôt que faux positif.
+- `supabase/functions/elio-agent/knowledge/fiscal-concepts.ts` : 20 concepts avec structure `{id, title, elio_explanation, key_numbers_2025[], who_it_fits[], watch_out_for[], source_url}`.
+- `supabase/functions/elio-agent/tools/detectAids.ts` : fetch profile depuis `profiles`, mappe vers les inputs des règles, exécute toutes les `check()`, regroupe par status. Renvoie aussi `view_type: 'aids_eligibility'`.
+- `supabase/functions/elio-agent/tools/getFiscalConcept.ts` : lookup dans le dict, renvoie `{concept, view_type: 'fiscal_concept'}` ou erreur si id inconnu.
+- `supabase/functions/elio-agent/index.ts` : importer + ajouter les 2 tools dans la liste des tool definitions OpenAI, brancher dans le switch d'exécution, mettre à jour la règle CRITIQUE du system prompt selon le format demandé.
 
-1. **Restructurer `/simulateurs`** en 5 catégories visuelles claires (Famille, Pro, Immo, Épargne, Retraite) avec sous-cards
-2. **Mettre en avant le simulateur immo existant** comme card hero (premier bloc, badge "Complet")
-3. **Marquer chaque sous-thème** : `Disponible` (lien direct), `Via Élio Agent` (ouvre `/agent` avec prompt pré-rempli), `Bientôt`
+**2. Frontend — 2 rich views**
+- `src/components/elio-agent/rich-views/AidsEligibility.tsx` : 4 sections verticales (vert / orange / jaune / gris dépliable), cartes avec nom + montant + reason + lien source. Sora, palette Élio.
+- `src/components/elio-agent/rich-views/FiscalConcept.tsx` : carte avec titre + 4 sous-sections (En gros, Chiffres 2025, Pour qui, Attention à) + lien source.
+- `src/components/elio-agent/RichViewRenderer.tsx` : ajouter les 2 cases.
 
-### Changements (3 max)
+**3. Suggestions L1 dans la page Agent**
+- Ouvrir `src/pages/Agent.tsx` (ou `ElioAgent.tsx` selon ce qui existe), vérifier que "Vérifie si j'ai droit à des aides" est présent, ajouter "Explique-moi ma tranche d'imposition" si absent.
 
-**1. `src/pages/Simulateurs.tsx` — refonte du hub**
-- Section "Hero" : card immo plein largeur avec CTA "Lancer le simulateur" → `/simulator`
-- 5 sections accordéons/grilles :
-  - **Famille & Couple** : PACS/Mariage (✓ dispo), Naissance/QF, Garde alternée, Pension, Donation → tous via Agent
-  - **Vie professionnelle** : Freelance (✓ dispo), Dividendes vs salaire, Rupture conv., Stock-options → via Agent
-  - **Immobilier** : RP vs location, Locatif nu/meublé, SCI, Travaux/déficit foncier → tous routent vers `/simulator`
-  - **Épargne** : PER, AV, PEA, SCPI, Crypto 2086 (✓ scanner) → via Agent ou outils dédiés
-  - **Retraite** : Rachat trimestres, Départ optimal, Sortie PER → via Agent
-- Chaque sous-item = bouton compact qui soit navigue vers une route existante, soit ouvre `/agent` avec `state.initialPrompt`
-
-**2. `src/pages/Outils.tsx` — réactiver/mettre en avant le simulateur immo**
-- Vérifier que la card "Simulateur immobilier" pointe bien vers `/simulator` et est visible
-- Ajouter un badge "Outil complet" pour le différencier
-
-**3. Vérifier le routing dans `src/App.tsx`**
-- Confirmer que `/simulator` (immo) est bien actif et protégé
-- S'assurer que `/simulateurs` (hub) coexiste sans conflit
-
-### Pattern technique pour les sous-items "via Agent"
-
-```tsx
-<button onClick={() => navigate('/agent', { 
-  state: { initialPrompt: "Explique-moi l'impact fiscal d'un PACS dans ma situation" }
-})}>
-  PACS / Mariage
-</button>
-```
-
-Le hook `useElioAgent` consomme déjà `location.state.initialPrompt` (mis en place au prompt précédent).
-
-### Design
-- Sora, palette stricte (#1B3A5C, #C8943E, #F8F5F0)
-- Cards `rounded-xl border border-[#E5E7EB]`, mobile-first 1 colonne → md:2 cols → lg:3 cols
-- Badges : `Disponible` (vert sauge #4B8264), `Via Élio` (doré #C8943E), `Bientôt` (gris)
-- Disclaimer en bas
-
-### Hors scope
-- Pas de nouveaux moteurs de calcul (succession, donation, expatriation, stock-options... → V2)
-- Pas de modification du simulateur immo existant
-- Pas de nouvelle table DB
+### Notes techniques
+- Les `check()` lisent les champs disponibles dans `profiles` (income_range, family_status, children_count, is_homeowner, professional_status, age_range, etc.). Quand un champ critique manque → status `needs_info` + `missing_fields`.
+- Pas de nouvelle table, pas de migration.
+- Lovable AI gateway déjà configuré, on n'y touche pas.
+- Disclaimer présent dans les rich views (estimations indicatives).
