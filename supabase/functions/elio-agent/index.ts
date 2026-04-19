@@ -490,7 +490,7 @@ serve(async (req) => {
         message: cleanedText,
         rich_view: finalRichView,
         tool_calls_made: toolCallsLog.map(t => t.name),
-        remaining_today: Math.max(0, DAILY_LIMIT - (currentCount + 1)),
+        remaining_today: null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
