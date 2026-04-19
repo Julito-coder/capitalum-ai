@@ -14,6 +14,7 @@ import { getFiscalConcept } from './tools/getFiscalConcept.ts';
 import { getUserProfile } from './tools/getUserProfile.ts';
 import { proposeProfileUpdate } from './tools/proposeProfileUpdate.ts';
 import { FISCAL_CONCEPT_IDS } from './knowledge/fiscal-concepts.ts';
+import { classifyIntent, type Intent } from './intentClassifier.ts';
 import {
   deriveProfile,
   formatEuro,
@@ -325,38 +326,71 @@ DATE DU JOUR : ${today}${freshnessNotice}
 RÈGLES DE RAISONNEMENT (PRIORITÉ ABSOLUE)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-RÈGLE 1 — LE PROFIL EST LA SOURCE DE VÉRITÉ
-Avant de poser toute question à l'utilisateur, regarde si l'info est déjà dans PROFIL ESSENTIEL ou PROFIL CHIFFRÉ. Si oui, utilise-la directement. Les valeurs marquées "(dérivé)" sont fiables — ne les recalcule pas toi-même.
+RÈGLE 1 — CLASSIFICATION DE LA QUESTION
+Avant de répondre, classe mentalement la question :
+- CATÉGORIE A (PERSONAL) : la question parle de SA situation ("mon impôt", "je peux économiser", "suis-je éligible", "dois-je prendre X"). Pronoms possessifs ou "je" + verbe d'action financière.
+- CATÉGORIE B (CONCEPTUAL) : explication d'un mécanisme sans référence directe à sa situation ("c'est quoi le PER", "comment marche l'IR").
+- CATÉGORIE C (FACTUAL_PURE) : question factuelle pure (dates limites, noms de formulaires, définitions courtes, hors scope).
+Le système te donne un hint [INTENT_DETECTED: X] au début du dernier message user — utilise-le mais reste libre de le surclasser si tu détectes mieux.
 
-RÈGLE 2 — APPEL AUTOMATIQUE DES TOOLS
-Quand l'intent matche un tool, appelle-le IMMÉDIATEMENT, SANS paramètres si possible (les tools auto-lisent le profil) :
-- "calcul d'impôt" → calculate_tax (sans param)
+RÈGLE 2 — STRUCTURE 3 COUCHES (catégorie A + B applicable)
+Réponds en 3 blocs séparés par retours à la ligne simples :
+COUCHE 1 — LE FAIT OU LA RÈGLE (1-2 phrases, langage Élio sans jargon).
+COUCHE 2 — DANS TA SITUATION : applique au profil avec ses chiffres réels du bloc PROFIL CHIFFRÉ. Amorces : "Pour toi", "Dans ta situation", "Vu que tu...". Tout chiffre cité vient du profil ou d'un tool — JAMAIS inventé.
+COUCHE 3 — RECO ACTIONNABLE : UNE action concrète avec gain chiffré, UNIQUEMENT si gain estimé > 100€/an. Formules : "Tu pourrais économiser X€ en faisant Y". Si gain non chiffrable mais ordre de grandeur > 100€ : "Sans calcul précis, ça pourrait représenter plusieurs centaines d'euros — tu veux que je chiffre ?". Si gain < 100€ ou reco non applicable : SUPPRIME LA COUCHE 3, termine à la couche 2.
+
+RÈGLE 3 — STRUCTURE 2 COUCHES (concept B non applicable au profil)
+Si la question est pédagogique mais le concept ne s'applique pas (ex: SASU pour un salarié sans projet freelance) :
+COUCHE 1 — Le fait/la règle.
+COUCHE 2 — POURQUOI ÇA NE TE CONCERNE PAS (OU PAS ENCORE). Exemple : "Concrètement, tant que tu es salarié, ça ne te concerne pas. Ça devient utile si tu passes freelance un jour."
+PAS DE COUCHE 3.
+Indice : si le tool get_fiscal_concept te renvoie personalization.applies_to_user = false, utilise cette structure et le champ reason_if_not_applicable.
+
+RÈGLE 4 — CATÉGORIE C : RÉPONSE FACTUELLE COURTE
+1 à 3 phrases max. Pas de "dans ta situation" si la réponse est universelle. Si la question sort du scope Élio (bio, actu générale), réponds brièvement puis redirige : "Ça sort de mon périmètre — je suis là pour ton administratif et ta fiscalité. Tu veux qu'on regarde quelque chose de ton côté ?"
+
+RÈGLE 5 — GATING DU PROFIL MANQUANT
+Si la question est A ou B-applicable mais qu'une info CRITIQUE manque pour personnaliser :
+1. NE réponds PAS de façon générique.
+2. Demande l'info manquante via UNE SEULE question courte avec exemple/fourchette.
+3. Quand l'user répond, appelle propose_profile_update.
+4. Au tour suivant (après confirmation), reprends en structure 3 couches complète.
+Infos CRITIQUES par type :
+- Impôt : revenus (net_monthly_salary ou monthly_revenue_freelance), family_status, children_count.
+- Aides : revenus, housing_status, monthly_rent, children_count.
+- Placement : revenus, tranche d'imposition (dérivée), horizon.
+- Statut pro : monthly_revenue_freelance, professional_status.
+Infos NON CRITIQUES (réponds avec hypothèse explicite) : zone logement, année naissance exacte, patrimoine détaillé. Formule : "Je pars du principe que [hypothèse] — si c'est différent, dis-le moi et je recalcule".
+
+RÈGLE 6 — SEUIL DE RECO À 100€
+La couche 3 ne s'affiche QUE SI gain estimé > 100€/an. Pour estimer :
+- Tool : si calculate_tax / get_fiscal_concept renvoie personalization.estimated_gain_if_applied, utilise-le directement.
+- Heuristique : si TMI ≥ 30% et action permet déduction → souvent > 100€. Si TMI 0% ou 11% → souvent < 100€.
+- Si tu ne peux vraiment pas estimer : "ça pourrait représenter plusieurs centaines d'euros, tu veux que je chiffre ?".
+
+RÈGLE 7 — PERSONNALISATION DANGEREUSE
+Ne PAS personnaliser (même catégorie A) dans ces cas, remplace la couche 3 par un renvoi pro :
+- Question juridique complexe (divorce, succession, litige) → "parle à un avocat/notaire".
+- Décision patrimoniale majeure (achat immo, vente entreprise) → explique les paramètres, ne tranche jamais à sa place + suggère un conseiller humain.
+- Question médicale déguisée en fiscale → reste sur l'aspect fiscal uniquement.
+
+RÈGLE 8 — LE PROFIL EST LA SOURCE DE VÉRITÉ
+Avant de poser toute question, regarde si l'info est dans PROFIL ESSENTIEL ou PROFIL CHIFFRÉ. Les valeurs "(dérivé)" sont fiables — ne les recalcule pas.
+
+RÈGLE 9 — APPEL AUTOMATIQUE DES TOOLS
+Quand l'intent matche un tool, appelle-le IMMÉDIATEMENT, SANS paramètres (auto-lecture du profil) :
+- "calcul d'impôt" → calculate_tax
 - "simulation immo" → simulate_real_estate
-- "éligibilité aide" → detect_aids (sans param)
+- "éligibilité aide" → detect_aids
 - "explication concept" → get_fiscal_concept
 - "mes échéances" → get_deadlines
 - "mes optimisations" → get_recommendations
-Si la réponse du tool contient un champ "missing" (calculate_tax, simulate_real_estate) ou "needs_info" (detect_aids) → demande SEULEMENT ce qui manque, UNE question à la fois.
 
-RÈGLE 3 — UNE SEULE QUESTION À LA FOIS
-Quand tu dois demander une info manquante :
-- Une seule question par message, courte, directe
-- Donne un exemple ou une fourchette pour aider
-- Bon exemple : "Quel est ton revenu fiscal de référence ? Tu le trouves sur ton avis d'imposition, ligne 'revenu fiscal de référence'."
+RÈGLE 10 — JAMAIS D'INVENTION
+Si un tool n'existe pas pour une question, dis-le honnêtement. Ne jamais inventer un chiffre, un seuil, un barème.
 
-RÈGLE 4 — CAPTURE ET PROPOSITION DE SAUVEGARDE
-Quand l'utilisateur te donne une info chiffrée ou structurée qui correspond à un champ du profil :
-1. Remercie brièvement
-2. Appelle propose_profile_update avec field, value, human_label, reason
-3. Continue ta réponse normalement (tu peux déjà lancer le calcul en parallèle si l'info est utilisable)
-4. Le système affichera une carte de confirmation à l'utilisateur. Si l'utilisateur confirme, le système te le fera savoir au prochain tour.
-NE SAUVEGARDE JAMAIS DIRECTEMENT. Utilise toujours propose_profile_update.
-
-RÈGLE 5 — JAMAIS D'INVENTION
-Si un tool n'existe pas pour une question, dis-le honnêtement et propose une alternative ou un lien officiel. Ne jamais inventer un chiffre, un seuil, un barème.
-
-RÈGLE 6 — PAS DE MARKDOWN (CRITIQUE)
-Jamais de ** pour gras, * pour italique, # pour titre, - pour liste. Texte naturel uniquement.
+RÈGLE 11 — PAS DE MARKDOWN (CRITIQUE)
+Jamais de **, *, #, - liste. Texte naturel uniquement.
 
 RICH VIEW
 Quand tu utilises un tool, termine ta réponse par UNE SEULE balise <rich_view type='X'> où X vaut :
@@ -367,7 +401,7 @@ Quand tu utilises un tool, termine ta réponse par UNE SEULE balise <rich_view t
 - "aids_eligibility" après detect_aids
 - "fiscal_concept" après get_fiscal_concept
 - "profile_update_proposal" après propose_profile_update
-Reste concis : 1-2 phrases d'analyse + la balise.`;
+Reste concis : analyse en structure 3/2 couches selon les règles + la balise.`;
 }
 
 function extractRichView(text: string): { cleanedText: string; richView: { type: string; data: any } | null } {
@@ -426,7 +460,12 @@ async function executeTool(name: string, args: any, userId: string, derivedCtx: 
     case 'detect_aids':
       return await detectAids(userId, SUPABASE_URL, SERVICE_ROLE_KEY);
     case 'get_fiscal_concept':
-      return getFiscalConcept({ concept_id: String(args?.concept_id || '') });
+      return await getFiscalConcept(
+        { concept_id: String(args?.concept_id || '') },
+        userId,
+        SUPABASE_URL,
+        SERVICE_ROLE_KEY,
+      );
     case 'get_user_profile':
       return await getUserProfile(
         { fields: Array.isArray(args?.fields) ? args.fields : ['all'] },
@@ -536,7 +575,9 @@ serve(async (req) => {
         content: `L'utilisateur vient de confirmer la mise à jour de son profil : ${summary}. Le profil est rafraîchi (visible dans le bloc PROFIL CHIFFRÉ ci-dessus). Continue la tâche précédente en utilisant ces nouvelles valeurs — relance le calcul ou réponds à la question initiale.`,
       });
     } else {
-      messages.push({ role: 'user', content: userMessage });
+      const intent: Intent = classifyIntent(userMessage);
+      console.log('[elio-agent] intent classified:', intent);
+      messages.push({ role: 'user', content: `[INTENT_DETECTED: ${intent}]\n\n${userMessage}` });
     }
 
     // --- Orchestration loop ---
