@@ -278,6 +278,13 @@ async function executeTool(
       return await detectAids(userId, SUPABASE_URL, SERVICE_ROLE_KEY);
     case 'get_fiscal_concept':
       return getFiscalConcept({ concept_id: String(args?.concept_id || '') });
+    case 'get_user_profile':
+      return await getUserProfile(
+        { fields: Array.isArray(args?.fields) ? args.fields : ['all'] },
+        userId,
+        SUPABASE_URL,
+        SERVICE_ROLE_KEY,
+      );
     default:
       return { error: `Unknown tool: ${name}` };
   }
