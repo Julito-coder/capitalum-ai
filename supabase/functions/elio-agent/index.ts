@@ -14,6 +14,7 @@ import { getFiscalConcept } from './tools/getFiscalConcept.ts';
 import { getUserProfile } from './tools/getUserProfile.ts';
 import { proposeProfileUpdate } from './tools/proposeProfileUpdate.ts';
 import { FISCAL_CONCEPT_IDS } from './knowledge/fiscal-concepts.ts';
+import { classifyIntent, type Intent } from './intentClassifier.ts';
 import {
   deriveProfile,
   formatEuro,
@@ -426,7 +427,12 @@ async function executeTool(name: string, args: any, userId: string, derivedCtx: 
     case 'detect_aids':
       return await detectAids(userId, SUPABASE_URL, SERVICE_ROLE_KEY);
     case 'get_fiscal_concept':
-      return getFiscalConcept({ concept_id: String(args?.concept_id || '') });
+      return await getFiscalConcept(
+        { concept_id: String(args?.concept_id || '') },
+        userId,
+        SUPABASE_URL,
+        SERVICE_ROLE_KEY,
+      );
     case 'get_user_profile':
       return await getUserProfile(
         { fields: Array.isArray(args?.fields) ? args.fields : ['all'] },
