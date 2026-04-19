@@ -1501,6 +1501,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_recommendations: {
+        Row: {
+          accepted_at: string | null
+          completed_at: string | null
+          created_at: string
+          dismissed_at: string | null
+          dismissed_reason: string | null
+          estimated_gain: number
+          id: string
+          recommendation_key: string
+          snoozed_until: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          dismissed_reason?: string | null
+          estimated_gain?: number
+          id?: string
+          recommendation_key: string
+          snoozed_until?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          dismissed_reason?: string | null
+          estimated_gain?: number
+          id?: string
+          recommendation_key?: string
+          snoozed_until?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_recurring_deadlines: {
         Row: {
           amount: number | null
