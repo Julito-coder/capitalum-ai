@@ -227,6 +227,4 @@ export const useElioAgent = () => {
     notifyProfileUpdated,
   };
 };
-    notifyProfileUpdated,
-  };
-};
+
