@@ -26,10 +26,10 @@ const tools = [
     color: 'bg-warning/10 text-warning',
   },
   {
-    path: '/outils/simulateur',
+    path: '/simulateurs',
     icon: Building2,
-    title: 'Simulateur immobilier',
-    description: 'Calcule la rentabilité de ton investissement locatif',
+    title: 'Simulateurs de vie',
+    description: 'PACS, freelance, immobilier — anticipe l\'impact fiscal',
     color: 'bg-info/10 text-info',
   },
   {

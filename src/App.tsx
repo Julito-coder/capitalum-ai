@@ -19,6 +19,9 @@ import NewSimulation from "./pages/simulator/NewSimulation";
 import SimulationDetails from "./pages/simulator/SimulationDetails";
 import CompareSimulations from "./pages/simulator/CompareSimulations";
 import SavingsSimulator from "./pages/SavingsSimulator";
+import Simulateurs from "./pages/Simulateurs";
+import PacsSimulator from "./pages/simulators/PacsSimulator";
+import FreelanceSimulator from "./pages/simulators/FreelanceSimulator";
 import AidesDetector from "./pages/AidesDetector";
 import Coach from "./pages/Coach";
 import FiscalProfile from "./pages/FiscalProfile";
@@ -54,6 +57,9 @@ const App = () => (
             <Route path="/outils/simulateur/compare" element={<ProtectedRoute><CompareSimulations /></ProtectedRoute>} />
             <Route path="/outils/simulateur/:id" element={<ProtectedRoute><SimulationDetails /></ProtectedRoute>} />
             <Route path="/outils/epargne" element={<ProtectedRoute><SavingsSimulator /></ProtectedRoute>} />
+            <Route path="/simulateurs" element={<ProtectedRoute><Simulateurs /></ProtectedRoute>} />
+            <Route path="/simulateurs/pacs" element={<ProtectedRoute><PacsSimulator /></ProtectedRoute>} />
+            <Route path="/simulateurs/freelance" element={<ProtectedRoute><FreelanceSimulator /></ProtectedRoute>} />
             <Route path="/outils/aides" element={<ProtectedRoute><AidesDetector /></ProtectedRoute>} />
             <Route path="/coach" element={<ProtectedRoute><Coach /></ProtectedRoute>} />
             <Route path="/outils/coffre" element={<ProtectedRoute><CoffreFortPage /></ProtectedRoute>} />
