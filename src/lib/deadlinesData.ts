@@ -388,7 +388,7 @@ export const FISCAL_DEADLINES: FiscalDeadline[] = [
       explanation: `La revalorisation IRL représente ~2-3% de tes loyers annuels. Sur 10 ans, ne pas ajuster peut coûter plus de 5 000 €.`,
     }),
     actions: [
-      { id: 'simulate', label: 'Simuler l\'impact', icon: 'Calculator', type: 'simulation', target: '/simulator' },
+      { id: 'simulate', label: 'Simuler l\'impact', icon: 'Calculator', type: 'simulation', target: '/outils/simulateur' },
     ],
     tags: ['propriétaire', 'locatif', 'annuel'],
   },
@@ -582,7 +582,7 @@ export const FISCAL_DEADLINES: FiscalDeadline[] = [
       };
     },
     actions: [
-      { id: 'optimize', label: 'Simuler l\'avantage', icon: 'Calculator', type: 'simulation', target: '/simulator' },
+      { id: 'optimize', label: 'Simuler l\'avantage', icon: 'Calculator', type: 'simulation', target: '/outils/simulateur' },
     ],
     tags: ['couple', 'annuel', 'optimisation'],
   },
@@ -712,7 +712,7 @@ export const FISCAL_DEADLINES: FiscalDeadline[] = [
     },
     actions: [
       { id: 'scan', label: 'Scanner ma déclaration', icon: 'Search', type: 'guide', target: '/scanner' },
-      { id: 'simulate', label: 'Simuler l\'impact', icon: 'Calculator', type: 'simulation', target: '/simulator' },
+      { id: 'simulate', label: 'Simuler l\'impact', icon: 'Calculator', type: 'simulation', target: '/outils/simulateur' },
     ],
     tags: ['locatif', 'obligatoire', 'annuel'],
   },

@@ -63,7 +63,7 @@ const ProjectItem = ({ project }: { project: ProjectSummary }) => {
   const statusBadge = getStatusBadge(project.status);
   
   const handleClick = () => {
-    navigate(project.type === 'immobilier' ? '/simulator' : '/savings');
+    navigate(project.type === 'immobilier' ? '/outils/simulateur' : '/savings');
   };
 
   return (
@@ -130,7 +130,7 @@ export const ProjectsSimulationsCard = () => {
             variant="outline" 
             size="sm" 
             className="h-9 gap-1.5 shrink-0 min-w-[44px]" 
-            onClick={() => navigate('/simulator/new')}
+            onClick={() => navigate('/outils/simulateur/new')}
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Nouveau</span>
@@ -150,7 +150,7 @@ export const ProjectsSimulationsCard = () => {
               <Button 
                 variant="ghost" 
                 className="justify-start text-muted-foreground hover:text-foreground h-11 px-3"
-                onClick={() => navigate('/simulator')}
+                onClick={() => navigate('/outils/simulateur')}
               >
                 <Building2 className="h-4 w-4 mr-2 shrink-0" />
                 <span className="truncate">Immo</span>
@@ -175,7 +175,7 @@ export const ProjectsSimulationsCard = () => {
               Lancez une simulation pour visualiser ton patrimoine futur.
             </p>
             <div className="flex gap-2">
-              <Button variant="outline" className="min-h-[44px]" onClick={() => navigate('/simulator/new')}>
+              <Button variant="outline" className="min-h-[44px]" onClick={() => navigate('/outils/simulateur/new')}>
                 <Building2 className="h-4 w-4 mr-1.5" />
                 Immobilier
               </Button>

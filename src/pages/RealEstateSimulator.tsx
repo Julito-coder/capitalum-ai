@@ -73,12 +73,12 @@ const RealEstateSimulator = () => {
           </div>
           <div className="flex gap-2">
             {projects.length >= 2 && (
-              <Button variant="outline" onClick={() => navigate("/simulator/compare")} className="gap-2">
+              <Button variant="outline" onClick={() => navigate("/outils/simulateur/compare")} className="gap-2">
                 <TrendingUp className="h-4 w-4" />
                 Comparer
               </Button>
             )}
-            <Button onClick={() => navigate("/simulator/new")} className="gap-2">
+            <Button onClick={() => navigate("/outils/simulateur/new")} className="gap-2">
               <Plus className="h-4 w-4" />
               Nouvelle simulation
             </Button>
@@ -93,7 +93,7 @@ const RealEstateSimulator = () => {
               <p className="text-muted-foreground text-center mb-4">
                 Créez votre première simulation immobilière pour analyser rentabilité, cashflow et fiscalité.
               </p>
-              <Button onClick={() => navigate("/simulator/new")}>
+              <Button onClick={() => navigate("/outils/simulateur/new")}>
                 <Plus className="h-4 w-4 mr-2" />
                 Créer une simulation
               </Button>
