@@ -33,6 +33,14 @@ const tools = [
     color: 'bg-info/10 text-info',
   },
   {
+    path: '/outils/simulateur',
+    icon: Building2,
+    title: 'Simulateur immobilier',
+    description: 'Outil complet : amortissement, cashflow, patrimoine, dossier banque',
+    color: 'bg-primary/10 text-primary',
+    badge: 'Outil complet',
+  },
+  {
     path: '/outils/epargne',
     icon: PiggyBank,
     title: 'Simulateur épargne',
@@ -82,9 +90,16 @@ const OutilsPage = () => {
                 <tool.icon className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                  {tool.title}
-                </h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {tool.title}
+                  </h3>
+                  {(tool as any).badge && (
+                    <span className="text-[10px] font-semibold text-[#C8943E] bg-[#C8943E]/10 px-2 py-0.5 rounded-full">
+                      {(tool as any).badge}
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">{tool.description}</p>
               </div>
             </motion.button>
