@@ -575,7 +575,9 @@ serve(async (req) => {
         content: `L'utilisateur vient de confirmer la mise à jour de son profil : ${summary}. Le profil est rafraîchi (visible dans le bloc PROFIL CHIFFRÉ ci-dessus). Continue la tâche précédente en utilisant ces nouvelles valeurs — relance le calcul ou réponds à la question initiale.`,
       });
     } else {
-      messages.push({ role: 'user', content: userMessage });
+      const intent: Intent = classifyIntent(userMessage);
+      console.log('[elio-agent] intent classified:', intent);
+      messages.push({ role: 'user', content: `[INTENT_DETECTED: ${intent}]\n\n${userMessage}` });
     }
 
     // --- Orchestration loop ---
