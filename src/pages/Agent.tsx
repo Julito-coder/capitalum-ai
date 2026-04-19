@@ -12,11 +12,22 @@ import {
   Calendar,
   Sparkles,
   TrendingUp,
+  History,
+  Pin,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useElioAgent } from '@/hooks/useElioAgent';
 import { RichViewRenderer } from '@/components/elio-agent/RichViewRenderer';
+import {
+  listConversations,
+  loadConversation,
+  togglePin,
+  deleteConversation,
+  type ConversationSummary,
+} from '@/lib/agentConversationsService';
 
 interface Suggestion {
   label: string;
