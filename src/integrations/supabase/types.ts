@@ -756,6 +756,7 @@ export type Database = {
           employer_siret: string | null
           family_status: string | null
           financial_objectives: string[] | null
+          first_name: string | null
           fiscal_status: string | null
           full_name: string | null
           gdpr_consent: boolean | null
@@ -766,6 +767,8 @@ export type Database = {
           has_meal_vouchers: boolean | null
           has_real_expenses: boolean | null
           has_rental_income: boolean | null
+          housing_status: string | null
+          housing_zone: string | null
           id: string
           ifi_liable: boolean | null
           income_range: string | null
@@ -779,6 +782,8 @@ export type Database = {
           life_insurance_withdrawals: number | null
           liquidation_date: string | null
           main_pension_annual: number | null
+          monthly_rent: number | null
+          monthly_revenue_freelance: number | null
           mortgage_remaining: number | null
           net_monthly_salary: number | null
           nif: string | null
@@ -799,6 +804,7 @@ export type Database = {
           professional_supplies: number | null
           real_expenses_amount: number | null
           recent_donations: Json | null
+          reference_tax_income: number | null
           rental_properties: Json | null
           rental_scheme: string | null
           residence_duration_years: number | null
@@ -849,6 +855,7 @@ export type Database = {
           employer_siret?: string | null
           family_status?: string | null
           financial_objectives?: string[] | null
+          first_name?: string | null
           fiscal_status?: string | null
           full_name?: string | null
           gdpr_consent?: boolean | null
@@ -859,6 +866,8 @@ export type Database = {
           has_meal_vouchers?: boolean | null
           has_real_expenses?: boolean | null
           has_rental_income?: boolean | null
+          housing_status?: string | null
+          housing_zone?: string | null
           id?: string
           ifi_liable?: boolean | null
           income_range?: string | null
@@ -872,6 +881,8 @@ export type Database = {
           life_insurance_withdrawals?: number | null
           liquidation_date?: string | null
           main_pension_annual?: number | null
+          monthly_rent?: number | null
+          monthly_revenue_freelance?: number | null
           mortgage_remaining?: number | null
           net_monthly_salary?: number | null
           nif?: string | null
@@ -892,6 +903,7 @@ export type Database = {
           professional_supplies?: number | null
           real_expenses_amount?: number | null
           recent_donations?: Json | null
+          reference_tax_income?: number | null
           rental_properties?: Json | null
           rental_scheme?: string | null
           residence_duration_years?: number | null
@@ -942,6 +954,7 @@ export type Database = {
           employer_siret?: string | null
           family_status?: string | null
           financial_objectives?: string[] | null
+          first_name?: string | null
           fiscal_status?: string | null
           full_name?: string | null
           gdpr_consent?: boolean | null
@@ -952,6 +965,8 @@ export type Database = {
           has_meal_vouchers?: boolean | null
           has_real_expenses?: boolean | null
           has_rental_income?: boolean | null
+          housing_status?: string | null
+          housing_zone?: string | null
           id?: string
           ifi_liable?: boolean | null
           income_range?: string | null
@@ -965,6 +980,8 @@ export type Database = {
           life_insurance_withdrawals?: number | null
           liquidation_date?: string | null
           main_pension_annual?: number | null
+          monthly_rent?: number | null
+          monthly_revenue_freelance?: number | null
           mortgage_remaining?: number | null
           net_monthly_salary?: number | null
           nif?: string | null
@@ -985,6 +1002,7 @@ export type Database = {
           professional_supplies?: number | null
           real_expenses_amount?: number | null
           recent_donations?: Json | null
+          reference_tax_income?: number | null
           rental_properties?: Json | null
           rental_scheme?: string | null
           residence_duration_years?: number | null

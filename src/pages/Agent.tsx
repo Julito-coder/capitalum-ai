@@ -111,7 +111,7 @@ const AgentPage = () => {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { messages, isLoading, remainingToday, sendMessage, startNewConversation } = useElioAgent();
+  const { messages, isLoading, remainingToday, sendMessage, startNewConversation, confirmProfileUpdates } = useElioAgent();
 
   useEffect(() => {
     if (!user) return;
@@ -231,7 +231,7 @@ const AgentPage = () => {
                     {m.content && (
                       <div className="text-[#1F3347] text-sm whitespace-pre-wrap leading-relaxed">{m.content}</div>
                     )}
-                    <RichViewRenderer rich_view={m.rich_view} onRunPrompt={sendMessage} />
+                    <RichViewRenderer rich_view={m.rich_view} onRunPrompt={sendMessage} onConfirmProfileUpdate={confirmProfileUpdates} />
                   </div>
                 </div>
               );
