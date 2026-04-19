@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { Building2, RefreshCw, Plug, Trash2, ArrowLeft, Loader2, Landmark } from 'lucide-react';
+import { Building2, RefreshCw, Plug, Trash2, ArrowLeft, Loader2, Landmark, Sparkles } from 'lucide-react';
 import {
   getConnectionStatus,
   listAccounts,
@@ -15,6 +15,7 @@ import {
   startWebview,
   syncBankData,
   disconnectBank,
+  detectRecurringFromBank,
   type BankAccount,
   type BankTransaction,
   type PowensConnectionStatus,
