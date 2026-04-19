@@ -1,9 +1,16 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, ScanSearch, Building2, PiggyBank, FolderLock, HandCoins } from 'lucide-react';
+import { Calendar, ScanSearch, Building2, PiggyBank, FolderLock, HandCoins, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const tools = [
+  {
+    path: '/coach',
+    icon: Sparkles,
+    title: 'Coach fiscal',
+    description: 'Tes optimisations personnalisées avec gain estimé',
+    color: 'bg-secondary/10 text-secondary',
+  },
   {
     path: '/outils/calendrier',
     icon: Calendar,
