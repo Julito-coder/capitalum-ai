@@ -47,8 +47,8 @@ export const useElioAgent = () => {
           const status = (error as any).context?.status ?? (error as any).status;
           if (status === 429) {
             toast({
-              title: 'Limite atteinte',
-              description: 'Tu as atteint la limite de 5 messages par jour. Reviens demain.',
+              title: 'Trop de requêtes',
+              description: 'Élio reçoit beaucoup de demandes. Réessaie dans quelques secondes.',
               variant: 'destructive',
             });
           } else {

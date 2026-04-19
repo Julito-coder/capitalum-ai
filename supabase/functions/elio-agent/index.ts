@@ -280,12 +280,7 @@ serve(async (req) => {
       .maybeSingle();
 
     const currentCount = usageRow?.messages_count || 0;
-    if (currentCount >= DAILY_LIMIT) {
-      return new Response(
-        JSON.stringify({ error: 'Tu as atteint la limite de 5 messages par jour. Reviens demain ou passe premium.', remaining_today: 0 }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    }
+    // Pas de limite quotidienne — usage tracké pour stats uniquement.
 
     // --- Load profile ---
     const { data: profile } = await adminClient
@@ -495,7 +490,7 @@ serve(async (req) => {
         message: cleanedText,
         rich_view: finalRichView,
         tool_calls_made: toolCallsLog.map(t => t.name),
-        remaining_today: Math.max(0, DAILY_LIMIT - (currentCount + 1)),
+        remaining_today: null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
