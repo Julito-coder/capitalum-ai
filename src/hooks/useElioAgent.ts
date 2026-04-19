@@ -9,6 +9,7 @@ export type RichViewType =
   | 'recommendations_list'
   | 'aids_eligibility'
   | 'fiscal_concept'
+  | 'profile_update_proposal'
   | null;
 
 export interface RichView {
@@ -28,6 +29,20 @@ export const useElioAgent = () => {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [remainingToday, setRemainingToday] = useState<number | null>(null);
 
+  const handleResponse = useCallback((data: any) => {
+    if (data?.conversation_id) setConversationId(data.conversation_id);
+    if (typeof data?.remaining_today === 'number') setRemainingToday(data.remaining_today);
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: 'assistant',
+        content: data?.message ?? '',
+        rich_view: data?.rich_view ?? null,
+      },
+    ]);
+  }, []);
+
   const sendMessage = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
@@ -39,11 +54,10 @@ export const useElioAgent = () => {
 
       try {
         const { data, error } = await supabase.functions.invoke('elio-agent', {
-          body: { message: trimmed, conversation_id: conversationId },
+          body: { type: 'message', message: trimmed, conversation_id: conversationId },
         });
 
         if (error) {
-          // 429 rate limit
           const status = (error as any).context?.status ?? (error as any).status;
           if (status === 429) {
             toast({
@@ -62,17 +76,7 @@ export const useElioAgent = () => {
           return;
         }
 
-        if (data?.conversation_id) setConversationId(data.conversation_id);
-        if (typeof data?.remaining_today === 'number') setRemainingToday(data.remaining_today);
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: data?.message ?? '',
-            rich_view: data?.rich_view ?? null,
-          },
-        ]);
+        handleResponse(data);
       } catch (e) {
         console.error('[useElioAgent] error', e);
         toast({
@@ -85,7 +89,98 @@ export const useElioAgent = () => {
         setIsLoading(false);
       }
     },
-    [conversationId, isLoading]
+    [conversationId, isLoading, handleResponse],
+  );
+
+  /**
+   * Confirme et applique les mises à jour de profil proposées par l'agent.
+   * 1. Écrit en base via UPDATE sur public.profiles
+   * 2. Notifie l'agent qui reprend la tâche en cours avec les nouvelles valeurs
+   */
+  const confirmProfileUpdates = useCallback(
+    async (updates: Array<{ field: string; value: any }>) => {
+      if (!updates.length) return;
+      if (!conversationId) {
+        toast({
+          title: 'Erreur',
+          description: 'Aucune conversation active.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData?.user?.id;
+        if (!userId) throw new Error('Utilisateur non authentifié');
+
+        // Construit le payload en convertissant les valeurs proprement
+        const payload: Record<string, any> = {};
+        for (const u of updates) {
+          payload[u.field] = u.value;
+        }
+
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update(payload)
+          .eq('user_id', userId);
+
+        if (updateError) {
+          console.error('[useElioAgent] profile update error', updateError);
+          toast({
+            title: 'Erreur',
+            description: "Impossible d'enregistrer les modifications.",
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        toast({
+          title: 'Profil mis à jour',
+          description: 'Élio reprend ton calcul avec les nouvelles infos.',
+        });
+
+        // Affiche un message user "fantôme" pour la lisibilité du fil
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'user',
+            content: `J'ai confirmé : ${updates.map((u) => u.field).join(', ')}`,
+          },
+        ]);
+
+        // Notifie l'agent pour qu'il reprenne la tâche
+        const { data, error } = await supabase.functions.invoke('elio-agent', {
+          body: {
+            type: 'resume_after_confirmation',
+            conversation_id: conversationId,
+            confirmed_updates: updates,
+          },
+        });
+
+        if (error) {
+          toast({
+            title: 'Erreur',
+            description: "Élio n'a pas pu reprendre. Renvoie ton message.",
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        handleResponse(data);
+      } catch (e) {
+        console.error('[useElioAgent] confirmProfileUpdates error', e);
+        toast({
+          title: 'Erreur',
+          description: 'Erreur lors de la confirmation.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [conversationId, handleResponse],
   );
 
   const startNewConversation = useCallback(() => {
@@ -93,12 +188,6 @@ export const useElioAgent = () => {
     setConversationId(null);
   }, []);
 
-  /**
-   * À appeler depuis les pages où l'utilisateur modifie son profil
-   * (FiscalProfile, onboarding, etc.). N'envoie rien au serveur :
-   * l'edge function relit `profiles` à chaque message et détecte
-   * la mise à jour via `updated_at` vs `last_profile_snapshot_at`.
-   */
   const notifyProfileUpdated = useCallback(() => {
     toast({
       title: 'Profil mis à jour',
@@ -112,6 +201,7 @@ export const useElioAgent = () => {
     conversationId,
     remainingToday,
     sendMessage,
+    confirmProfileUpdates,
     startNewConversation,
     notifyProfileUpdated,
   };

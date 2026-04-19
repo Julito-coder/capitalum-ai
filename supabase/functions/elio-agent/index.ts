@@ -12,7 +12,18 @@ import { getRecommendations } from './tools/getRecommendations.ts';
 import { detectAids } from './tools/detectAids.ts';
 import { getFiscalConcept } from './tools/getFiscalConcept.ts';
 import { getUserProfile } from './tools/getUserProfile.ts';
+import { proposeProfileUpdate } from './tools/proposeProfileUpdate.ts';
 import { FISCAL_CONCEPT_IDS } from './knowledge/fiscal-concepts.ts';
+import {
+  deriveProfile,
+  formatEuro,
+  getFirstName,
+  translateFamilyStatus,
+  translateHousing,
+  translateProfessionalStatus,
+  type RawProfile,
+  type DerivedValues,
+} from './profileDeriver.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,8 +31,7 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const DAILY_LIMIT = 5;
-const MAX_TOOL_CALLS_PER_TURN = 5;
+const MAX_TOOL_CALLS_PER_TURN = 6;
 const MAX_LOOP_ITERATIONS = 6;
 const MODEL = 'google/gemini-2.5-flash';
 
@@ -36,7 +46,7 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'get_recommendations',
-      description: 'Récupère les recommandations fiscales actives pour l\'utilisateur (PER, PEA, frais réels, aides...) avec le gain estimé en euros.',
+      description: "Récupère les recommandations fiscales actives pour l'utilisateur (PER, PEA, frais réels, aides...) avec le gain estimé en euros.",
       parameters: { type: 'object', properties: {}, required: [] },
     },
   },
@@ -58,15 +68,16 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'calculate_tax',
-      description: 'Calcule l\'impôt sur le revenu français avec le barème 2025 et le quotient familial. À UTILISER pour tout calcul d\'IR.',
+      description:
+        "Calcule l'impôt sur le revenu français avec le barème 2025 et le quotient familial. Tous les paramètres sont OPTIONNELS — si non fournis, ils sont auto-lus depuis le profil. Appelle ce tool SANS paramètres en premier ; si la réponse contient un champ 'missing', demande à l'utilisateur les infos manquantes puis rappelle le tool avec elles.",
       parameters: {
         type: 'object',
         properties: {
-          taxable_income: { type: 'number', description: 'Revenu net imposable annuel en euros' },
-          family_status: { type: 'string', enum: ['single', 'married', 'pacs', 'divorced', 'widowed'], description: 'Situation familiale' },
-          children_count: { type: 'integer', description: 'Nombre d\'enfants à charge', default: 0 },
+          taxable_income: { type: 'number', description: 'Revenu net imposable annuel en euros (optionnel — auto)' },
+          family_status: { type: 'string', enum: ['single', 'married', 'pacs', 'divorced', 'widowed'], description: 'Situation familiale (optionnel — auto)' },
+          children_count: { type: 'integer', description: "Nombre d'enfants à charge (optionnel — auto)" },
         },
-        required: ['taxable_income', 'family_status', 'children_count'],
+        required: [],
       },
     },
   },
@@ -74,16 +85,17 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'simulate_real_estate',
-      description: 'Simule une opération immobilière locative : mensualité, cashflow mensuel, rendement brut/net.',
+      description:
+        "Simule une opération immobilière locative : mensualité, cashflow mensuel, rendement brut/net. Tous les paramètres sont OPTIONNELS — si non fournis, ils sont auto-lus depuis le profil. Appelle SANS paramètres d'abord ; regarde 'missing' dans la réponse.",
       parameters: {
         type: 'object',
         properties: {
-          property_price: { type: 'number', description: 'Prix du bien en euros' },
-          monthly_rent: { type: 'number', description: 'Loyer mensuel attendu' },
+          property_price: { type: 'number', description: 'Prix du bien en euros (optionnel)' },
+          monthly_rent: { type: 'number', description: 'Loyer mensuel attendu (optionnel — auto si stocké)' },
           loan_duration_years: { type: 'integer', description: 'Durée du prêt en années', default: 20 },
           down_payment: { type: 'number', description: 'Apport personnel en euros', default: 0 },
         },
-        required: ['property_price', 'monthly_rent', 'loan_duration_years', 'down_payment'],
+        required: [],
       },
     },
   },
@@ -91,7 +103,8 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'detect_aids',
-      description: 'Analyse l\'éligibilité de l\'utilisateur aux 10 principales aides nationales françaises (APL, Prime d\'activité, CSS, ARS, Chèque énergie, Bourse CROUS, MaPrimeRénov\', RSA, AAH, Allocations familiales) en fonction de son profil fiscal. Retourne la liste des aides éligibles, non éligibles, et celles nécessitant des infos complémentaires.',
+      description:
+        "Analyse l'éligibilité de l'utilisateur aux aides nationales françaises (APL, Prime d'activité, CSS, ARS, Chèque énergie, Bourse CROUS, MaPrimeRénov', RSA, AAH, Allocations familiales). Aucun paramètre — utilise le profil. Si une aide nécessite une info manquante (ex: revenu fiscal de référence), elle apparaît dans 'needs_info' avec la liste des champs à compléter.",
       parameters: { type: 'object', properties: {}, required: [] },
     },
   },
@@ -99,7 +112,8 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'get_fiscal_concept',
-      description: 'Récupère des informations structurées sur un concept fiscal ou un dispositif (tranches IR, PER, PEA, micro-entrepreneur, SASU, EURL, PFU, LMNP, SCPI, déficit foncier, etc.). À utiliser quand l\'utilisateur demande une explication ou veut comprendre un mécanisme fiscal.',
+      description:
+        "Récupère des informations structurées sur un concept fiscal ou un dispositif (tranches IR, PER, PEA, micro-entrepreneur, SASU, EURL, PFU, LMNP, SCPI, déficit foncier, etc.). À utiliser quand l'utilisateur demande une explication ou veut comprendre un mécanisme fiscal.",
       parameters: {
         type: 'object',
         properties: {
@@ -117,7 +131,8 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'get_user_profile',
-      description: "Récupère les détails chiffrés et précis du profil fiscal de l'utilisateur connecté (revenus, montants, valeurs). À utiliser dès que tu as besoin d'un chiffre précis sur sa situation. Retourne {value, status} pour chaque champ — si status='not_filled', demande à l'utilisateur de compléter plutôt que d'inventer.",
+      description:
+        "Récupère un détail chiffré ou structuré du profil de l'utilisateur (champ atomique ou dérivé). À utiliser SEULEMENT si une info précise n'est pas déjà visible dans le bloc PROFIL CHIFFRÉ du contexte.",
       parameters: {
         type: 'object',
         properties: {
@@ -151,94 +166,208 @@ const TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'propose_profile_update',
+      description:
+        "Propose à l'utilisateur d'enregistrer une information chiffrée ou structurée dans son profil. NE SAUVEGARDE PAS directement — affiche une carte de confirmation avec boutons. À appeler systématiquement quand l'utilisateur te donne une info qui correspond à un champ du profil (revenus, patrimoine, situation familiale, RFR, etc.). Tu peux proposer plusieurs updates d'un coup.",
+      parameters: {
+        type: 'object',
+        properties: {
+          proposals: {
+            type: 'array',
+            description: 'Liste des propositions de mise à jour',
+            items: {
+              type: 'object',
+              properties: {
+                field: {
+                  type: 'string',
+                  enum: [
+                    'first_name',
+                    'net_monthly_salary',
+                    'annual_bonus',
+                    'thirteenth_month',
+                    'monthly_revenue_freelance',
+                    'annual_revenue_ht',
+                    'has_real_expenses',
+                    'real_expenses_amount',
+                    'family_status',
+                    'children_count',
+                    'professional_status',
+                    'pea_balance',
+                    'life_insurance_balance',
+                    'main_pension_annual',
+                    'housing_status',
+                    'monthly_rent',
+                    'housing_zone',
+                    'has_rental_income',
+                    'has_investments',
+                    'birth_year',
+                    'primary_objective',
+                    'reference_tax_income',
+                  ],
+                },
+                value: { description: 'La valeur proposée (type selon le champ)' },
+                human_label: { type: 'string', description: 'Label humain du champ' },
+                unit: { type: 'string', description: 'Unité si applicable (€, ans, etc.)' },
+                reason: { type: 'string', description: 'Pourquoi cette proposition, en 1 phrase.' },
+              },
+              required: ['field', 'value', 'human_label', 'reason'],
+            },
+          },
+        },
+        required: ['proposals'],
+      },
+    },
+  },
 ];
 
-// ---------- Helpers ----------
+// ---------- System prompt builder ----------
 
-function buildProfileSummary(profile: any): string {
-  if (!profile) return "Profil fiscal non renseigné. Demande à l'utilisateur de compléter son profil.";
-
-  const familyMap: Record<string, string> = {
-    single: 'célibataire', married: 'marié(e)', pacs: 'pacsé(e)', divorced: 'divorcé(e)', widowed: 'veuf/veuve',
-  };
-  const profStatus: string[] = [];
-  if (profile.is_employee) profStatus.push('salarié');
-  if (profile.is_self_employed) profStatus.push('indépendant');
-  if (profile.is_retired) profStatus.push('retraité');
-  if (profile.is_investor) profStatus.push('investisseur');
-
-  const firstName = (profile.full_name || '').split(' ')[0] || "l'utilisateur";
-  const hasCrypto = !!(profile.crypto_pnl_2025 || profile.crypto_wallet_address);
-  const updatedAt = profile.updated_at
-    ? new Date(profile.updated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
-    : 'inconnu';
+function buildEssentialBlock(p: RawProfile): string {
+  const firstName = getFirstName(p);
+  const fam = translateFamilyStatus(p.family_status);
+  const children = p.children_count != null ? `${p.children_count}` : 'Non renseigné';
+  const prof = translateProfessionalStatus(p);
+  const birth = p.birth_year ? `${new Date().getFullYear() - p.birth_year} ans` : 'Non renseigné';
+  const objective = p.primary_objective ?? 'Non renseigné';
+  const onb = p.onboarding_completed ? 'Oui' : 'Non — certaines infos manquent';
 
   return [
     `- Prénom : ${firstName}`,
-    `- Situation familiale : ${familyMap[profile.family_status] || 'non renseignée'}`,
-    `- Nombre d'enfants : ${profile.children_count ?? 'non renseigné'}`,
-    `- Statut professionnel : ${profStatus.length ? profStatus.join(', ') : 'non renseigné'}`,
-    `- A des revenus fonciers : ${profile.has_rental_income ? 'oui' : 'non'}`,
-    `- A des investissements : ${profile.has_investments ? 'oui' : 'non'}`,
-    `- A de la crypto : ${hasCrypto ? 'oui' : 'non'}`,
-    `- Onboarding complet : ${profile.onboarding_completed ? 'oui' : 'non — certaines infos manquent'}`,
-    `- Profil mis à jour le : ${updatedAt}`,
+    `- Situation familiale : ${fam}`,
+    `- Enfants à charge : ${children}`,
+    `- Statut professionnel : ${prof}`,
+    `- Âge : ${birth}`,
+    `- Objectif principal : ${objective}`,
+    `- Onboarding complet : ${onb}`,
   ].join('\n');
 }
 
-function buildSystemPrompt(profileSummary: string, profileChangedSinceLastTurn: boolean): string {
+function buildNumericBlock(p: RawProfile, d: DerivedValues): string {
+  const atomic = [
+    'Atomiques (saisis par l\'utilisateur) :',
+    `- Salaire net mensuel : ${formatEuro(p.net_monthly_salary)}`,
+    `- Prime annuelle : ${formatEuro(p.annual_bonus)}`,
+    `- 13ème mois : ${formatEuro(p.thirteenth_month)}`,
+    `- CA freelance mensuel : ${formatEuro(p.monthly_revenue_freelance)}`,
+    `- Frais réels déclarés : ${p.has_real_expenses ? formatEuro(p.real_expenses_amount) : 'Non (forfait 10%)'}`,
+    `- PEA : ${formatEuro(p.pea_balance)}`,
+    `- Assurance-vie : ${formatEuro(p.life_insurance_balance)}`,
+    `- Statut logement : ${translateHousing(p)}`,
+    `- Loyer mensuel : ${formatEuro(p.monthly_rent)}`,
+    `- Zone logement : ${p.housing_zone ?? 'Non renseigné'}`,
+    `- Revenu fiscal de référence : ${formatEuro(p.reference_tax_income)}`,
+  ].join('\n');
+
+  const derived = [
+    'Dérivés (calculés automatiquement — fiables) :',
+    `- Revenu net annuel : ${formatEuro(d.annual_net_income)} ${d.annual_net_income ? '(dérivé)' : ''}`,
+    `- Revenu imposable estimé : ${formatEuro(d.taxable_income)} ${d.taxable_income ? '(dérivé)' : ''}`,
+    `- Parts fiscales : ${d.tax_parts ?? 'Non calculable'} ${d.tax_parts ? '(dérivé)' : ''}`,
+    `- A de la crypto : ${d.has_crypto ? 'oui' : 'non'}`,
+  ].join('\n');
+
+  return `${atomic}\n\n${derived}`;
+}
+
+function buildMissingBlock(p: RawProfile, d: DerivedValues): string {
+  const missing: string[] = [];
+  if (d.annual_net_income == null) missing.push('Revenus (salaire mensuel ou CA freelance)');
+  if (!p.family_status) missing.push('Situation familiale');
+  if (p.children_count == null) missing.push("Nombre d'enfants à charge");
+  if (!p.professional_status && !p.is_employee && !p.is_self_employed && !p.is_retired) {
+    missing.push('Statut professionnel');
+  }
+  if (p.reference_tax_income == null) missing.push('Revenu fiscal de référence (utile pour APL, CSS, RSA)');
+
+  if (missing.length === 0) return 'Aucun — profil complet pour les calculs principaux.';
+  return missing.map((m) => `- ${m}`).join('\n');
+}
+
+function buildSystemPrompt(p: RawProfile, d: DerivedValues, profileChangedSinceLastTurn: boolean): string {
   const today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const freshnessNotice = profileChangedSinceLastTurn
-    ? "\n\n⚠️ L'utilisateur a mis à jour son profil depuis ton dernier message. Prends en compte les nouvelles infos. Si tu as des données chiffrées en mémoire qui pourraient être obsolètes, re-vérifie via get_user_profile."
+    ? "\n\n⚠️ L'utilisateur a mis à jour son profil depuis ton dernier message. Reprends en compte les nouvelles valeurs ci-dessous."
     : '';
 
-  return `Tu es Élio, l'agent IA fiscal et administratif de l'app Élio. Tu aides les particuliers français à comprendre, anticiper et optimiser leur situation fiscale et administrative.
+  return `Tu es Élio, l'agent IA fiscal et administratif de l'app Élio. Tu aides les particuliers français à comprendre, anticiper et optimiser leur situation fiscale.
 
 PERSONNALITÉ
 - Tu tutoies toujours l'utilisateur
 - Ton chaleureux, direct, jamais condescendant
-- Registre courant, pas de jargon fiscal sauf si tu l'expliques
-- Tu es l'ami compétent en impôts, pas un prof, pas un robot, pas un banquier
-- Tu annonces clairement ce que tu vas faire avant d'appeler un tool
+- Pas de jargon fiscal sauf si tu l'expliques
+- JAMAIS de markdown : pas de **, pas de ##, pas de *, pas de listes à puces, pas de tableaux. Que du texte naturel avec retours à la ligne simples si besoin.
 
-VOCABULAIRE ÉLIO (obligatoire)
+VOCABULAIRE ÉLIO OBLIGATOIRE
 - "ta tranche d'imposition" (pas "TMI")
 - "tu peux économiser X€" (pas "optimisation fiscale")
 - "tes cotisations sociales" (pas "charges TNS")
-- "impôt sur les dividendes (30%)" (pas "PFU" ni "flat tax")
+- "impôt sur les dividendes à 30%" (pas "PFU" ni "flat tax")
 
-RÈGLE CRITIQUE : TU UTILISES LES TOOLS POUR TOUT ÉLÉMENT FACTUEL
-- Calculs (impôt, immo) → calculate_tax, simulate_real_estate
-- Éligibilité à une aide (APL, Prime d'activité, CSS, RSA, ARS, AAH, etc.) → detect_aids
-- Explication d'un dispositif fiscal (PER, PEA, LMNP, SASU, tranches IR, PFU…) → get_fiscal_concept
-- Échéances / recommandations → get_deadlines, get_recommendations
-- Si aucun tool ne couvre la question : dis honnêtement que tu ne peux pas y répondre pour l'instant, et propose une piste alternative ou un lien officiel. NE JAMAIS INVENTER de barème, seuil ou montant.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONTEXTE UTILISATEUR (mis à jour à chaque message)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PROFIL ESSENTIEL DE L'UTILISATEUR (toujours à jour)
-${profileSummary}
+PROFIL ESSENTIEL
+${buildEssentialBlock(p)}
 
-POUR TOUT DÉTAIL CHIFFRÉ (revenus annuels, montants épargnés, PEA, assurance-vie, frais réels, pension, CA freelance, etc.) → utilise OBLIGATOIREMENT le tool get_user_profile avec les champs voulus. Ne jamais deviner un chiffre.
-SI L'UTILISATEUR DIT "j'ai changé X dans mon profil" → re-appelle get_user_profile pour re-vérifier.
-SI un champ revient avec status='not_filled' → demande à l'utilisateur de compléter, ne fabrique pas de valeur.${freshnessNotice}
+PROFIL CHIFFRÉ
+${buildNumericBlock(p, d)}
 
-LIMITES DE V1
-- Pas de soumission directe à impots.gouv
-- Pas de connexion aux comptes bancaires
-- Pas de conseil patrimonial personnalisé au sens du CMF (disclaimer quand on touche à ça)
-- Pour les actions irréversibles : toujours demander confirmation
+CHAMPS MANQUANTS
+${buildMissingBlock(p, d)}
 
-RICH VIEW (IMPORTANT)
+DATE DU JOUR : ${today}${freshnessNotice}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RÈGLES DE RAISONNEMENT (PRIORITÉ ABSOLUE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RÈGLE 1 — LE PROFIL EST LA SOURCE DE VÉRITÉ
+Avant de poser toute question à l'utilisateur, regarde si l'info est déjà dans PROFIL ESSENTIEL ou PROFIL CHIFFRÉ. Si oui, utilise-la directement. Les valeurs marquées "(dérivé)" sont fiables — ne les recalcule pas toi-même.
+
+RÈGLE 2 — APPEL AUTOMATIQUE DES TOOLS
+Quand l'intent matche un tool, appelle-le IMMÉDIATEMENT, SANS paramètres si possible (les tools auto-lisent le profil) :
+- "calcul d'impôt" → calculate_tax (sans param)
+- "simulation immo" → simulate_real_estate
+- "éligibilité aide" → detect_aids (sans param)
+- "explication concept" → get_fiscal_concept
+- "mes échéances" → get_deadlines
+- "mes optimisations" → get_recommendations
+Si la réponse du tool contient un champ "missing" (calculate_tax, simulate_real_estate) ou "needs_info" (detect_aids) → demande SEULEMENT ce qui manque, UNE question à la fois.
+
+RÈGLE 3 — UNE SEULE QUESTION À LA FOIS
+Quand tu dois demander une info manquante :
+- Une seule question par message, courte, directe
+- Donne un exemple ou une fourchette pour aider
+- Bon exemple : "Quel est ton revenu fiscal de référence ? Tu le trouves sur ton avis d'imposition, ligne 'revenu fiscal de référence'."
+
+RÈGLE 4 — CAPTURE ET PROPOSITION DE SAUVEGARDE
+Quand l'utilisateur te donne une info chiffrée ou structurée qui correspond à un champ du profil :
+1. Remercie brièvement
+2. Appelle propose_profile_update avec field, value, human_label, reason
+3. Continue ta réponse normalement (tu peux déjà lancer le calcul en parallèle si l'info est utilisable)
+4. Le système affichera une carte de confirmation à l'utilisateur. Si l'utilisateur confirme, le système te le fera savoir au prochain tour.
+NE SAUVEGARDE JAMAIS DIRECTEMENT. Utilise toujours propose_profile_update.
+
+RÈGLE 5 — JAMAIS D'INVENTION
+Si un tool n'existe pas pour une question, dis-le honnêtement et propose une alternative ou un lien officiel. Ne jamais inventer un chiffre, un seuil, un barème.
+
+RÈGLE 6 — PAS DE MARKDOWN (CRITIQUE)
+Jamais de ** pour gras, * pour italique, # pour titre, - pour liste. Texte naturel uniquement.
+
+RICH VIEW
 Quand tu utilises un tool, termine ta réponse par UNE SEULE balise <rich_view type='X'> où X vaut :
-- "tax_breakdown" après calculate_tax
-- "real_estate_cashflow" après simulate_real_estate
+- "tax_breakdown" après calculate_tax (réussi)
+- "real_estate_cashflow" après simulate_real_estate (réussi)
 - "deadlines_list" après get_deadlines
 - "recommendations_list" après get_recommendations
 - "aids_eligibility" après detect_aids
 - "fiscal_concept" après get_fiscal_concept
-(get_user_profile n'a pas de rich_view, juste un texte concis.)
-Ne mets jamais les chiffres bruts complets dans ton texte si un rich_view les affichera. Reste concis : 1-2 phrases d'analyse + la balise.
-
-DATE DU JOUR : ${today}`;
+- "profile_update_proposal" après propose_profile_update
+Reste concis : 1-2 phrases d'analyse + la balise.`;
 }
 
 function extractRichView(text: string): { cleanedText: string; richView: { type: string; data: any } | null } {
@@ -246,30 +375,50 @@ function extractRichView(text: string): { cleanedText: string; richView: { type:
   if (!match) return { cleanedText: text, richView: null };
   return {
     cleanedText: text.replace(match[0], '').trim(),
-    richView: { type: match[1], data: {} }, // data injecté plus tard depuis le dernier tool result
+    richView: { type: match[1], data: {} },
   };
 }
 
-async function executeTool(
-  name: string,
-  args: any,
-  userId: string,
-): Promise<any> {
+// ---------- Tool executor ----------
+
+async function executeTool(name: string, args: any, userId: string, derivedCtx: { raw: RawProfile; derived: DerivedValues }): Promise<any> {
   console.log(`[elio-agent] executing tool: ${name}`, args);
   switch (name) {
-    case 'calculate_tax':
-      return calculateTax({
-        taxable_income: Number(args.taxable_income),
-        family_status: String(args.family_status),
-        children_count: Number(args.children_count) || 0,
-      });
-    case 'simulate_real_estate':
-      return simulateRealEstate({
-        property_price: Number(args.property_price),
-        monthly_rent: Number(args.monthly_rent),
-        loan_duration_years: Number(args.loan_duration_years) || 20,
-        down_payment: Number(args.down_payment) || 0,
-      });
+    case 'calculate_tax': {
+      // Auto-lecture depuis profil dérivé si paramètres manquants
+      const taxable_income = args.taxable_income ?? derivedCtx.derived.taxable_income;
+      const family_status = args.family_status ?? derivedCtx.raw.family_status;
+      const children_count = args.children_count ?? derivedCtx.raw.children_count ?? 0;
+      return calculateTax({ taxable_income, family_status, children_count });
+    }
+    case 'simulate_real_estate': {
+      const monthly_rent = args.monthly_rent ?? derivedCtx.raw.monthly_rent;
+      const property_price = args.property_price;
+      // Si property_price absent → missing explicite
+      if (property_price == null) {
+        return {
+          success: false,
+          missing: ['property_price'],
+          message: 'Pour simuler, il me faut le prix du bien immobilier que tu envisages.',
+        };
+      }
+      if (monthly_rent == null) {
+        return {
+          success: false,
+          missing: ['monthly_rent'],
+          message: 'Quel loyer mensuel envisages-tu pour ce bien ?',
+        };
+      }
+      return {
+        success: true,
+        ...simulateRealEstate({
+          property_price: Number(property_price),
+          monthly_rent: Number(monthly_rent),
+          loan_duration_years: Number(args.loan_duration_years) || 20,
+          down_payment: Number(args.down_payment) || 0,
+        }),
+      };
+    }
     case 'get_deadlines':
       return getDeadlines({ months_ahead: Number(args.months_ahead) || 3 });
     case 'get_recommendations':
@@ -285,6 +434,8 @@ async function executeTool(
         SUPABASE_URL,
         SERVICE_ROLE_KEY,
       );
+    case 'propose_profile_update':
+      return proposeProfileUpdate({ proposals: Array.isArray(args?.proposals) ? args.proposals : [] });
     default:
       return { error: `Unknown tool: ${name}` };
   }
@@ -313,15 +464,21 @@ serve(async (req) => {
 
     // --- Input ---
     const body = await req.json();
-    const userMessage: string = String(body?.message || '').trim();
+    const inputType: string = String(body?.type || 'message');
     const conversationId: string | null = body?.conversation_id || null;
-    if (!userMessage) {
+    const userMessage: string = String(body?.message || '').trim();
+    const confirmedUpdates: Array<{ field: string; value: any }> = Array.isArray(body?.confirmed_updates) ? body.confirmed_updates : [];
+
+    if (inputType === 'message' && !userMessage) {
       return new Response(JSON.stringify({ error: 'message is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (inputType === 'resume_after_confirmation' && (!conversationId || confirmedUpdates.length === 0)) {
+      return new Response(JSON.stringify({ error: 'conversation_id and confirmed_updates are required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    // --- Rate limit (ad-hoc) ---
+    // --- Track usage (no daily limit) ---
     const today = new Date().toISOString().slice(0, 10);
     const { data: usageRow } = await adminClient
       .from('elio_agent_usage')
@@ -329,9 +486,7 @@ serve(async (req) => {
       .eq('user_id', userId)
       .eq('date', today)
       .maybeSingle();
-
     const currentCount = usageRow?.messages_count || 0;
-    // Pas de limite quotidienne — usage tracké pour stats uniquement.
 
     // --- Load profile (frais) ---
     const { data: profile } = await adminClient
@@ -339,6 +494,8 @@ serve(async (req) => {
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
+
+    const derivedCtx = deriveProfile(profile);
 
     // --- Load conversation history ---
     let conversation: any = null;
@@ -352,15 +509,14 @@ serve(async (req) => {
       conversation = data;
     }
 
-    // --- Compute profile freshness flag ---
+    // --- Profile freshness flag ---
     const profileUpdatedAt = profile?.updated_at ? new Date(profile.updated_at).getTime() : 0;
     const lastSnapshot = conversation?.last_profile_snapshot_at
       ? new Date(conversation.last_profile_snapshot_at).getTime()
       : 0;
     const profileChangedSinceLastTurn = !!(conversation && profileUpdatedAt > lastSnapshot);
 
-    const profileSummary = buildProfileSummary(profile);
-    const systemPrompt = buildSystemPrompt(profileSummary, profileChangedSinceLastTurn);
+    const systemPrompt = buildSystemPrompt(derivedCtx.raw, derivedCtx.derived, profileChangedSinceLastTurn);
 
     const previousMessages: any[] = Array.isArray(conversation?.messages) ? conversation.messages : [];
     const recentHistory = previousMessages
@@ -369,11 +525,19 @@ serve(async (req) => {
       .map((m) => ({ role: m.role, content: m.content }));
 
     // --- Build initial message list ---
-    const messages: any[] = [
-      { role: 'system', content: systemPrompt },
-      ...recentHistory,
-      { role: 'user', content: userMessage },
-    ];
+    const messages: any[] = [{ role: 'system', content: systemPrompt }, ...recentHistory];
+
+    if (inputType === 'resume_after_confirmation') {
+      const summary = confirmedUpdates
+        .map((u) => `${u.field} = ${JSON.stringify(u.value)}`)
+        .join(', ');
+      messages.push({
+        role: 'system',
+        content: `L'utilisateur vient de confirmer la mise à jour de son profil : ${summary}. Le profil est rafraîchi (visible dans le bloc PROFIL CHIFFRÉ ci-dessus). Continue la tâche précédente en utilisant ces nouvelles valeurs — relance le calcul ou réponds à la question initiale.`,
+      });
+    } else {
+      messages.push({ role: 'user', content: userMessage });
+    }
 
     // --- Orchestration loop ---
     let totalTokens = 0;
@@ -406,7 +570,7 @@ serve(async (req) => {
         }
         if (llmResp.status === 402) {
           return new Response(
-            JSON.stringify({ error: 'Crédits IA épuisés. Contacte le support pour réactiver l\'agent.' }),
+            JSON.stringify({ error: "Crédits IA épuisés. Contacte le support pour réactiver l'agent." }),
             { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
           );
         }
@@ -431,15 +595,13 @@ serve(async (req) => {
 
       if (toolCalls.length > MAX_TOOL_CALLS_PER_TURN) {
         return new Response(
-          JSON.stringify({ error: 'Trop d\'appels d\'outils sur ce tour. Réessaie avec une question plus précise.' }),
+          JSON.stringify({ error: "Trop d'appels d'outils sur ce tour. Réessaie avec une question plus précise." }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         );
       }
 
-      // Push assistant message containing tool_calls
       messages.push(assistantMessage);
 
-      // Execute each tool
       for (const tc of toolCalls) {
         const fnName = tc.function?.name;
         let parsedArgs: any = {};
@@ -448,7 +610,7 @@ serve(async (req) => {
         } catch (e) {
           console.error('[elio-agent] failed to parse tool args:', e);
         }
-        const result = await executeTool(fnName, parsedArgs, userId);
+        const result = await executeTool(fnName, parsedArgs, userId, derivedCtx);
         toolCallsLog.push({ name: fnName, args: parsedArgs, result });
         lastToolResultData = result;
         lastToolName = fnName;
@@ -462,7 +624,7 @@ serve(async (req) => {
     }
 
     if (!finalAssistantText) {
-      finalAssistantText = 'Désolé, je n\'ai pas réussi à formuler une réponse complète. Réessaie avec une question plus précise.';
+      finalAssistantText = "Désolé, je n'ai pas réussi à formuler une réponse complète. Réessaie avec une question plus précise.";
     }
 
     // --- Extract rich_view tag ---
@@ -471,7 +633,6 @@ serve(async (req) => {
     if (richView && lastToolResultData) {
       finalRichView = { type: richView.type, data: lastToolResultData };
     } else if (lastToolName && lastToolResultData) {
-      // Fallback : si l'agent oublie la balise mais a appelé un tool, on infère
       const inferMap: Record<string, string> = {
         calculate_tax: 'tax_breakdown',
         simulate_real_estate: 'real_estate_cashflow',
@@ -479,15 +640,21 @@ serve(async (req) => {
         get_recommendations: 'recommendations_list',
         detect_aids: 'aids_eligibility',
         get_fiscal_concept: 'fiscal_concept',
+        propose_profile_update: 'profile_update_proposal',
       };
       const inferred = inferMap[lastToolName];
       if (inferred) finalRichView = { type: inferred, data: lastToolResultData };
     }
 
     // --- Persist conversation ---
+    const turnUserContent =
+      inputType === 'resume_after_confirmation'
+        ? `[Profil mis à jour : ${confirmedUpdates.map((u) => u.field).join(', ')}]`
+        : userMessage;
+
     const newMessages = [
       ...previousMessages,
-      { role: 'user', content: userMessage, ts: new Date().toISOString() },
+      { role: 'user', content: turnUserContent, ts: new Date().toISOString() },
       { role: 'assistant', content: cleanedText, ts: new Date().toISOString(), rich_view: finalRichView },
     ];
 
@@ -518,7 +685,7 @@ serve(async (req) => {
           tool_calls: allToolCalls,
           total_tokens: totalTokens,
           model_used: MODEL,
-          topic: userMessage.slice(0, 80),
+          topic: turnUserContent.slice(0, 80),
           last_profile_snapshot_at: snapshotIso,
         })
         .select('id')
@@ -552,7 +719,7 @@ serve(async (req) => {
         conversation_id: savedConversationId,
         message: cleanedText,
         rich_view: finalRichView,
-        tool_calls_made: toolCallsLog.map(t => t.name),
+        tool_calls_made: toolCallsLog.map((t) => t.name),
         remaining_today: null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
