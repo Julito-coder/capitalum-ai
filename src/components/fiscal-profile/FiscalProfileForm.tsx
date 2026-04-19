@@ -54,6 +54,8 @@ export const FiscalProfileForm = () => {
     setSaving(false);
     if (result.success) {
       toast({ title: '✅ Profil sauvegardé', description: 'Tes informations ont été mises à jour.' });
+      // Notifie l'agent Élio que le profil a été modifié manuellement
+      window.dispatchEvent(new CustomEvent('elio:profile-updated', { detail: { source: 'fiscal_profile_form' } }));
     } else {
       toast({ title: 'Erreur', description: result.error, variant: 'destructive' });
     }
