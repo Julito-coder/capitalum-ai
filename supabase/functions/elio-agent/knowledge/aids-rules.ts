@@ -24,12 +24,18 @@ export interface AidRule {
 // Helpers
 const annualIncome = (p: any): number => {
   if (!p) return 0;
-  const sal = (Number(p.gross_monthly_salary) || 0) * 12;
-  const indep = Number(p.annual_revenue_ht) || 0;
+  // Prend le max entre net mensuel × 12 et brut mensuel × 12 × 0.78 pour éviter de sous-estimer
+  const netSal = (Number(p.net_monthly_salary) || 0) * 12;
+  const grossSal = (Number(p.gross_monthly_salary) || 0) * 12;
+  const sal = Math.max(netSal, grossSal);
+  const freelanceMonthly = (Number(p.monthly_revenue_freelance) || 0) * 12;
+  const indep = Math.max(Number(p.annual_revenue_ht) || 0, freelanceMonthly);
+  const bonus = Number(p.annual_bonus) || 0;
+  const thirteenth = Number(p.thirteenth_month) || 0;
   const pens = Number(p.main_pension_annual) || 0;
   const supp = Number(p.supplementary_income) || 0;
   const spouse = Number(p.spouse_income) || 0;
-  return sal + indep + pens + supp + spouse;
+  return sal + indep + bonus + thirteenth + pens + supp + spouse;
 };
 
 const incomeRangeToEstimate = (range?: string | null): number | null => {
@@ -46,8 +52,13 @@ const incomeRangeToEstimate = (range?: string | null): number | null => {
 };
 
 const estimateAnnualIncome = (p: any): number | null => {
+  // 1. Priorité au RFR si renseigné (donnée fiscale officielle)
+  const rfr = Number(p?.reference_tax_income);
+  if (rfr > 0) return rfr;
+  // 2. Sinon dérivé des composantes salariales/freelance
   const direct = annualIncome(p);
   if (direct > 0) return direct;
+  // 3. Sinon fourchette déclarative
   return incomeRangeToEstimate(p?.income_range);
 };
 
