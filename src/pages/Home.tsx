@@ -4,6 +4,7 @@ import { ScoreElio } from '@/components/home/ScoreElio';
 import { GainCard } from '@/components/home/GainCard';
 import { ActionCard } from '@/components/home/ActionCard';
 import { CalendarPreview } from '@/components/home/CalendarPreview';
+import { ElioAgentFeed } from '@/components/home/ElioAgentFeed';
 import { useAuth } from '@/contexts/AuthContext';
 import { loadUserProfile, calculateDashboardMetrics } from '@/lib/dashboardService';
 import { FISCAL_DEADLINES } from '@/lib/deadlinesData';
@@ -128,6 +129,8 @@ const HomePage = () => {
         >
           <ScoreElio score={score} />
         </motion.div>
+
+        <ElioAgentFeed />
 
         <GainCard totalLoss={totalLoss} breakdown={breakdown} />
 

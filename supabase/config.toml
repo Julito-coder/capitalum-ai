@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.purge-expired-conversations]
 verify_jwt = false
+
+[functions.elio-agent-proactive]
+verify_jwt = false
