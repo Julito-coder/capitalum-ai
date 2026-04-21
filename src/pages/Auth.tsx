@@ -35,7 +35,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate('/dashboard', { replace: true });
+      navigate('/bulletin', { replace: true });
     }
   }, [user, loading, navigate]);
 

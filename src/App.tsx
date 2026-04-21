@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 import Index from "./pages/Index";
+import Bulletin from "./pages/Bulletin";
 import HomePage from "./pages/Home";
 import AgentPage from "./pages/Agent";
 import OutilsPage from "./pages/Outils";
@@ -47,7 +48,9 @@ const App = () => (
             <Route path="/auth/reset-password" element={<ResetPassword />} />
 
             {/* Protected routes */}
+            <Route path="/bulletin" element={<ProtectedRoute><Bulletin /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/tableau-de-bord" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/agent" element={<ProtectedRoute><AgentPage /></ProtectedRoute>} />
             <Route path="/outils" element={<ProtectedRoute><OutilsPage /></ProtectedRoute>} />
             <Route path="/outils/calendrier" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
