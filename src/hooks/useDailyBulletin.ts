@@ -214,5 +214,5 @@ export function useDailyBulletin() {
     }
   }, [data]);
 
-  return { data, loading, error, handleActionStatus, reload: loadBulletin };
+  return { data, loading, newsLoading, error, handleActionStatus, reload: loadBulletin };
 }

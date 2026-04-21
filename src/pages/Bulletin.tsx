@@ -15,7 +15,7 @@ import { getBulletinHistory, DailyBulletinRow } from '@/lib/bulletinService';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Bulletin = () => {
-  const { data, loading, handleActionStatus } = useDailyBulletin();
+  const { data, loading, newsLoading, handleActionStatus } = useDailyBulletin();
   const { user } = useAuth();
   const [history, setHistory] = useState<DailyBulletinRow[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
