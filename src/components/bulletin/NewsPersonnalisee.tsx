@@ -1,16 +1,36 @@
 import { motion } from 'framer-motion';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import { Skeleton } from '@/components/ui/skeleton';
 import { forwardRef, useState } from 'react';
 
 interface NewsPersonnaliseeProps {
   context: string | null;
   title: string | null;
   body: string | null;
+  loading?: boolean;
 }
 
 export const NewsPersonnalisee = forwardRef<HTMLDivElement, NewsPersonnaliseeProps>(
-  ({ context, title, body }, ref) => {
+  ({ context, title, body, loading = false }, ref) => {
     const [drawerOpen, setDrawerOpen] = useState(false);
+
+    // Skeleton pendant le chargement de la news
+    if (loading) {
+      return (
+        <motion.div
+          ref={ref}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.5, ease: 'easeOut' }}
+          className="bg-card rounded-xl border border-border p-6 mx-5 lg:mx-8 mt-4"
+        >
+          <Skeleton className="h-3 w-40 mb-3" />
+          <Skeleton className="h-5 w-3/4 mb-3" />
+          <Skeleton className="h-4 w-full mb-1" />
+          <Skeleton className="h-4 w-2/3" />
+        </motion.div>
+      );
+    }
 
     if (!title || !body) return null;
 

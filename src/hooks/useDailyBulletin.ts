@@ -14,6 +14,7 @@ import {
   markBulletinViewed,
   updateStreak,
   getDoneActionIds,
+  getWeekAgoGain,
   DailyBulletinRow,
   UserStreakRow,
 } from '@/lib/bulletinService';
@@ -34,6 +35,7 @@ export function useDailyBulletin() {
   const { user } = useAuth();
   const [data, setData] = useState<BulletinData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [newsLoading, setNewsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadBulletin = useCallback(async () => {
@@ -124,19 +126,10 @@ export function useDailyBulletin() {
         return;
       }
 
-      // Si le bulletin existe mais sans news, déclencher le backfill via edge function
-      if (!bulletin.news_title) {
-        try {
-          const { data: fnData } = await supabase.functions.invoke(
-            'generate-daily-bulletin',
-            { body: {} }
-          );
-          if (fnData?.bulletin?.news_title) {
-            bulletin = fnData.bulletin as DailyBulletinRow;
-          }
-        } catch {
-          // Silencieux, la news reste vide
-        }
+      // Si le bulletin existe mais sans news, backfill asynchrone (ne bloque pas le rendu)
+      const needsNewsBackfill = !bulletin.news_title;
+      if (needsNewsBackfill) {
+        setNewsLoading(true);
       }
 
       // Marquer comme vu
@@ -155,16 +148,38 @@ export function useDailyBulletin() {
 
       const deadline = bulletin.next_deadline_json as unknown as BulletinDeadline | null;
 
+      // Calcul du vrai delta hebdomadaire
+      const weekAgoGain = await getWeekAgoGain(user.id);
+      const realWeeklyDelta = weekAgoGain !== null
+        ? bulletin.cumulative_gain_cents - weekAgoGain
+        : bulletin.weekly_delta_cents;
+
       setData({
         bulletin,
         action,
         deadline,
         streak,
         cumulativeGainCents: bulletin.cumulative_gain_cents,
-        weeklyDeltaCents: bulletin.weekly_delta_cents,
+        weeklyDeltaCents: realWeeklyDelta,
         userName: firstName,
         profileCompletionPct,
       });
+
+      // Backfill news asynchrone après affichage du bulletin
+      if (needsNewsBackfill) {
+        supabase.functions.invoke('generate-daily-bulletin', { body: {} })
+          .then(({ data: fnData }) => {
+            if (fnData?.bulletin?.news_title) {
+              const updated = fnData.bulletin as DailyBulletinRow;
+              setData(prev => prev ? {
+                ...prev,
+                bulletin: { ...prev.bulletin, news_title: updated.news_title, news_body: updated.news_body, news_context: updated.news_context },
+              } : null);
+            }
+          })
+          .catch(() => {})
+          .finally(() => setNewsLoading(false));
+      }
     } catch (err) {
       console.error('Erreur chargement bulletin:', err);
       setError('Impossible de charger ton bulletin du jour.');
@@ -199,5 +214,5 @@ export function useDailyBulletin() {
     }
   }, [data]);
 
-  return { data, loading, error, handleActionStatus, reload: loadBulletin };
+  return { data, loading, newsLoading, error, handleActionStatus, reload: loadBulletin };
 }
