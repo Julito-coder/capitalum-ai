@@ -1,6 +1,6 @@
 import { TrendingUp, Minus } from 'lucide-react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { motion, animate } from 'framer-motion';
+import { useEffect, useState, useRef } from 'react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 
 interface GainCumuleProps {
@@ -15,11 +15,17 @@ function formatEuros(cents: number): string {
 
 const AnimatedNumber = ({ value }: { value: number }) => {
   const [displayed, setDisplayed] = useState(0);
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
+    if (hasAnimated.current) {
+      setDisplayed(value);
+      return;
+    }
+    hasAnimated.current = true;
     const controls = animate(0, value, {
-      duration: 1.2,
-      ease: 'easeOut',
+      duration: 1.4,
+      ease: [0.25, 0.46, 0.45, 0.94],
       onUpdate: (v) => setDisplayed(Math.round(v)),
     });
     return controls.stop;
@@ -37,16 +43,26 @@ export const GainCumule = ({ totalCents, weeklyDeltaCents }: GainCumuleProps) =>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.15, duration: 0.5, ease: 'easeOut' }}
           className="bg-card rounded-2xl border border-border shadow-sm p-6 mx-5 lg:mx-8 cursor-pointer hover:shadow-md transition-shadow"
         >
           <p className="text-sm text-muted-foreground">Élio t'a fait gagner</p>
-          <p className="text-5xl lg:text-6xl font-bold text-primary mt-2">
+          <motion.p
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.3, type: 'spring', stiffness: 120 }}
+            className="text-5xl lg:text-6xl font-bold text-primary mt-2"
+          >
             <AnimatedNumber value={Math.round(totalCents / 100)} />
-          </p>
+          </motion.p>
           <p className="text-sm text-muted-foreground mt-1">cette année</p>
 
-          <div className="flex items-center gap-1.5 mt-3">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="flex items-center gap-1.5 mt-3"
+          >
             {isPositiveDelta ? (
               <>
                 <TrendingUp className="h-4 w-4 text-success" />
@@ -62,7 +78,7 @@ export const GainCumule = ({ totalCents, weeklyDeltaCents }: GainCumuleProps) =>
                 </span>
               </>
             )}
-          </div>
+          </motion.div>
         </motion.div>
       </DrawerTrigger>
       <DrawerContent>

@@ -15,19 +15,22 @@ export const BulletinFooter = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ delay: 0.5 }}
+      transition={{ delay: 0.6, duration: 0.4 }}
       className="mt-8 mx-5 lg:mx-8"
     >
       <div className="bg-muted/30 rounded-xl p-4 flex gap-3">
-        {shortcuts.map(({ icon: Icon, label, path }) => (
-          <button
+        {shortcuts.map(({ icon: Icon, label, path }, i) => (
+          <motion.button
             key={path}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.65 + i * 0.08 }}
             onClick={() => navigate(path)}
             className="flex-1 flex flex-col items-center gap-1.5 py-2 rounded-lg hover:bg-muted/50 transition-colors"
           >
             <Icon className="h-5 w-5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground font-medium">{label}</span>
-          </button>
+          </motion.button>
         ))}
       </div>
 
