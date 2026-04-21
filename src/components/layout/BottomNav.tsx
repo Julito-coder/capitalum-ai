@@ -1,8 +1,8 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, MessageCircle, Wrench, UserCircle } from 'lucide-react';
+import { Newspaper, MessageCircle, Wrench, UserCircle } from 'lucide-react';
 
 const tabs = [
-  { path: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
+  { path: '/bulletin', icon: Newspaper, label: 'Accueil' },
   { path: '/agent', icon: MessageCircle, label: 'Élio Agent' },
   { path: '/outils', icon: Wrench, label: 'Outils' },
   { path: '/profil', icon: UserCircle, label: 'Profil' },
@@ -12,7 +12,7 @@ export const BottomNav = () => {
   const location = useLocation();
 
   const isActive = (path: string) => {
-    if (path === '/dashboard') return location.pathname === '/dashboard';
+    if (path === '/bulletin') return location.pathname === '/bulletin';
     return location.pathname.startsWith(path);
   };
 

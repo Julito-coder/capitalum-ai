@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard,
+  Newspaper,
   Sparkles,
   Wrench,
   UserCircle,
@@ -16,7 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ElioLogo } from './ElioLogo';
 
 const mainNav = [
-  { path: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
+  { path: '/bulletin', icon: Newspaper, label: 'Bulletin du jour' },
   { path: '/agent', icon: Sparkles, label: 'Élio Agent' },
 ];
 
