@@ -126,19 +126,10 @@ export function useDailyBulletin() {
         return;
       }
 
-      // Si le bulletin existe mais sans news, déclencher le backfill via edge function
-      if (!bulletin.news_title) {
-        try {
-          const { data: fnData } = await supabase.functions.invoke(
-            'generate-daily-bulletin',
-            { body: {} }
-          );
-          if (fnData?.bulletin?.news_title) {
-            bulletin = fnData.bulletin as DailyBulletinRow;
-          }
-        } catch {
-          // Silencieux, la news reste vide
-        }
+      // Si le bulletin existe mais sans news, backfill asynchrone (ne bloque pas le rendu)
+      const needsNewsBackfill = !bulletin.news_title;
+      if (needsNewsBackfill) {
+        setNewsLoading(true);
       }
 
       // Marquer comme vu
