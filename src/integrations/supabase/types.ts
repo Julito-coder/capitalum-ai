@@ -458,6 +458,69 @@ export type Database = {
           },
         ]
       }
+      daily_bulletins: {
+        Row: {
+          action_description: string
+          action_effort_minutes: number | null
+          action_gain_cents: number | null
+          action_id: string
+          action_status: string
+          action_title: string
+          action_type: string
+          bulletin_date: string
+          created_at: string
+          cumulative_gain_cents: number
+          id: string
+          news_body: string | null
+          news_context: string | null
+          news_title: string | null
+          next_deadline_json: Json | null
+          user_id: string
+          viewed_at: string | null
+          weekly_delta_cents: number
+        }
+        Insert: {
+          action_description: string
+          action_effort_minutes?: number | null
+          action_gain_cents?: number | null
+          action_id: string
+          action_status?: string
+          action_title: string
+          action_type: string
+          bulletin_date: string
+          created_at?: string
+          cumulative_gain_cents?: number
+          id?: string
+          news_body?: string | null
+          news_context?: string | null
+          news_title?: string | null
+          next_deadline_json?: Json | null
+          user_id: string
+          viewed_at?: string | null
+          weekly_delta_cents?: number
+        }
+        Update: {
+          action_description?: string
+          action_effort_minutes?: number | null
+          action_gain_cents?: number | null
+          action_id?: string
+          action_status?: string
+          action_title?: string
+          action_type?: string
+          bulletin_date?: string
+          created_at?: string
+          cumulative_gain_cents?: number
+          id?: string
+          news_body?: string | null
+          news_context?: string | null
+          news_title?: string | null
+          next_deadline_json?: Json | null
+          user_id?: string
+          viewed_at?: string | null
+          weekly_delta_cents?: number
+        }
+        Relationships: []
+      }
       elio_agent_usage: {
         Row: {
           created_at: string
@@ -1864,6 +1927,30 @@ export type Database = {
           source?: string
           source_document_path?: string | null
           title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          current_streak: number
+          last_opened_date: string | null
+          longest_streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          last_opened_date?: string | null
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          last_opened_date?: string | null
+          longest_streak?: number
           updated_at?: string
           user_id?: string
         }
