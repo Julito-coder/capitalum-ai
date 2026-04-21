@@ -661,6 +661,33 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_dispatch_log: {
+        Row: {
+          channel: string
+          event_key: string
+          event_type: string
+          id: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          event_key: string
+          event_type: string
+          id?: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          event_key?: string
+          event_type?: string
+          id?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           category: string
@@ -1166,6 +1193,39 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vehicle_expenses?: number | null
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
         }
         Relationships: []
       }
