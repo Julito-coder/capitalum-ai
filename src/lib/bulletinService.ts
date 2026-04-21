@@ -66,11 +66,11 @@ export async function createTodayBulletin(
   bulletin: Omit<DailyBulletinRow, 'id' | 'user_id' | 'created_at' | 'viewed_at'>
 ): Promise<DailyBulletinRow> {
   const { data, error } = await supabase
-    .from('daily_bulletins')
+    .from('daily_bulletins' as any)
     .insert({
       user_id: userId,
       ...bulletin,
-    })
+    } as any)
     .select()
     .single();
 
