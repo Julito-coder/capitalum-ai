@@ -156,13 +156,19 @@ export function useDailyBulletin() {
 
       const deadline = bulletin.next_deadline_json as unknown as BulletinDeadline | null;
 
+      // Calcul du vrai delta hebdomadaire
+      const weekAgoGain = await getWeekAgoGain(user.id);
+      const realWeeklyDelta = weekAgoGain !== null
+        ? bulletin.cumulative_gain_cents - weekAgoGain
+        : bulletin.weekly_delta_cents;
+
       setData({
         bulletin,
         action,
         deadline,
         streak,
         cumulativeGainCents: bulletin.cumulative_gain_cents,
-        weeklyDeltaCents: bulletin.weekly_delta_cents,
+        weeklyDeltaCents: realWeeklyDelta,
         userName: firstName,
         profileCompletionPct,
       });
