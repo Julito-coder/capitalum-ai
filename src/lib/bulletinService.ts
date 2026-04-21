@@ -43,11 +43,13 @@ function yesterdayStr(): string {
   return d.toISOString().split('T')[0];
 }
 
-/**
- * Récupère le bulletin du jour s'il existe.
- */
+// Helper pour les requêtes sur tables non encore dans les types générés
+function db() {
+  return supabase as any;
+}
+
 export async function getTodayBulletin(userId: string): Promise<DailyBulletinRow | null> {
-  const { data, error } = await supabase
+  const { data, error } = await db()
     .from('daily_bulletins')
     .select('*')
     .eq('user_id', userId)
@@ -58,19 +60,13 @@ export async function getTodayBulletin(userId: string): Promise<DailyBulletinRow
   return data as DailyBulletinRow | null;
 }
 
-/**
- * Crée le bulletin du jour.
- */
 export async function createTodayBulletin(
   userId: string,
   bulletin: Omit<DailyBulletinRow, 'id' | 'user_id' | 'created_at' | 'viewed_at'>
 ): Promise<DailyBulletinRow> {
-  const { data, error } = await supabase
-    .from('daily_bulletins' as any)
-    .insert({
-      user_id: userId,
-      ...bulletin,
-    } as any)
+  const { data, error } = await db()
+    .from('daily_bulletins')
+    .insert({ user_id: userId, ...bulletin })
     .select()
     .single();
 
@@ -78,14 +74,11 @@ export async function createTodayBulletin(
   return data as DailyBulletinRow;
 }
 
-/**
- * Met à jour le statut de l'action du jour.
- */
 export async function updateActionStatus(
   bulletinId: string,
   status: 'done' | 'snoozed' | 'skipped'
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db()
     .from('daily_bulletins')
     .update({ action_status: status })
     .eq('id', bulletinId);
@@ -93,11 +86,8 @@ export async function updateActionStatus(
   if (error) throw error;
 }
 
-/**
- * Marque le bulletin comme vu.
- */
 export async function markBulletinViewed(bulletinId: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db()
     .from('daily_bulletins')
     .update({ viewed_at: new Date().toISOString() })
     .eq('id', bulletinId);
@@ -105,11 +95,8 @@ export async function markBulletinViewed(bulletinId: string): Promise<void> {
   if (error) throw error;
 }
 
-/**
- * Récupère les 30 derniers bulletins (historique).
- */
 export async function getBulletinHistory(userId: string, limit = 30): Promise<DailyBulletinRow[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db()
     .from('daily_bulletins')
     .select('*')
     .eq('user_id', userId)
@@ -120,15 +107,11 @@ export async function getBulletinHistory(userId: string, limit = 30): Promise<Da
   return (data || []) as DailyBulletinRow[];
 }
 
-/**
- * Récupère ou crée le streak de l'utilisateur et le met à jour.
- */
 export async function updateStreak(userId: string): Promise<UserStreakRow> {
   const today = todayStr();
   const yesterday = yesterdayStr();
 
-  // Tente de lire le streak existant
-  const { data: existing } = await supabase
+  const { data: existing } = await db()
     .from('user_streaks')
     .select('*')
     .eq('user_id', userId)
@@ -137,8 +120,7 @@ export async function updateStreak(userId: string): Promise<UserStreakRow> {
   const streak = existing as UserStreakRow | null;
 
   if (!streak) {
-    // Premier accès
-    const { data, error } = await supabase
+    const { data, error } = await db()
       .from('user_streaks')
       .insert({
         user_id: userId,
@@ -164,7 +146,7 @@ export async function updateStreak(userId: string): Promise<UserStreakRow> {
 
   const newLongest = Math.max(streak.longest_streak, newStreak);
 
-  const { data, error } = await supabase
+  const { data, error } = await db()
     .from('user_streaks')
     .update({
       current_streak: newStreak,
@@ -180,11 +162,8 @@ export async function updateStreak(userId: string): Promise<UserStreakRow> {
   return data as UserStreakRow;
 }
 
-/**
- * Récupère les IDs des actions déjà traitées par l'utilisateur.
- */
 export async function getDoneActionIds(userId: string): Promise<string[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db()
     .from('daily_bulletins')
     .select('action_id')
     .eq('user_id', userId)
