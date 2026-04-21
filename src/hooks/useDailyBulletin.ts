@@ -124,6 +124,21 @@ export function useDailyBulletin() {
         return;
       }
 
+      // Si le bulletin existe mais sans news, déclencher le backfill via edge function
+      if (!bulletin.news_title) {
+        try {
+          const { data: fnData } = await supabase.functions.invoke(
+            'generate-daily-bulletin',
+            { body: {} }
+          );
+          if (fnData?.bulletin?.news_title) {
+            bulletin = fnData.bulletin as DailyBulletinRow;
+          }
+        } catch {
+          // Silencieux, la news reste vide
+        }
+      }
+
       // Marquer comme vu
       if (!bulletin.viewed_at) {
         await markBulletinViewed(bulletin.id);

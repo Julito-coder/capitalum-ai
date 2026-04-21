@@ -251,6 +251,38 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existing) {
+      // Si la news manque, on la génère et on met à jour
+      if (!existing.news_title) {
+        const profileForNews = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (profileForNews.data) {
+          const summary = buildProfileSummary(profileForNews.data);
+          let news = await generatePersonalizedNews(summary);
+          if (!news) news = getFallbackNews(summary);
+
+          const { data: updated } = await supabase
+            .from('daily_bulletins')
+            .update({
+              news_title: news.title,
+              news_body: news.body,
+              news_context: news.context,
+            })
+            .eq('id', existing.id)
+            .select()
+            .single();
+
+          if (updated) {
+            return new Response(JSON.stringify({ bulletin: updated, cached: true, news_backfilled: true }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+        }
+      }
+
       return new Response(JSON.stringify({ bulletin: existing, cached: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
