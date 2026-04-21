@@ -3,35 +3,10 @@
  * Lecture/écriture des bulletins quotidiens et des streaks.
  */
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
-export interface DailyBulletinRow {
-  id: string;
-  user_id: string;
-  bulletin_date: string;
-  action_type: string;
-  action_id: string;
-  action_title: string;
-  action_description: string;
-  action_gain_cents: number | null;
-  action_effort_minutes: number | null;
-  action_status: string;
-  news_title: string | null;
-  news_body: string | null;
-  news_context: string | null;
-  next_deadline_json: Record<string, unknown> | null;
-  cumulative_gain_cents: number;
-  weekly_delta_cents: number;
-  viewed_at: string | null;
-  created_at: string;
-}
-
-export interface UserStreakRow {
-  user_id: string;
-  current_streak: number;
-  longest_streak: number;
-  last_opened_date: string | null;
-  updated_at: string;
-}
+export type DailyBulletinRow = Tables<'daily_bulletins'>;
+export type UserStreakRow = Tables<'user_streaks'>;
 
 function todayStr(): string {
   return new Date().toISOString().split('T')[0];
@@ -43,13 +18,8 @@ function yesterdayStr(): string {
   return d.toISOString().split('T')[0];
 }
 
-// Helper pour les requêtes sur tables non encore dans les types générés
-function db() {
-  return supabase as any;
-}
-
 export async function getTodayBulletin(userId: string): Promise<DailyBulletinRow | null> {
-  const { data, error } = await db()
+  const { data, error } = await supabase
     .from('daily_bulletins')
     .select('*')
     .eq('user_id', userId)
@@ -57,28 +27,28 @@ export async function getTodayBulletin(userId: string): Promise<DailyBulletinRow
     .maybeSingle();
 
   if (error) throw error;
-  return data as DailyBulletinRow | null;
+  return data;
 }
 
 export async function createTodayBulletin(
   userId: string,
-  bulletin: Omit<DailyBulletinRow, 'id' | 'user_id' | 'created_at' | 'viewed_at'>
+  bulletin: Omit<TablesInsert<'daily_bulletins'>, 'user_id'>
 ): Promise<DailyBulletinRow> {
-  const { data, error } = await db()
+  const { data, error } = await supabase
     .from('daily_bulletins')
     .insert({ user_id: userId, ...bulletin })
     .select()
     .single();
 
   if (error) throw error;
-  return data as DailyBulletinRow;
+  return data;
 }
 
 export async function updateActionStatus(
   bulletinId: string,
   status: 'done' | 'snoozed' | 'skipped'
 ): Promise<void> {
-  const { error } = await db()
+  const { error } = await supabase
     .from('daily_bulletins')
     .update({ action_status: status })
     .eq('id', bulletinId);
@@ -87,7 +57,7 @@ export async function updateActionStatus(
 }
 
 export async function markBulletinViewed(bulletinId: string): Promise<void> {
-  const { error } = await db()
+  const { error } = await supabase
     .from('daily_bulletins')
     .update({ viewed_at: new Date().toISOString() })
     .eq('id', bulletinId);
@@ -96,7 +66,7 @@ export async function markBulletinViewed(bulletinId: string): Promise<void> {
 }
 
 export async function getBulletinHistory(userId: string, limit = 30): Promise<DailyBulletinRow[]> {
-  const { data, error } = await db()
+  const { data, error } = await supabase
     .from('daily_bulletins')
     .select('*')
     .eq('user_id', userId)
@@ -104,23 +74,21 @@ export async function getBulletinHistory(userId: string, limit = 30): Promise<Da
     .limit(limit);
 
   if (error) throw error;
-  return (data || []) as DailyBulletinRow[];
+  return data || [];
 }
 
 export async function updateStreak(userId: string): Promise<UserStreakRow> {
   const today = todayStr();
   const yesterday = yesterdayStr();
 
-  const { data: existing } = await db()
+  const { data: existing } = await supabase
     .from('user_streaks')
     .select('*')
     .eq('user_id', userId)
     .maybeSingle();
 
-  const streak = existing as UserStreakRow | null;
-
-  if (!streak) {
-    const { data, error } = await db()
+  if (!existing) {
+    const { data, error } = await supabase
       .from('user_streaks')
       .insert({
         user_id: userId,
@@ -132,21 +100,21 @@ export async function updateStreak(userId: string): Promise<UserStreakRow> {
       .single();
 
     if (error) throw error;
-    return data as UserStreakRow;
+    return data;
   }
 
-  if (streak.last_opened_date === today) {
-    return streak;
+  if (existing.last_opened_date === today) {
+    return existing;
   }
 
   let newStreak = 1;
-  if (streak.last_opened_date === yesterday) {
-    newStreak = streak.current_streak + 1;
+  if (existing.last_opened_date === yesterday) {
+    newStreak = existing.current_streak + 1;
   }
 
-  const newLongest = Math.max(streak.longest_streak, newStreak);
+  const newLongest = Math.max(existing.longest_streak, newStreak);
 
-  const { data, error } = await db()
+  const { data, error } = await supabase
     .from('user_streaks')
     .update({
       current_streak: newStreak,
@@ -159,16 +127,16 @@ export async function updateStreak(userId: string): Promise<UserStreakRow> {
     .single();
 
   if (error) throw error;
-  return data as UserStreakRow;
+  return data;
 }
 
 export async function getDoneActionIds(userId: string): Promise<string[]> {
-  const { data, error } = await db()
+  const { data, error } = await supabase
     .from('daily_bulletins')
     .select('action_id')
     .eq('user_id', userId)
     .in('action_status', ['done', 'skipped']);
 
   if (error) return [];
-  return (data || []).map((d: { action_id: string }) => d.action_id);
+  return (data || []).map((d) => d.action_id);
 }

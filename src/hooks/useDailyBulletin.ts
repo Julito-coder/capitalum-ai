@@ -111,7 +111,7 @@ export function useDailyBulletin() {
             news_title: null,
             news_body: null,
             news_context: null,
-            next_deadline_json: deadline ? (deadline as unknown as Record<string, unknown>) : null,
+            next_deadline_json: deadline ? JSON.parse(JSON.stringify(deadline)) : null,
             cumulative_gain_cents: gains.totalCents,
             weekly_delta_cents: gains.weeklyDeltaCents,
           });
