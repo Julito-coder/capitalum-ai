@@ -140,3 +140,23 @@ export async function getDoneActionIds(userId: string): Promise<string[]> {
   if (error) return [];
   return (data || []).map((d) => d.action_id);
 }
+
+/**
+ * Récupère le gain cumulé du bulletin il y a 7 jours pour calculer le vrai delta hebdo.
+ */
+export async function getWeekAgoGain(userId: string): Promise<number | null> {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  const weekAgoStr = d.toISOString().split('T')[0];
+
+  const { data } = await supabase
+    .from('daily_bulletins')
+    .select('cumulative_gain_cents')
+    .eq('user_id', userId)
+    .lte('bulletin_date', weekAgoStr)
+    .order('bulletin_date', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return data?.cumulative_gain_cents ?? null;
+}
