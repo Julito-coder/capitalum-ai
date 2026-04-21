@@ -115,12 +115,13 @@ const Bulletin = () => {
           <ProchaineEcheance deadline={data.deadline} />
         )}
 
-        {/* News personnalisée (étape 3 — placeholder vide pour l'instant) */}
-        {data?.bulletin && (
+        {/* News personnalisée — skeleton si en cours de génération */}
+        {(data?.bulletin || newsLoading) && (
           <NewsPersonnalisee
-            context={data.bulletin.news_context}
-            title={data.bulletin.news_title}
-            body={data.bulletin.news_body}
+            context={data?.bulletin?.news_context ?? null}
+            title={data?.bulletin?.news_title ?? null}
+            body={data?.bulletin?.news_body ?? null}
+            loading={newsLoading && !data?.bulletin?.news_title}
           />
         )}
 
