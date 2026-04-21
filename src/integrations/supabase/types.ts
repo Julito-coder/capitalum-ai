@@ -475,6 +475,7 @@ export type Database = {
           news_context: string | null
           news_title: string | null
           next_deadline_json: Json | null
+          skip_reason: string | null
           user_id: string
           viewed_at: string | null
           weekly_delta_cents: number
@@ -495,6 +496,7 @@ export type Database = {
           news_context?: string | null
           news_title?: string | null
           next_deadline_json?: Json | null
+          skip_reason?: string | null
           user_id: string
           viewed_at?: string | null
           weekly_delta_cents?: number
@@ -515,6 +517,7 @@ export type Database = {
           news_context?: string | null
           news_title?: string | null
           next_deadline_json?: Json | null
+          skip_reason?: string | null
           user_id?: string
           viewed_at?: string | null
           weekly_delta_cents?: number

@@ -1,0 +1,1 @@
+ALTER TABLE daily_bulletins ADD COLUMN skip_reason TEXT;
