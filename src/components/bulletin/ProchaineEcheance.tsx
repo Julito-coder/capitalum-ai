@@ -19,7 +19,9 @@ export const ProchaineEcheance = ({ deadline }: ProchaineEcheanceProps) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
+      transition={{ delay: 0.35, duration: 0.5, ease: 'easeOut' }}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
       onClick={() => navigate('/outils/calendrier')}
       className="bg-card rounded-xl border border-border p-5 mx-5 lg:mx-8 mt-4 flex items-center gap-4 cursor-pointer hover:shadow-sm transition-shadow"
     >
