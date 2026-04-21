@@ -164,6 +164,22 @@ export function useDailyBulletin() {
         userName: firstName,
         profileCompletionPct,
       });
+
+      // Backfill news asynchrone après affichage du bulletin
+      if (needsNewsBackfill) {
+        supabase.functions.invoke('generate-daily-bulletin', { body: {} })
+          .then(({ data: fnData }) => {
+            if (fnData?.bulletin?.news_title) {
+              const updated = fnData.bulletin as DailyBulletinRow;
+              setData(prev => prev ? {
+                ...prev,
+                bulletin: { ...prev.bulletin, news_title: updated.news_title, news_body: updated.news_body, news_context: updated.news_context },
+              } : null);
+            }
+          })
+          .catch(() => {})
+          .finally(() => setNewsLoading(false));
+      }
     } catch (err) {
       console.error('Erreur chargement bulletin:', err);
       setError('Impossible de charger ton bulletin du jour.');
