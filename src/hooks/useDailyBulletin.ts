@@ -35,6 +35,7 @@ export function useDailyBulletin() {
   const { user } = useAuth();
   const [data, setData] = useState<BulletinData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [newsLoading, setNewsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadBulletin = useCallback(async () => {
