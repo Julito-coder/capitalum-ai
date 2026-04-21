@@ -14,6 +14,7 @@ import {
   markBulletinViewed,
   updateStreak,
   getDoneActionIds,
+  getWeekAgoGain,
   DailyBulletinRow,
   UserStreakRow,
 } from '@/lib/bulletinService';
