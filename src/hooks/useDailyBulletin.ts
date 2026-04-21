@@ -197,10 +197,10 @@ export function useDailyBulletin() {
     loadBulletin();
   }, [loadBulletin]);
 
-  const handleActionStatus = useCallback(async (status: 'done' | 'snoozed' | 'skipped') => {
+  const handleActionStatus = useCallback(async (status: 'done' | 'snoozed' | 'skipped', reason?: string) => {
     if (!data?.bulletin) return;
     try {
-      await updateActionStatus(data.bulletin.id, status);
+      await updateActionStatus(data.bulletin.id, status, reason);
       setData(prev => prev ? {
         ...prev,
         bulletin: { ...prev.bulletin, action_status: status },
