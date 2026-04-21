@@ -46,11 +46,15 @@ export async function createTodayBulletin(
 
 export async function updateActionStatus(
   bulletinId: string,
-  status: 'done' | 'snoozed' | 'skipped'
+  status: 'done' | 'snoozed' | 'skipped',
+  reason?: string
 ): Promise<void> {
+  const update: Record<string, unknown> = { action_status: status };
+  if (reason) update.skip_reason = reason;
+
   const { error } = await supabase
     .from('daily_bulletins')
-    .update({ action_status: status })
+    .update(update)
     .eq('id', bulletinId);
 
   if (error) throw error;
