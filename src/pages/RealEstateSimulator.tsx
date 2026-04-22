@@ -139,7 +139,7 @@ const RealEstateSimulator = () => {
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/simulator/${project.id}`)}>
+                    <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/outils/simulateur/${project.id}`)}>
                       <Eye className="h-4 w-4 mr-1" />
                       Voir
                     </Button>
