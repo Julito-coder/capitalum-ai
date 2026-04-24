@@ -305,12 +305,26 @@ serve(async (req) => {
     const profileSummary = buildProfileSummary(profile);
 
     // Get body payload with action data from client-side engine
-    const body = await req.json();
+    let body: any = {};
+    try {
+      const text = await req.text();
+      if (text) body = JSON.parse(text);
+    } catch {
+      body = {};
+    }
     const {
       action_type, action_id, action_title, action_description,
       action_gain_cents, action_effort_minutes,
       next_deadline_json, cumulative_gain_cents, weekly_delta_cents,
     } = body;
+
+    // If no action data provided (backfill call without bulletin yet), bail out gracefully
+    if (!action_type || !action_id || !action_title) {
+      return new Response(JSON.stringify({ error: 'Action data manquante', bulletin: null }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Generate personalized news via LLM
     let news = await generatePersonalizedNews(profileSummary);
@@ -342,6 +356,20 @@ serve(async (req) => {
       .single();
 
     if (insertError) {
+      // Race condition: bulletin créé en parallèle. Récupère l'existant.
+      if ((insertError as any).code === '23505') {
+        const { data: raceBulletin } = await supabase
+          .from('daily_bulletins')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('bulletin_date', today)
+          .maybeSingle();
+        if (raceBulletin) {
+          return new Response(JSON.stringify({ bulletin: raceBulletin, cached: true, race: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
       console.error('Insert error:', insertError);
       return new Response(JSON.stringify({ error: 'Erreur lors de la création du bulletin' }), {
         status: 500,
