@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 import Index from "./pages/Index";
+import Welcome from "./pages/Welcome";
 import Bulletin from "./pages/Bulletin";
 import HomePage from "./pages/Home";
 import AgentPage from "./pages/Agent";
