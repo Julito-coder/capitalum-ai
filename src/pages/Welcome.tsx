@@ -25,6 +25,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useAuth } from '@/contexts/AuthContext';
+import { ElioLogo } from '@/components/layout/ElioLogo';
 import { Loader2 } from 'lucide-react';
 
 const SIGNUP_HREF = '/quiz';
