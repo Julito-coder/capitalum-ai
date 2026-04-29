@@ -44,9 +44,10 @@ const App = () => (
         <AuthProvider>
           <Routes>
             {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/welcome" element={<Welcome />} />
-            <Route path="/lp" element={<Navigate to="/welcome" replace />} />
+            <Route path="/" element={<Welcome />} />
+            <Route path="/welcome" element={<Navigate to="/" replace />} />
+            <Route path="/lp" element={<Navigate to="/" replace />} />
+            <Route path="/quiz" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/reset-password" element={<ResetPassword />} />
 
