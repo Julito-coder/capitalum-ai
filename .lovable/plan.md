@@ -1,30 +1,102 @@
+# Landing page publique `/welcome`
 
-## Plan : ajouter 2 tools à l'agent Élio (`detect_aids` + `get_fiscal_concept`)
+Page marketing de souscription, inspirée de Lovable et Emergent, qui présente Élio et redirige vers l'inscription dans l'app.
 
-### Contexte
-- L'agent Élio actuel a 4 tools dans `supabase/functions/elio-agent/tools/` : calculateTax, getDeadlines, getRecommendations, simulateRealEstate.
-- Le RichViewRenderer route déjà des `view_type` vers des composants. Il faut ajouter 2 nouveaux types : `aids_eligibility` et `fiscal_concept`.
-- L'espace agent vit dans `src/pages/Agent.tsx` (pas `ElioAgent.tsx` — la mémoire confirme la nav 4 tabs avec Agent en 2e). Je vérifierai le nom exact avant édit.
+## Routing
 
-### Changements (≤3 logiques)
+- Nouvelle route publique `/welcome` (alias `/lp` en redirect).
+- Si l'utilisateur est déjà connecté : redirection automatique vers `/bulletin`.
+- `/` reste sur le quiz de diagnostic actuel (inchangé).
+- Tous les CTA pointent vers `/auth?mode=signup&from=welcome` (sauf "Voir une démo" qui scrolle vers la section démo).
 
-**1. Backend — knowledge + tools + déclaration + system prompt**
-- `supabase/functions/elio-agent/knowledge/aids-rules.ts` : 10 aides (APL, Prime activité, CSS, ARS, Chèque énergie, Bourse CROUS, MaPrimeRénov', RSA, AAH, AF) avec `check(profile)` retournant `{status, reason, estimated_amount?, missing_fields?}`. Seuils 2025 simplifiés, biais "uncertain" plutôt que faux positif.
-- `supabase/functions/elio-agent/knowledge/fiscal-concepts.ts` : 20 concepts avec structure `{id, title, elio_explanation, key_numbers_2025[], who_it_fits[], watch_out_for[], source_url}`.
-- `supabase/functions/elio-agent/tools/detectAids.ts` : fetch profile depuis `profiles`, mappe vers les inputs des règles, exécute toutes les `check()`, regroupe par status. Renvoie aussi `view_type: 'aids_eligibility'`.
-- `supabase/functions/elio-agent/tools/getFiscalConcept.ts` : lookup dans le dict, renvoie `{concept, view_type: 'fiscal_concept'}` ou erreur si id inconnu.
-- `supabase/functions/elio-agent/index.ts` : importer + ajouter les 2 tools dans la liste des tool definitions OpenAI, brancher dans le switch d'exécution, mettre à jour la règle CRITIQUE du system prompt selon le format demandé.
+## Structure de la page (sections, dans l'ordre)
 
-**2. Frontend — 2 rich views**
-- `src/components/elio-agent/rich-views/AidsEligibility.tsx` : 4 sections verticales (vert / orange / jaune / gris dépliable), cartes avec nom + montant + reason + lien source. Sora, palette Élio.
-- `src/components/elio-agent/rich-views/FiscalConcept.tsx` : carte avec titre + 4 sous-sections (En gros, Chiffres 2025, Pour qui, Attention à) + lien source.
-- `src/components/elio-agent/RichViewRenderer.tsx` : ajouter les 2 cases.
+1. **Nav top sticky transparente**
+   - Logo Élio à gauche.
+   - Liens ancres : Fonctionnalités · Tarifs · FAQ.
+   - À droite : "Se connecter" (lien `/auth`) + bouton primaire "Commencer gratuitement" (`/auth?mode=signup`).
+   - Sur mobile : burger → drawer.
 
-**3. Suggestions L1 dans la page Agent**
-- Ouvrir `src/pages/Agent.tsx` (ou `ElioAgent.tsx` selon ce qui existe), vérifier que "Vérifie si j'ai droit à des aides" est présent, ajouter "Explique-moi ma tranche d'imposition" si absent.
+2. **Hero (style Lovable/Emergent)**
+   - Badge accent doré : "Nouveau · Diagnostic gratuit en 90 secondes".
+   - Headline XXL Sora bold : "Ne perds plus un euro par manque d'information."
+   - Sous-titre : "Élio est ton copilote administratif et financier. Aides oubliées, erreurs fiscales, contrats sous-optimisés — on récupère en moyenne 2 000 € par an pour toi."
+   - Double CTA : "Créer mon compte gratuit" (primary) · "Voir comment ça marche" (ghost, scroll vers démo).
+   - Mention discrète sous CTA : "Sans CB · Diagnostic offert · 2 min".
+   - Visuel à droite (desktop) / dessous (mobile) : mockup du bulletin Élio dans un cadre device, ombre douce, halo dégradé bleu/doré en arrière-plan.
 
-### Notes techniques
-- Les `check()` lisent les champs disponibles dans `profiles` (income_range, family_status, children_count, is_homeowner, professional_status, age_range, etc.). Quand un champ critique manque → status `needs_info` + `missing_fields`.
-- Pas de nouvelle table, pas de migration.
-- Lovable AI gateway déjà configuré, on n'y touche pas.
-- Disclaimer présent dans les rich views (estimations indicatives).
+3. **Bandeau preuve sociale**
+   - Ligne de chiffres clés en grille 3 colonnes :
+     - "10 Md€" · aides non réclamées chaque année en France
+     - "2 000 €" · récupérables en moyenne par foyer
+     - "90 s" · pour ton premier diagnostic
+   - Logos presse / mentions ("Vu dans…") en niveaux de gris si on en a, sinon placeholder désactivable.
+
+4. **"Comment ça marche" — 3 étapes**
+   - Carte 1 : "Réponds au quiz" — 5 à 7 questions, swipe.
+   - Carte 2 : "Reçois ton Score Élio" — montant € récupérable + top 3 actions.
+   - Carte 3 : "Agis chaque matin" — bulletin quotidien en 60 s.
+
+5. **Features (6 cartes en grille 2x3 / 1 col mobile)**
+   - Bulletin quotidien — l'habitude qui rapporte.
+   - Scanner fiscal IA — détecte erreurs et optimisations.
+   - Détecteur d'aides — APL, prime d'activité, MaPrimeRénov'…
+   - Calendrier prédictif — toutes tes échéances sur 12 mois.
+   - Simulateurs — immo, PACS, freelance, épargne.
+   - Agent IA Élio — réponses chiffrées avec les vrais barèmes.
+   - Chaque carte : icône Lucide, titre, 1 phrase, micro-CTA "En savoir plus" (ancre).
+
+6. **Section démo visuelle**
+   - Capture/mockup d'un bulletin réel (placeholder image stylisée).
+   - Texte à côté : "Chaque matin, un seul écran. Une action. Un gain en euros."
+
+7. **Pricing (2 plans)**
+   - Carte **Gratuit** : diagnostic, top 3 actions, calendrier sans montants, 1 scan/mois, agent limité.
+   - Carte **Premium** (mise en avant, badge doré "Le plus choisi") : tout illimité, calendrier avec montants, coach proactif, simulateurs PDF, coffre 5 Go. Prix affiché : "9,99 €/mois" ou "99 €/an" (à confirmer — placeholder).
+   - CTA sous chaque plan : "Commencer gratuitement".
+   - Note : pas de checkout en V1 — le CTA mène à l'inscription.
+
+8. **Testimonials (3 cartes)**
+   - Citations courtes attribuées aux personas (Léa étudiante, Thomas dev, Sarah & Karim) — marquées comme exemples.
+
+9. **FAQ (accordion shadcn)**
+   - "Est-ce que c'est vraiment gratuit ?"
+   - "Élio remplace-t-il mon comptable ?"
+   - "Mes données sont-elles en sécurité ?"
+   - "Puis-je l'utiliser sur mobile ?"
+   - "Quand passer en Premium ?"
+
+10. **CTA final pleine largeur**
+    - Fond dégradé bleu profond → doré subtil.
+    - "Commence à récupérer ton argent dès aujourd'hui." + bouton blanc "Créer mon compte gratuit".
+
+11. **Footer**
+    - 4 colonnes : Produit · Ressources · Légal (CGU, Confidentialité, Mentions) · Contact.
+    - Disclaimer : "Élio fournit des estimations à titre indicatif…".
+    - Logo + © 2026 Élio.
+
+## Détails techniques
+
+- Fichiers à créer :
+  - `src/pages/Welcome.tsx` (page principale).
+  - `src/components/landing/` : `LandingNav.tsx`, `Hero.tsx`, `SocialProof.tsx`, `HowItWorks.tsx`, `FeaturesGrid.tsx`, `DemoSection.tsx`, `Pricing.tsx`, `Testimonials.tsx`, `FAQ.tsx`, `FinalCTA.tsx`, `LandingFooter.tsx`.
+- Modifier `src/App.tsx` : ajouter `<Route path="/welcome" element={<Welcome />} />` et `<Route path="/lp" element={<Navigate to="/welcome" replace />} />` (publiques).
+- Modifier `src/pages/Auth.tsx` (si nécessaire) pour lire `?mode=signup` et pré-sélectionner l'onglet inscription + tracker `from=welcome`.
+- Design system strict : couleurs `#1B3A5C` / `#C8943E` / `#FAFAF7`, font Sora, cards radius 12px, shadow-sm, composants shadcn existants (Button, Card, Accordion).
+- Animations Framer Motion : fade-up au scroll sur chaque section (déjà installé), parallax léger sur le mockup hero.
+- Mobile-first : hero stack vertical < 640px, grilles features/pricing en 1 colonne, nav burger.
+- SEO : `<title>Élio — Ne perds plus un euro</title>`, meta description, Open Graph (image hero), `lang="fr"`. Mise à jour de `index.html` ou via `react-helmet-async` si déjà présent (sinon on met juste les balises dans le composant via `useEffect` document.title).
+- Aucun appel Supabase nécessaire (page 100% statique côté client). Conformité RGPD : pas de tracker custom ajouté.
+- Disclaimer fiscal présent dans le footer.
+
+## Hors scope (à faire dans un prompt suivant)
+
+- Checkout payant Stripe/Paddle (pas activé sur le projet).
+- A/B testing, analytics avancées.
+- Génération du mockup hero en image (on utilise un placeholder stylisé en HTML/CSS dans une frame `device`).
+- Pages légales détaillées (CGU/Confidentialité) — liens présents mais pages dédiées non créées ici.
+
+## Ce qui n'est PAS touché
+
+- `/`, quiz onboarding, `/bulletin`, `/auth` (sauf petite lecture du param `mode`).
+- Layout app, navigation 4 tabs, AuthContext, Supabase client, moteurs de calcul.
