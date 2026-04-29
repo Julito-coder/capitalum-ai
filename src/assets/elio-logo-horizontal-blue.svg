@@ -1,9 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 80" width="280" height="80">
-<g transform="translate(38,38) scale(0.85)">
-  <path d="M 0,-36 C 20,-36 36,-20 36,0 C 36,16 26,30 14,34 L 22,44 C 16,40 8,36 0,36 C -20,36 -36,20 -36,0 C -36,-20 -20,-36 0,-36 Z" fill="#1B3A5C"/>
-  <circle cx="10" cy="-8" r="6" fill="#C8943E"/>
-  <path d="M -12,8 Q 0,18 12,8" fill="none" stroke="#C8943E" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
-</g>
-<text x="85" y="50" font-family="Sora, sans-serif" font-weight="800" font-size="42" fill="#1B3A5C" letter-spacing="-0.5px">élio</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 64" fill="none">
+  <defs>
+    <linearGradient id="elioGradH" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1B3A5C"/>
+      <stop offset="65%" stop-color="#2A5580"/>
+      <stop offset="100%" stop-color="#C8943E"/>
+    </linearGradient>
+    <linearGradient id="elioHighlightH" x1="0" y1="0" x2="0" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="55%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <path d="M32 2C12 2 2 12 2 32s10 30 30 30 30-10 30-30S52 2 32 2Z" fill="url(#elioGradH)"/>
+    <path d="M32 2C12 2 2 12 2 32s10 30 30 30 30-10 30-30S52 2 32 2Z" fill="url(#elioHighlightH)"/>
+    <path d="M40.5 26.5c0-5-4-8.5-9.2-8.5-6 0-10.3 4.6-10.3 10.8 0 6.5 4.5 10.7 11 10.7 3.4 0 6.3-1 8.4-2.7l-2.4-3.6c-1.6 1.2-3.5 1.9-5.6 1.9-3.2 0-5.6-1.7-6.2-4.6h14.1c.1-.6.2-1.4.2-2Zm-14.2-1.8c.6-2.6 2.5-4.2 5-4.2s4.3 1.6 4.6 4.2H26.3Z" fill="#FAFAF7"/>
+    <circle cx="32.5" cy="13" r="2.4" fill="#C8943E"/>
+  </g>
+  <!-- Wordmark 'élio' -->
+  <g fill="#1B3A5C" font-family="'Sora', system-ui, sans-serif" font-weight="700">
+    <text x="78" y="44" font-size="34" letter-spacing="-1">élio</text>
+  </g>
 </svg>
