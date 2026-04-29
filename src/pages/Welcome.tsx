@@ -25,6 +25,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useAuth } from '@/contexts/AuthContext';
+import { ElioLogo } from '@/components/layout/ElioLogo';
 import { Loader2 } from 'lucide-react';
 
 const SIGNUP_HREF = '/quiz';
@@ -43,11 +44,9 @@ function LandingNav() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link to="/welcome" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold">
-            É
-          </div>
-          <span className="text-lg font-bold text-foreground">Élio</span>
+        <Link to="/welcome" className="flex items-center gap-2.5">
+          <ElioLogo variant="symbol" size={36} />
+          <ElioLogo variant="wordmark" size={28} />
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Fonctionnalités</a>
