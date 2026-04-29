@@ -27,7 +27,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
-const SIGNUP_HREF = '/auth?mode=signup&from=welcome';
+const SIGNUP_HREF = '/quiz';
 const LOGIN_HREF = '/auth?mode=login&from=welcome';
 
 const fadeUp = {
