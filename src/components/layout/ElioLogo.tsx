@@ -23,8 +23,15 @@ export const ElioLogo = ({ variant = 'full', className = '', size = 40 }: ElioLo
   if (variant === 'wordmark') {
     return (
       <span
-        className={`text-4xl font-extrabold text-primary ${className}`}
-        style={{ letterSpacing: '-0.3px' }}
+        className={`font-bold ${className}`}
+        style={{
+          fontSize: size * 0.85,
+          letterSpacing: '-0.04em',
+          background: 'linear-gradient(135deg, #1B3A5C 0%, #2A5580 60%, #C8943E 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+        }}
       >
         élio
       </span>
