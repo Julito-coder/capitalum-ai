@@ -44,9 +44,9 @@ function LandingNav() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link to="/welcome" className="flex items-center gap-2.5">
-          <ElioLogo variant="symbol" size={36} />
-          <ElioLogo variant="wordmark" size={28} />
+        <Link to="/welcome" className="flex items-center">
+          <ElioLogo variant="compact" size={32} className="sm:hidden" />
+          <ElioLogo variant="compact" size={36} className="hidden sm:inline-flex" />
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Fonctionnalités</a>
